@@ -16,6 +16,3 @@ const redis = globalThis.redisGlobal ?? redisClientSingleton();
 export default redis;
 
 if (process.env.NODE_ENV !== "production") globalThis.redisGlobal = redis;
-
-process.on("exit", () => redis.destroy());
-process.on("SIGINT", () => redis.destroy());

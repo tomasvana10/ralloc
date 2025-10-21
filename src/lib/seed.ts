@@ -1,6 +1,6 @@
 import * as rts from "regex-to-strings";
 
-interface SeedExpansion {
+export interface SeedExpansion {
   values: string[];
   compressed: boolean;
 }
