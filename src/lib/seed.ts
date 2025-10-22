@@ -5,11 +5,11 @@ export class Seed {
   private static expandRange(part: string) {
     let results = [part];
 
-    const numMatch = part.match(/\[(\-?\d+)-(\-?\d+)\]/);
+    const numMatch = part.match(/\[(-?\d+)-(-?\d+)\]/);
     if (numMatch) {
       const [full, a, b] = numMatch;
       const [start, end] = [Number(a), Number(b)];
-      if (Math.abs(end - start) - 1 > this.MAX_PARTS) return [];
+      if (Math.abs(end - start) - 1 > Seed.MAX_PARTS) return [];
       if (start > end) return [];
 
       results = [];
@@ -21,7 +21,7 @@ export class Seed {
     if (charMatches.length <= 2) {
       for (const [full, a, b] of charMatches) {
         const range = Math.abs(b.charCodeAt(0) - a.charCodeAt(0)) + 1;
-        if (range * results.length > this.MAX_PARTS) return [];
+        if (range * results.length > Seed.MAX_PARTS) return [];
 
         const next: string[] = [];
         for (const r of results) {
@@ -32,15 +32,15 @@ export class Seed {
       }
     }
 
-    if (results.length > this.MAX_PARTS) return [];
-    return results.map(r => r.slice(0, this.MAX_PART_LENGTH));
+    if (results.length > Seed.MAX_PARTS) return [];
+    return results.map((r) => r.slice(0, Seed.MAX_PART_LENGTH));
   }
 
   public static expand(input: string) {
     return input
       .split(",")
-      .map(part => part.trim())
+      .map((part) => part.trim())
       .filter(Boolean)
-      .flatMap(p => this.expandRange(p));
+      .flatMap((p) => Seed.expandRange(p));
   }
 }

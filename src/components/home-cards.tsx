@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import { SessionJoinForm } from "./forms/session-join-form";
 import { SessionCreateForm } from "./forms/session-create-form";
 

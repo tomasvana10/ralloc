@@ -15,7 +15,8 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange>
+          disableTransitionOnChange
+        >
           <DefaultLayout>
             <main>{children}</main>
             <Toaster />

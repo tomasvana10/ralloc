@@ -28,7 +28,7 @@ export async function DefaultLayout({
           </div>
           <div className="flex gap-2">
             <ThemeCycler />
-            {!!session ? <Profile /> : null}
+            {session ? <Profile /> : null}
           </div>
         </CardHeader>
         <CardContent>{children}</CardContent>

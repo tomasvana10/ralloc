@@ -34,7 +34,7 @@ export async function Profile() {
             <AvatarFallback>
               {session.user?.name
                 ?.split(" ")
-                .map(p => p[0])
+                .map((p) => p[0])
                 .join("")
                 .toUpperCase()}
             </AvatarFallback>

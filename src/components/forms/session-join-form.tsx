@@ -22,7 +22,7 @@ export const sessionJoinSchema = z.object({
     .length(CODE_LENGTH, `Code must be ${CODE_LENGTH} characters`)
     .regex(
       new RegExp(REGEXP_ONLY_DIGITS_AND_CHARS),
-      "Code must be alphanumeric"
+      "Code must be alphanumeric",
     ),
 });
 
@@ -42,7 +42,10 @@ export function SessionJoinForm() {
     <Card>
       <CardHeader>
         <CardTitle>Join a Group Session</CardTitle>
-        <CardDescription>Join a group session using a code. You can paste the code or type it manually.</CardDescription>
+        <CardDescription>
+          Join a group session using a code. You can paste the code or type it
+          manually.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form id="form-join-session" onSubmit={form.handleSubmit(onSubmit)}>
@@ -56,10 +59,11 @@ export function SessionJoinForm() {
                     maxLength={CODE_LENGTH}
                     value={field.value}
                     onChange={field.onChange}
-                    aria-invalid={fieldState.invalid}>
+                    aria-invalid={fieldState.invalid}
+                  >
                     <InputOTPGroup className="flex-wrap">
                       {Array.from({ length: CODE_LENGTH }, (_, i) => (
-                        <InputOTPSlot {...field} index={i} key={i} />
+                        <InputOTPSlot {...field} index={i} key={`otp-slot-${i}`} />
                       ))}
                     </InputOTPGroup>
                   </InputOTP>

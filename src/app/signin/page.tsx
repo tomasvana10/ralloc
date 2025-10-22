@@ -8,7 +8,7 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const session = await auth();
-  if (!!session)
+  if (session)
     return (
       <WarningItemWithRedirectOption
         href="/"

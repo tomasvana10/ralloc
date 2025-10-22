@@ -11,7 +11,7 @@ export function useWebSocket(url: () => string) {
     if (ref.current) return;
     const socket = new WebSocket(target.current());
     Reflect.set(ref, "current", socket);
-    update(p => p + 1);
+    update((p) => p + 1);
   }, []);
 
   return ref.current;

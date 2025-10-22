@@ -50,8 +50,8 @@ export const sessionCreateSchema = z.object({
     .max(500, "Description must be at most 500 characters")
     .optional()
     .refine(
-      val => !val || val.length >= 10,
-      "Description must be at least 10 characters"
+      (val) => !val || val.length >= 10,
+      "Description must be at least 10 characters",
     ),
 });
 
@@ -91,7 +91,8 @@ export function SessionCreateForm() {
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="flex-[0.7]">
+                    className="flex-[0.7]"
+                  >
                     <FieldLabel htmlFor="form-create-session-name" required>
                       Name
                     </FieldLabel>
@@ -115,11 +116,13 @@ export function SessionCreateForm() {
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="flex-[0.3]">
+                    className="flex-[0.3]"
+                  >
                     <FieldLabel
                       className="text-nowrap"
                       htmlFor="form-create-session-group-size"
-                      required>
+                      required
+                    >
                       Group Size
                     </FieldLabel>
                     <Input
@@ -128,7 +131,7 @@ export function SessionCreateForm() {
                       inputMode="numeric"
                       min={1}
                       value={String(field.value)}
-                      onChange={e => field.onChange(e.target.value)}
+                      onChange={(e) => field.onChange(e.target.value)}
                       id="form-create-session-group-size"
                       aria-invalid={fieldState.invalid}
                     />
@@ -212,7 +215,8 @@ export function SessionCreateForm() {
           <Button
             type="button"
             variant="destructive"
-            onClick={() => form.reset()}>
+            onClick={() => form.reset()}
+          >
             Reset
           </Button>
           <Button type="submit" form="form-create-session">
