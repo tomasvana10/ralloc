@@ -5,7 +5,7 @@ import { Moon, Sun, Monitor } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 
-export function ThemeToggle() {
+export function ThemeCycler() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -20,7 +20,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <Button variant="outline" size="icon-lg" disabled>
-        <span className="sr-only">Toggle theme</span>
+        <span className="sr-only">Cycle theme</span>
       </Button>
     );
   }
@@ -30,7 +30,7 @@ export function ThemeToggle() {
       {theme === "light" && <Sun className="size-[1.2rem]" />}
       {theme === "dark" && <Moon className="size-[1.2rem]" />}
       {theme === "system" && <Monitor className="size-[1.2rem]" />}
-      <span className="sr-only">Toggle theme</span>
+      <span className="sr-only">Cycle theme</span>
     </Button>
   );
 }

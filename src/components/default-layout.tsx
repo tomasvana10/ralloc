@@ -7,7 +7,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Profile } from "./profile";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeCycler } from "./theme-cycler";
 
 export async function DefaultLayout({
   children,
@@ -27,7 +27,7 @@ export async function DefaultLayout({
             </CardDescription>
           </div>
           <div className="flex gap-2">
-            <ThemeToggle />
+            <ThemeCycler />
             {!!session ? <Profile /> : null}
           </div>
         </CardHeader>
