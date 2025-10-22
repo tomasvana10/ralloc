@@ -1,6 +1,6 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
-import { ContextWrapper } from "@/components/context-wrapper";
+import { DefaultLayout } from "@/components/default-layout";
 import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
@@ -16,10 +16,10 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          <ContextWrapper>
+          <DefaultLayout>
             <main>{children}</main>
             <Toaster />
-          </ContextWrapper>
+          </DefaultLayout>
         </ThemeProvider>
       </body>
     </html>

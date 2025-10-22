@@ -19,14 +19,14 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" disabled>
+      <Button variant="outline" size="icon-lg" disabled>
         <span className="sr-only">Toggle theme</span>
       </Button>
     );
   }
 
   return (
-    <Button variant="outline" size="icon" onClick={cycleTheme}>
+    <Button variant="outline" size="icon-lg" onClick={cycleTheme}>
       {theme === "light" && <Sun className="size-[1.2rem]" />}
       {theme === "dark" && <Moon className="size-[1.2rem]" />}
       {theme === "system" && <Monitor className="size-[1.2rem]" />}

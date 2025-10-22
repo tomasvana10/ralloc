@@ -14,7 +14,7 @@ interface Props {
   description: string;
 }
 
-export default function WarningItemWithRedirectOption({
+export function WarningItemWithRedirectOption({
   href,
   title,
   description,

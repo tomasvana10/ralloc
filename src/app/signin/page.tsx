@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { SignInCard } from "@/components/sign-in";
-import WarningItemWithRedirectOption from "@/components/warning-item";
+import { WarningItemWithRedirectOption } from "@/components/warning-item";
 
 export default async function Page({
   searchParams,

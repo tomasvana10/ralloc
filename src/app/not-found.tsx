@@ -1,4 +1,4 @@
-import WarningItemWithRedirectOption from "@/components/warning-item";
+import { WarningItemWithRedirectOption } from "@/components/warning-item";
 
 export default function NotFound() {
   return (

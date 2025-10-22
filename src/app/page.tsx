@@ -1,5 +1,5 @@
-import { HomeOptions } from "@/components/home-options";
+import { HomeCards } from "@/components/home-cards";
 
 export default function RootPage() {
-  return <HomeOptions />;
+  return <HomeCards />;
 }
