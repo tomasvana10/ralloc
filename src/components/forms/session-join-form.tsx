@@ -39,7 +39,7 @@ export function SessionJoinForm() {
   function onSubmit(data: SessionJoinSchemaType) {}
 
   return (
-    <Card>
+    <Card className="border-primary">
       <CardHeader>
         <CardTitle>Join a Group Session</CardTitle>
         <CardDescription>
