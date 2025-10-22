@@ -1,9 +1,9 @@
-import SignIn from "@/components/sign-in";
+import SignIn from "@/components/ui/sign-in";
 
 export default async function Page({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
-  return <SignIn callbackUrl={(await searchParams)?.callbackUrl ?? "/"} />;
+  return <SignIn callbackUrl={(await searchParams)?.callbackUrl} />;
 }

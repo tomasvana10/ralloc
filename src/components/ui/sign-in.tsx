@@ -1,7 +1,7 @@
 import { signIn } from "@/auth";
 
 type Props = {
-  callbackUrl: string;
+  callbackUrl?: string;
 };
 
 export default function SignIn({ callbackUrl }: Props) {
@@ -10,7 +10,7 @@ export default function SignIn({ callbackUrl }: Props) {
       action={async () => {
         "use server";
         await signIn("google", {
-          redirectTo: callbackUrl,
+          redirectTo: callbackUrl ?? "/",
         });
       }}>
       <button type="submit">Signin with Google</button>

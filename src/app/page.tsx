@@ -1,5 +1,9 @@
-import SignIn from "@/components/sign-in";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export default function Home() {
-  return <SignIn />;
+  return (
+    <div className="p-10">
+      <ThemeToggle />
+    </div>
+  );
 }
