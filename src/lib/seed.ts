@@ -1,6 +1,6 @@
 export class Seed {
-  private static MAX_PART_LENGTH = 50;
-  private static MAX_PARTS = 500;
+  public static MAX_PART_LENGTH = 50;
+  public static MAX_PARTS = 500;
 
   private static expandRange(part: string) {
     let results = [part];

@@ -1,9 +1,5 @@
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { HomeOptions } from "@/components/home-options";
 
-export default function Home() {
-  return (
-    <div className="p-10">
-      <ThemeToggle />
-    </div>
-  );
+export default function RootPage() {
+  return <HomeOptions />;
 }

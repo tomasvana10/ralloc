@@ -1,5 +1,7 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
+import { ContextWrapper } from "@/components/context-wrapper";
+import { Toaster } from "@/components/ui/sonner";
 
 export default function RootLayout({
   children,
@@ -14,7 +16,10 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          {children}
+          <ContextWrapper>
+            <main>{children}</main>
+            <Toaster />
+          </ContextWrapper>
         </ThemeProvider>
       </body>
     </html>
