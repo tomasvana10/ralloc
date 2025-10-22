@@ -42,7 +42,7 @@ export function SessionJoinForm() {
     <Card>
       <CardHeader>
         <CardTitle>Join a Group Session</CardTitle>
-        <CardDescription>Join a group session using a code.</CardDescription>
+        <CardDescription>Join a group session using a code. You can paste the code or type it manually.</CardDescription>
       </CardHeader>
       <CardContent>
         <form id="form-join-session" onSubmit={form.handleSubmit(onSubmit)}>
