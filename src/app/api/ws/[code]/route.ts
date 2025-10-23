@@ -20,18 +20,18 @@ export async function UPGRADE(
   client: WebSocket,
   server: WebSocketServer,
   request: NextRequest,
-  ctx: RouteContext<"/api/ws/[session]">,
+  ctx: RouteContext<"/api/ws/[code]">
 ) {
-  const { session: sessionId } = ctx.params;
-  const key = `session:${sessionId}`;
+  const { code } = ctx.params;
+  const key = `session:${code}`;
 
   const sub = redis.duplicate();
   await sub.connect();
-  await sub.subscribe(key, (msg) => {
+  await sub.subscribe(key, msg => {
     if (client.readyState === client.OPEN) client.send(msg);
   });
 
-  console.log(`client conencted to session ${sessionId}`);
+  console.log(`client conencted to session ${code}`);
 
   client.on("close", async () => {
     await sub.unsubscribe(key);

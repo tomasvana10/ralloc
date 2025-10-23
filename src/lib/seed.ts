@@ -68,13 +68,13 @@ export class Seed {
     }
 
     if (results.length > this.MAX_PARTS) return "too_big";
-    return results.map((r) => r.slice(0, this.MAX_PART_LENGTH));
+    return results.map(r => r.slice(0, this.MAX_PART_LENGTH));
   }
 
   public static expand(input: string): ExpansionResult {
     const filtered = input
       .split(",")
-      .map((part) => part.trim())
+      .map(part => part.trim())
       .filter(Boolean);
     const values = [];
 
@@ -88,5 +88,13 @@ export class Seed {
       return { values: [], issue: "too_short" };
 
     return { values };
+  }
+
+  public static indexOf(input: string, part: string) {
+    const expansion = Seed.expand(input);
+
+    if (!expansion.values.length) return -1;
+
+    return expansion.values.indexOf(part);
   }
 }
