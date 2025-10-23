@@ -1,3 +1,5 @@
+"use client";
+
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,72 +10,15 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { SimpleTooltip } from "../tooltip";
+} from "../../ui/card";
+import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { SimpleTooltip } from "../../tooltip";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
-
-export const sessionCreateSchema = z.object({
-  groupSeed: z
-    .string()
-    .min(5, "Seed must be at least 5 characters")
-    .max(150, "Seed must be at most 150 characters")
-    .superRefine((val, ctx) => {
-      const result = Seed.expand(val);
-      if (result.issue === undefined) return;
-
-      switch (result.issue) {
-        case "invalid_range":
-          return ctx.addIssue({
-            code: "custom",
-            message: "Seed has invalid ranges",
-          });
-        case "too_big":
-          return ctx.addIssue({
-            code: "too_big",
-            maximum: Seed.MAX_PARTS,
-            origin: "array",
-            message: "Seed expands to too many values",
-          });
-        case "too_short":
-          return ctx.addIssue({
-            code: "too_small",
-            minimum: Seed.MIN_PARTS,
-            origin: "array",
-            message: "Seed expands to too little values",
-          });
-        case "too_many_char_ranges":
-          return ctx.addIssue({
-            code: "custom",
-            message: `You have provided too many character ranges`,
-          });
-        case "too_many_num_ranges":
-          return ctx.addIssue({
-            code: "custom",
-            message: `You have provided too many numerical ranges`,
-          });
-      }
-    }),
-  groupSize: z.coerce.number().min(1, "Groups must have at least 1 member"),
-  name: z
-    .string()
-    .min(5, "Name must be at least 5 characters")
-    .max(50, "Name must be at most 50 characters"),
-  description: z
-    .string()
-    .max(500, "Description must be at most 500 characters")
-    .optional()
-    .refine(
-      (val) => !val || val.length >= 10,
-      "Description must be at least 10 characters"
-    ),
-});
-
-export type SessionCreateSchemaType = z.infer<typeof sessionCreateSchema>;
+import { sessionCreateSchema } from ".";
 
 export function SessionCreateForm() {
   const form = useForm<
@@ -91,8 +36,14 @@ export function SessionCreateForm() {
     mode: "onChange",
   });
 
-  function onSubmit(data: z.output<typeof sessionCreateSchema>) {
-    toast(JSON.stringify(data));
+  async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
+    await fetch("/api/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+
+    toast.success("Successfully created a group session.");
   }
 
   return (
@@ -111,8 +62,7 @@ export function SessionCreateForm() {
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="flex-[0.7]"
-                  >
+                    className="flex-[0.7]">
                     <FieldLabel htmlFor="form-create-session-name" required>
                       Name
                     </FieldLabel>
@@ -136,13 +86,11 @@ export function SessionCreateForm() {
                 render={({ field, fieldState }) => (
                   <Field
                     data-invalid={fieldState.invalid}
-                    className="flex-[0.3]"
-                  >
+                    className="flex-[0.3]">
                     <FieldLabel
                       className="text-nowrap"
                       htmlFor="form-create-session-group-size"
-                      required
-                    >
+                      required>
                       Group Size
                     </FieldLabel>
                     <Input
@@ -151,7 +99,7 @@ export function SessionCreateForm() {
                       inputMode="numeric"
                       min={1}
                       value={String(field.value)}
-                      onChange={(e) => field.onChange(e.target.value)}
+                      onChange={e => field.onChange(e.target.value)}
                       id="form-create-session-group-size"
                       aria-invalid={fieldState.invalid}
                     />
@@ -235,8 +183,7 @@ export function SessionCreateForm() {
           <Button
             type="button"
             variant="destructive"
-            onClick={() => form.reset()}
-          >
+            onClick={() => form.reset()}>
             Reset
           </Button>
           <Button type="submit" form="form-create-session">

@@ -9,23 +9,16 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../ui/card";
-import { Field, FieldError, FieldGroup } from "../ui/field";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
-import { Button } from "../ui/button";
+} from "@/components/ui/card";
+import { Field, FieldError, FieldGroup } from "@/components/ui/field";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
+import { Button } from "@/components/ui/button";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
-
-export const sessionJoinSchema = z.object({
-  code: z
-    .string()
-    .length(SESSION_CODE_LENGTH, `Code must be ${SESSION_CODE_LENGTH} characters`)
-    .regex(
-      new RegExp(REGEXP_ONLY_DIGITS_AND_CHARS),
-      "Code must be alphanumeric",
-    ),
-});
-
-export type SessionJoinSchemaType = z.infer<typeof sessionJoinSchema>;
+import { sessionJoinSchema, SessionJoinSchemaType } from ".";
 
 export function SessionJoinForm() {
   const form = useForm<SessionJoinSchemaType>({
@@ -58,11 +51,14 @@ export function SessionJoinForm() {
                     maxLength={SESSION_CODE_LENGTH}
                     value={field.value}
                     onChange={field.onChange}
-                    aria-invalid={fieldState.invalid}
-                  >
+                    aria-invalid={fieldState.invalid}>
                     <InputOTPGroup className="flex-wrap">
                       {Array.from({ length: SESSION_CODE_LENGTH }, (_, i) => (
-                        <InputOTPSlot {...field} index={i} key={`otp-slot-${i}`} />
+                        <InputOTPSlot
+                          {...field}
+                          index={i}
+                          key={`otp-slot-${i}`}
+                        />
                       ))}
                     </InputOTPGroup>
                   </InputOTP>
