@@ -1,7 +1,6 @@
 "use server";
 
 import { auth, signOut } from "@/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Button } from "./ui/button";
+import { ClientAvatar } from "./avatar";
 
 async function handleSignOut() {
   "use server";
@@ -26,19 +26,10 @@ export async function Profile() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild className="select-none cursor-pointer">
         <Button variant="outline" size="icon-lg">
-          <Avatar>
-            <AvatarImage
-              src={session.user?.image as string | undefined}
-              alt={`${session.user?.name}'s avatar`}
-            />
-            <AvatarFallback>
-              {session.user?.name
-                ?.split(" ")
-                .map((p) => p[0])
-                .join("")
-                .toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <ClientAvatar
+            image={session.user?.image as string | undefined}
+            name={session.user?.name}
+          />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
