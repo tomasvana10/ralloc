@@ -13,13 +13,12 @@ import {
 import { Field, FieldError, FieldGroup } from "../ui/field";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "../ui/input-otp";
 import { Button } from "../ui/button";
-
-export const CODE_LENGTH = 5;
+import { SESSION_CODE_LENGTH } from "@/lib/constants";
 
 export const sessionJoinSchema = z.object({
   code: z
     .string()
-    .length(CODE_LENGTH, `Code must be ${CODE_LENGTH} characters`)
+    .length(SESSION_CODE_LENGTH, `Code must be ${SESSION_CODE_LENGTH} characters`)
     .regex(
       new RegExp(REGEXP_ONLY_DIGITS_AND_CHARS),
       "Code must be alphanumeric",
@@ -56,13 +55,13 @@ export function SessionJoinForm() {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
                   <InputOTP
-                    maxLength={CODE_LENGTH}
+                    maxLength={SESSION_CODE_LENGTH}
                     value={field.value}
                     onChange={field.onChange}
                     aria-invalid={fieldState.invalid}
                   >
                     <InputOTPGroup className="flex-wrap">
-                      {Array.from({ length: CODE_LENGTH }, (_, i) => (
+                      {Array.from({ length: SESSION_CODE_LENGTH }, (_, i) => (
                         <InputOTPSlot {...field} index={i} key={`otp-slot-${i}`} />
                       ))}
                     </InputOTPGroup>

@@ -1,4 +1,4 @@
-import redis from "@/lib/redis";
+import redis from "@/db/redis";
 import type { MessageType } from "@/lib/session";
 import type { RouteContext } from "next-ws/server";
 import type { NextRequest } from "next/server";

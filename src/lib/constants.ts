@@ -1,0 +1,3 @@
+export const SESSION_CODE_LENGTH = 5;
+export const SESSION_CODE_CHARACTERS =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
