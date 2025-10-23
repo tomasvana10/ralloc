@@ -84,7 +84,7 @@ export function SessionCreateForm() {
     resolver: zodResolver(sessionCreateSchema),
     defaultValues: {
       groupSeed: "",
-      groupSize: 1,
+      groupSize: 2,
       name: "",
       description: "",
     },
