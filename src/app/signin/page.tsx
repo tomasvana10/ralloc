@@ -13,7 +13,7 @@ export default async function Page({
       <WarningItemWithRedirectOption
         href="/"
         title="You are already signed in"
-        description="Click here to return home"
+        description="Click here to return home."
       />
     );
 

@@ -5,7 +5,7 @@ export default function NotFound() {
     <WarningItemWithRedirectOption
       href="/"
       title="This page could not be found"
-      description="Click here to return home"
+      description="Click here to return home."
     />
   );
 }
