@@ -1,46 +1,92 @@
+import { areSameCase } from "./utils";
+
+interface ExpansionResult {
+  values: string[];
+  issue?:
+    | "too_big"
+    | "too_short"
+    | "invalid_range"
+    | "too_many_num_ranges"
+    | "too_many_char_ranges";
+}
+
 export class Seed {
   public static MAX_PART_LENGTH = 50;
   public static MAX_PARTS = 500;
+  public static MIN_PARTS = 2;
+  public static MAX_NUM_RANGES = 2;
+  public static MAX_CHAR_RANGES = 2;
 
-  private static expandRange(part: string) {
+  private static expandRange(
+    part: string
+  ): ExpansionResult["issue"] | string[] {
     let results = [part];
 
-    const numMatch = part.match(/\[(-?\d+)-(-?\d+)\]/);
-    if (numMatch) {
-      const [full, a, b] = numMatch;
-      const [start, end] = [Number(a), Number(b)];
-      if (Math.abs(end - start) - 1 > Seed.MAX_PARTS) return [];
-      if (start > end) return [];
+    const numRanges = [...part.matchAll(/\[(-?\d+)-(-?\d+)\]/g)];
+    if (numRanges.length > this.MAX_NUM_RANGES) return "too_many_num_ranges";
+    for (const [full, start, end] of numRanges) {
+      if (start === end) return "invalid_range";
+      const [a, b] = [Number(start), Number(end)];
+      if ((Math.abs(a - b) + 1) * results.length > this.MAX_PARTS)
+        return "too_big";
 
-      results = [];
-      for (let i = start; i <= end; i++)
-        results.push(part.replace(full, i.toString()));
-    }
-
-    const charMatches = [...part.matchAll(/\[([a-zA-Z])-([a-zA-Z])\]/g)];
-    if (charMatches.length <= 2) {
-      for (const [full, a, b] of charMatches) {
-        const range = Math.abs(b.charCodeAt(0) - a.charCodeAt(0)) + 1;
-        if (range * results.length > Seed.MAX_PARTS) return [];
-
-        const next: string[] = [];
-        for (const r of results) {
-          for (let c = a.charCodeAt(0); c <= b.charCodeAt(0); c++)
-            next.push(r.replace(full, String.fromCharCode(c)));
+      const next: string[] = [];
+      for (const r of results) {
+        if (a > b) {
+          for (let i = a; i >= b; i--) {
+            next.push(r.replace(full, i.toString()));
+          }
+        } else {
+          for (let i = a; i <= b; i++) {
+            next.push(r.replace(full, i.toString()));
+          }
         }
-        results = next;
       }
+      results = next;
     }
 
-    if (results.length > Seed.MAX_PARTS) return [];
-    return results.map((r) => r.slice(0, Seed.MAX_PART_LENGTH));
+    const charRanges = [...part.matchAll(/\[([a-zA-Z])-([a-zA-Z])\]/g)];
+    if (charRanges.length > this.MAX_CHAR_RANGES) return "too_many_char_ranges";
+    for (const [full, start, end] of charRanges) {
+      if (start === end) return "invalid_range";
+      if (!areSameCase(start, end)) return "invalid_range";
+      const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
+      if ((Math.abs(b - a) + 1) * results.length > this.MAX_PARTS)
+        return "too_big";
+
+      const next: string[] = [];
+      for (const r of results) {
+        if (a > b) {
+          for (let i = a; i >= b; i--)
+            next.push(r.replace(full, String.fromCharCode(i)));
+        } else {
+          for (let i = a; i <= b; i++)
+            next.push(r.replace(full, String.fromCharCode(i)));
+        }
+      }
+      results = next;
+    }
+
+    if (results.length > this.MAX_PARTS) return "too_big";
+    return results.map((r) => r.slice(0, this.MAX_PART_LENGTH));
   }
 
-  public static expand(input: string) {
-    return input
+  public static expand(input: string): ExpansionResult {
+    const filtered = input
       .split(",")
       .map((part) => part.trim())
-      .filter(Boolean)
-      .flatMap((p) => Seed.expandRange(p));
+      .filter(Boolean);
+    const values = [];
+
+    for (const part of filtered) {
+      const result = this.expandRange(part);
+      if (!Array.isArray(result)) return { values: [], issue: result };
+      values.push(...result);
+    }
+
+    if (values.length < this.MIN_PARTS)
+      return { values: [], issue: "too_short" };
+
+    return { values };
   }
 }
