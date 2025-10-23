@@ -11,11 +11,11 @@ export function ClientAvatar({
 }) {
   return (
     <Avatar>
-      <AvatarImage src={image} alt={`${name}'s avatar`} />
+      <AvatarImage src={image} referrerPolicy="no-referrer" alt={`${name}'s avatar`} />
       <AvatarFallback>
         {name
           ?.split(" ")
-          .map(p => p[0])
+          .map((p) => p[0])
           .join("")
           .toUpperCase() ?? "?"}
       </AvatarFallback>
