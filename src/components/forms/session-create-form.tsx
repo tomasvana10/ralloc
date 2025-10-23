@@ -23,22 +23,40 @@ export const sessionCreateSchema = z.object({
     .min(5, "Seed must be at least 5 characters")
     .max(150, "Seed must be at most 150 characters")
     .superRefine((val, ctx) => {
-      const length = Seed.expand(val).length;
-      if (length === 0)
-        return ctx.addIssue({
-          code: "too_big",
-          maximum: Seed.MAX_PARTS,
-          origin: "array",
-          message: "Seed expands into too many values",
-        });
+      const result = Seed.expand(val);
+      if (result.issue === undefined) return;
 
-      if (length === 1)
-        return ctx.addIssue({
-          code: "too_small",
-          minimum: 2,
-          origin: "array",
-          message: "Seed expands into only a single value",
-        });
+      switch (result.issue) {
+        case "invalid_range":
+          return ctx.addIssue({
+            code: "custom",
+            message: "Seed has invalid ranges",
+          });
+        case "too_big":
+          return ctx.addIssue({
+            code: "too_big",
+            maximum: Seed.MAX_PARTS,
+            origin: "array",
+            message: "Seed expands to too many values",
+          });
+        case "too_short":
+          return ctx.addIssue({
+            code: "too_small",
+            minimum: Seed.MIN_PARTS,
+            origin: "array",
+            message: "Seed expands to too little values",
+          });
+        case "too_many_char_ranges":
+          return ctx.addIssue({
+            code: "custom",
+            message: `You have provided too many character ranges`,
+          });
+        case "too_many_num_ranges":
+          return ctx.addIssue({
+            code: "custom",
+            message: `You have provided too many numerical ranges`,
+          });
+      }
     }),
   groupSize: z.coerce.number().min(1, "Groups must have at least 1 member"),
   name: z
@@ -51,15 +69,18 @@ export const sessionCreateSchema = z.object({
     .optional()
     .refine(
       (val) => !val || val.length >= 10,
-      "Description must be at least 10 characters",
+      "Description must be at least 10 characters"
     ),
 });
 
 export type SessionCreateSchemaType = z.infer<typeof sessionCreateSchema>;
-export type SessionCreateSchemaTypeInput = z.input<typeof sessionCreateSchema>;
 
 export function SessionCreateForm() {
-  const form = useForm<SessionCreateSchemaTypeInput>({
+  const form = useForm<
+    z.input<typeof sessionCreateSchema>,
+    unknown,
+    z.output<typeof sessionCreateSchema>
+  >({
     resolver: zodResolver(sessionCreateSchema),
     defaultValues: {
       groupSeed: "",
@@ -70,8 +91,7 @@ export function SessionCreateForm() {
     mode: "onChange",
   });
 
-  // seems more logical this should be z.output, but it causes an error for some reason
-  function onSubmit(data: SessionCreateSchemaTypeInput) {
+  function onSubmit(data: z.output<typeof sessionCreateSchema>) {
     toast(JSON.stringify(data));
   }
 
@@ -178,7 +198,7 @@ export function SessionCreateForm() {
                           </p>
                           <br />
                           <p>
-                            Supports a single numeric range (like{" "}
+                            Supports a single numerical range (like{" "}
                             <code>[1-50]</code>) and two character ranges (like{" "}
                             <code>[a-z]</code> or <code>[A-Z]</code>).
                           </p>
