@@ -1,16 +1,17 @@
 import { auth } from "@/auth";
-import { getHostSessions } from "@/db/session";
+import { getGroupSessionsOfHost } from "@/db/session";
 
-export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  const sessions = await getHostSessions(id);
+type Params = Promise<{ id: string }>;
+
+export async function GET(_: Request, { params }: { params: Params }) {
+  const { id: hostId } = await params;
   const session = (await auth())!;
 
-  if (session.user.id !== id)
-    return Response.json({ message: "unauthorised" }, { status: 403 });
+  if (session.user.id !== hostId)
+    return Response.json(
+      { error: { message: "unauthorised" } },
+      { status: 403 }
+    );
 
-  return Response.json({ data: sessions });
+  return Response.json({ data: await getGroupSessionsOfHost(hostId) });
 }

@@ -1,35 +1,33 @@
 import { auth } from "@/auth";
-import { deleteGroupSession, getSessionByCode } from "@/db/session";
+import { deleteGroupSession, getGroupSessionByCode } from "@/db/session";
 import { getHostId } from "@/db/session/helpers";
 
-export async function DELETE(
-  _: Request,
-  {
-    params,
-  }: {
-    params: Promise<{ code: string }>;
-  }
-) {
-  const session = (await auth())!;
+type Params = Promise<{ code: string }>;
+
+export async function DELETE(_: Request, { params }: { params: Params }) {
   const { code } = await params;
+  const session = (await auth())!;
   const hostId = await getHostId(code);
 
   if (session.user.id !== hostId)
-    return Response.json({ message: "unauthorised" }, { status: 403 });
+    return Response.json(
+      { error: { message: "unauthorised" } },
+      { status: 403 }
+    );
 
   await deleteGroupSession(hostId, code);
   return Response.json({ message: "success" });
 }
 
-export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ code: string }> }
-) {
+export async function GET(_: Request, { params }: { params: Params }) {
   const { code } = await params;
-  const session = await getSessionByCode(code);
+  const session = await getGroupSessionByCode(code);
 
   if (!session)
-    return Response.json({ message: "session not found" }, { status: 404 });
+    return Response.json(
+      { error: { code: 404, message: "resource not found" } },
+      { status: 404 }
+    );
 
   return Response.json({ data: session });
 }
