@@ -1,5 +1,8 @@
+import { auth } from "@/auth";
 import { HomeCards } from "@/components/home-cards";
 
-export default function RootPage() {
-  return <HomeCards />;
+export default async function RootPage() {
+  const session = (await auth())!;
+
+  return <HomeCards userId={session.user.id} />;
 }

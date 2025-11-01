@@ -19,8 +19,13 @@ import { SimpleTooltip } from "../../tooltip";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
 import { sessionCreateSchema } from ".";
+import { useGroupSessions } from "@/lib/hooks/groupSessions";
 
-export function SessionCreateForm() {
+interface Props {
+  userId: string;
+}
+
+export function SessionCreateForm({ userId }: Props) {
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
     unknown,
@@ -35,15 +40,17 @@ export function SessionCreateForm() {
     },
     mode: "onChange",
   });
+  const { mutate } = useGroupSessions(userId);
 
   async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
-    await fetch("/api/session", {
+    await fetch("/api/sessions", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
 
     toast.success("Successfully created a group session.");
+    mutate();
   }
 
   return (

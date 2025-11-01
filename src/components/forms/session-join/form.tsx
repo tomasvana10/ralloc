@@ -1,7 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
 import {
   Card,
   CardContent,

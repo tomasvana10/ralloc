@@ -25,5 +25,5 @@ export async function POST(req: Request) {
   }
 
   await setGroupSession(parseResult.data, userId);
-  return new Response("success");
+  return Response.json({ message: "success" });
 }
