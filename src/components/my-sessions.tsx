@@ -7,7 +7,6 @@ import {
   EmptyTitle,
 } from "./ui/empty";
 import { useGroupSessions } from "@/lib/hooks/groupSessions";
-import { Skeleton } from "./ui/skeleton";
 import {
   Item,
   ItemActions,
@@ -25,12 +24,11 @@ interface Props {
 export function MySessions({ userId }: Props) {
   const { sessions, isLoading, error, mutate } = useGroupSessions(userId);
 
-  if (isLoading) return <MySessionsSkeleton />;
   if (error) return <MySessionsEmpty cause="error" />;
+  if (isLoading || sessions.length === 0)
+    return <MySessionsEmpty cause="empty" />;
 
-  return sessions.length === 0 ? (
-    <MySessionsEmpty cause="empty" />
-  ) : (
+  return (
     <div className="flex w-full flex-col gap-4">
       {sessions.map(session => (
         <Item asChild variant="outline" key={session.code}>
@@ -58,14 +56,6 @@ export function MySessions({ userId }: Props) {
           </Link>
         </Item>
       ))}
-    </div>
-  );
-}
-
-export function MySessionsSkeleton() {
-  return (
-    <div className="flex flex-col space-y-3">
-      <Skeleton className="h-[125px] w-[250px] rounded-xl" />
     </div>
   );
 }

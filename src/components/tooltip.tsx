@@ -16,7 +16,7 @@ export function SimpleTooltip({ tip }: Props) {
       {/* desktop */}
       <div className="hidden sm:block">
         <Tooltip>
-          <TooltipTrigger asChild>
+          <TooltipTrigger asChild tabIndex={0}>
             <span>
               <CircleQuestionMark className="text-foreground size-4" />
             </span>
@@ -28,7 +28,7 @@ export function SimpleTooltip({ tip }: Props) {
       {/* mobile */}
       <div className="inline-flex sm:hidden">
         <Popover>
-          <PopoverTrigger>
+          <PopoverTrigger tabIndex={0}>
             <span>
               <CircleQuestionMark className="text-foreground size-4" />
             </span>

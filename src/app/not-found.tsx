@@ -1,11 +1,18 @@
-import { WarningItemWithRedirectOption } from "@/components/warning-item";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { AlertCircleIcon } from "lucide-react";
+import Link from "next/link";
 
 export default function NotFound() {
   return (
-    <WarningItemWithRedirectOption
-      href="/"
-      title="This page could not be found"
-      description="Click here to return home."
-    />
+    <>
+      <Alert variant="default">
+        <AlertCircleIcon />
+        <AlertTitle>This page couldn't be found</AlertTitle>
+      </Alert>
+      <Button className="mt-2" asChild>
+        <Link href="/">Return home</Link>
+      </Button>
+    </>
   );
 }
