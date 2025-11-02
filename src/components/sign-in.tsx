@@ -17,7 +17,7 @@ export function SignInCard({ callbackUrl }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Sign in to Ralloc</CardTitle>
+        <CardTitle>Sign In</CardTitle>
         <CardDescription>
           Please use one of the authentication methods listed below.
         </CardDescription>
