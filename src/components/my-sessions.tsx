@@ -1,12 +1,5 @@
-import { BoxesIcon, ChevronRightIcon, CloudAlert, Trash2 } from "lucide-react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "./ui/empty";
-import { useGroupSessions } from "@/lib/hooks/groupSessions";
+import { ChevronRightIcon, Trash2 } from "lucide-react";
+import { useGroupSessionsSWR } from "@/lib/hooks/swr/groupSessions";
 import {
   Item,
   ItemActions,
@@ -17,20 +10,12 @@ import {
 import Link from "next/link";
 import { Button } from "./ui/button";
 
-interface Props {
-  userId: string;
-}
+type Props = ReturnType<typeof useGroupSessionsSWR>;
 
-export function MySessions({ userId }: Props) {
-  const { sessions, isLoading, error, mutate } = useGroupSessions(userId);
-
-  if (error) return <MySessionsEmpty cause="error" />;
-  if (isLoading || sessions.length === 0)
-    return <MySessionsEmpty cause="empty" />;
-
+export function MySessions({ data, mutate }: Props) {
   return (
     <div className="flex w-full flex-col gap-4">
-      {sessions.map(session => (
+      {data.map(session => (
         <Item asChild variant="outline" key={session.code}>
           <Link href="#">
             <ItemActions>
@@ -57,31 +42,5 @@ export function MySessions({ userId }: Props) {
         </Item>
       ))}
     </div>
-  );
-}
-
-export function MySessionsEmpty({ cause }: { cause: "error" | "empty" }) {
-  return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          {cause === "empty" ? (
-            <BoxesIcon />
-          ) : (
-            <CloudAlert className="stroke-destructive" />
-          )}
-        </EmptyMedia>
-        <EmptyTitle>
-          {cause === "empty"
-            ? "No Group Sessions Yet"
-            : "Couldn't Fetch Group Sessions"}
-        </EmptyTitle>
-        <EmptyDescription>
-          {cause === "empty"
-            ? " You haven't created a group session yet. Create one using the form on this page and it will be displayed here."
-            : "Try reloading the page."}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
   );
 }

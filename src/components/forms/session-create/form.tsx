@@ -19,7 +19,7 @@ import { SimpleTooltip } from "../../tooltip";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
 import { sessionCreateSchema } from ".";
-import { useGroupSessions } from "@/lib/hooks/groupSessions";
+import { useGroupSessionsSWR } from "@/lib/hooks/swr/groupSessions";
 
 interface Props {
   userId: string;
@@ -40,7 +40,7 @@ export function SessionCreateForm({ userId }: Props) {
     },
     mode: "onChange",
   });
-  const { mutate } = useGroupSessions(userId);
+  const { mutate } = useGroupSessionsSWR(userId);
 
   async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
     await fetch("/api/sessions", {
