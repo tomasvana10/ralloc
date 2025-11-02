@@ -9,7 +9,7 @@ interface Props {
 
 export function HomeCards({ userId }: Props) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-2">
       <SessionJoinForm />
       <SessionCreateForm userId={userId} />
     </div>
