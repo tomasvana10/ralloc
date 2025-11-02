@@ -15,11 +15,10 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
-        >
+          disableTransitionOnChange>
           <DefaultLayout>
             <main>{children}</main>
-            <Toaster />
+            <Toaster position="top-right" richColors />
           </DefaultLayout>
         </ThemeProvider>
       </body>
