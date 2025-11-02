@@ -1,12 +1,13 @@
-import redis, { k } from "../redis";
+import { paths } from ".";
+import redis from "../redis";
 
 export async function getHostId(code: string) {
-  return (await redis.get(k("session", code, "host")))!;
+  return (await redis.get(paths.sessionHost(code)))!;
 }
 
 export async function getHostedSessionCount(hostId: string) {
   let count = 0;
-  const pattern = k("host", hostId, "session", "*", "metadata");
+  const pattern = paths.patternAllHostMetadataKeys(hostId);
 
   for await (const batch of redis.scanIterator({ MATCH: pattern })) {
     count += batch.length;
