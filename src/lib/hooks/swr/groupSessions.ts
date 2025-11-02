@@ -1,8 +1,11 @@
 import { GroupSessionData } from "@/db/session";
 import { toast } from "sonner";
-import useSWR from "swr";
+import useSWR, { SWRConfiguration } from "swr";
 
-export function useGroupSessionsSWR(hostId: string) {
+export function useGroupSessionsSWR(
+  hostId: string,
+  options?: Partial<SWRConfiguration>
+) {
   const { data, ...rest } = useSWR<GroupSessionData[], Error>(
     `/api/host/${hostId}/sessions`,
     async url => {
@@ -19,6 +22,7 @@ export function useGroupSessionsSWR(hostId: string) {
           description: "Try reloading the page.",
         });
       },
+      ...options,
     }
   );
 

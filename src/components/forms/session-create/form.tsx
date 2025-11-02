@@ -40,7 +40,7 @@ export function SessionCreateForm({ userId }: Props) {
     },
     mode: "onChange",
   });
-  const { mutate } = useGroupSessionsSWR(userId);
+  const { mutate } = useGroupSessionsSWR(userId, { revalidateOnMount: false });
 
   async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
     await fetch("/api/sessions", {
