@@ -18,7 +18,7 @@ export async function DefaultLayout({
 
   return (
     <div className="flex justify-center sm:p-10 p-1">
-      <Card className="max-w-[850px] w-full">
+      <Card className="max-w-[700px] w-full">
         <CardHeader className="flex justify-between">
           <div>
             <CardTitle className="text-3xl">Ralloc</CardTitle>
