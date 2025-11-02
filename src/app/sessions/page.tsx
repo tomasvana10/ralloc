@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
-import { HomeCards } from "@/components/home-cards";
 import MainTabs from "@/components/main-tabs";
+import { MySessions } from "@/components/my-sessions";
 
 export default async function RootPage() {
   const session = (await auth())!;
@@ -8,7 +8,7 @@ export default async function RootPage() {
   return (
     <>
       <MainTabs className="mb-2" />
-      <HomeCards userId={session.user.id} />
+      <MySessions userId={session.user.id} />
     </>
   );
 }

@@ -1,3 +1,5 @@
+"use client";
+
 import { ChevronRightIcon, Trash2 } from "lucide-react";
 import { useGroupSessionsSWR } from "@/lib/hooks/swr/groupSessions";
 import {
@@ -17,9 +19,13 @@ import {
   CardTitle,
 } from "./ui/card";
 
-type Props = ReturnType<typeof useGroupSessionsSWR>;
+interface Props {
+  userId: string;
+}
 
-export function MySessions({ data, mutate }: Props) {
+export function MySessions({ userId }: Props) {
+  const { data, mutate } = useGroupSessionsSWR(userId);
+
   return (
     <Card>
       <CardHeader>
