@@ -1,10 +1,15 @@
 import { HomeCards } from "@/components/home-cards";
-import MainTabs from "@/components/main-tabs";
+import { RoutedMainTabs } from "@/components/routed-tabs";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home · Ralloc",
+};
 
 export default async function RootPage() {
   return (
     <>
-      <MainTabs className="mb-2" />
+      <RoutedMainTabs className="mb-2" />
       <HomeCards />
     </>
   );

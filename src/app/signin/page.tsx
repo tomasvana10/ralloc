@@ -1,6 +1,11 @@
 import { auth } from "@/auth";
 import { SignInCard } from "@/components/sign-in";
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+};
 
 export default async function Page({
   searchParams,

@@ -1,5 +1,7 @@
-import { sessionCreateSchema } from "@/components/forms/session-create";
-import type { SessionCreateSchemaType } from "@/components/forms/session-create";
+import {
+  sessionCreateSchema,
+  type SessionCreateSchemaType,
+} from "@/components/forms/session-create";
 import z from "zod";
 import redis, { k, REDIS_SEP } from "../redis";
 import { Seed } from "@/lib/seed";

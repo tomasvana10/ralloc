@@ -4,17 +4,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { HomeIcon, ListIcon } from "lucide-react";
+import { HomeIcon, ListIcon, type LucideIcon } from "lucide-react";
 
-const tabs = [
-  { value: "/", label: "Home", icon: HomeIcon },
-  { value: "/sessions", label: "Sessions", icon: ListIcon },
-];
+export type RoutedTabData = {
+  value: string;
+  label: string;
+  icon: LucideIcon;
+}[];
 
-export default function MainTabs({
+type Props = React.ComponentProps<typeof TabsPrimitive.Root>;
+
+export function RoutedTabs({
   className,
+  tabs,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Root>) {
+}: Props & { tabs: RoutedTabData }) {
   const pathname = usePathname();
 
   return (
@@ -31,4 +35,12 @@ export default function MainTabs({
       </TabsList>
     </Tabs>
   );
+}
+
+export function RoutedMainTabs({ className, ...props }: Props) {
+  const tabs: RoutedTabData = [
+    { value: "/", label: "Home", icon: HomeIcon },
+    { value: "/sessions", label: "Sessions", icon: ListIcon },
+  ];
+  return <RoutedTabs className={className} tabs={tabs} {...props} />;
 }
