@@ -7,23 +7,27 @@ interface ExpansionResult {
     | "too_short"
     | "invalid_range"
     | "too_many_num_ranges"
-    | "too_many_char_ranges";
+    | "too_many_char_ranges"
+    | "duplicate_values";
 }
 
 export class Seed {
   public static MAX_PART_LENGTH = 50;
   public static MAX_PARTS = 500;
   public static MIN_PARTS = 2;
-  public static MAX_NUM_RANGES = 2;
-  public static MAX_CHAR_RANGES = 2;
+  public static MAX_NUM_RANGES_PER_PART = 2;
+  public static MAX_CHAR_RANGES_PER_PART = 2;
+  private static NUM_RANGE_REGEX = /\[(-?\d+)-(-?\d+)\]/g;
+  private static CHAR_RANGE_REGEX = /\[([a-zA-Z])-([a-zA-Z])\]/g;
 
   private static expandRange(
     part: string
   ): ExpansionResult["issue"] | string[] {
     let results = [part];
 
-    const numRanges = [...part.matchAll(/\[(-?\d+)-(-?\d+)\]/g)];
-    if (numRanges.length > this.MAX_NUM_RANGES) return "too_many_num_ranges";
+    const numRanges = [...part.matchAll(this.NUM_RANGE_REGEX)];
+    if (numRanges.length > this.MAX_NUM_RANGES_PER_PART)
+      return "too_many_num_ranges";
     for (const [full, start, end] of numRanges) {
       if (start === end) return "invalid_range";
       const [a, b] = [Number(start), Number(end)];
@@ -45,8 +49,9 @@ export class Seed {
       results = next;
     }
 
-    const charRanges = [...part.matchAll(/\[([a-zA-Z])-([a-zA-Z])\]/g)];
-    if (charRanges.length > this.MAX_CHAR_RANGES) return "too_many_char_ranges";
+    const charRanges = [...part.matchAll(this.CHAR_RANGE_REGEX)];
+    if (charRanges.length > this.MAX_CHAR_RANGES_PER_PART)
+      return "too_many_char_ranges";
     for (const [full, start, end] of charRanges) {
       if (start === end) return "invalid_range";
       if (!areSameCase(start, end)) return "invalid_range";
@@ -86,6 +91,8 @@ export class Seed {
 
     if (values.length < this.MIN_PARTS)
       return { values: [], issue: "too_short" };
+    if (new Set(values).size < values.length)
+      return { values: [], issue: "duplicate_values" };
 
     return { values };
   }

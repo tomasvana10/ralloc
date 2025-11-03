@@ -21,24 +21,29 @@ export const sessionCreateSchema = z.object({
             code: "too_big",
             maximum: Seed.MAX_PARTS,
             origin: "array",
-            message: "Seed expands to too many values",
+            message: "Seed expansion yields too many values",
           });
         case "too_short":
           return ctx.addIssue({
             code: "too_small",
             minimum: Seed.MIN_PARTS,
             origin: "array",
-            message: "Seed expands to too little values",
+            message: `Seed expansion yields too little values`,
           });
         case "too_many_char_ranges":
           return ctx.addIssue({
             code: "custom",
-            message: `You have provided too many character ranges`,
+            message: `You provided too many character ranges for a seed part`,
           });
         case "too_many_num_ranges":
           return ctx.addIssue({
             code: "custom",
-            message: `You have provided too many numerical ranges`,
+            message: `You provided too many numerical ranges for a seed part`,
+          });
+        case "duplicate_values":
+          return ctx.addIssue({
+            code: "custom",
+            message: "Seed expansion yields one or more duplicate values",
           });
       }
     }),
