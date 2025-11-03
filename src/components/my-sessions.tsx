@@ -11,60 +11,50 @@ import {
 } from "./ui/item";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { toast } from "sonner";
 
 interface Props {
   userId: string;
 }
 
 export function MySessions({ userId }: Props) {
-  const { data, mutate } = useGroupSessionsSWR(userId);
+  const { data, mutate } = useGroupSessionsSWR(userId, {
+    onError: err => {
+      toast.error(err.message, {
+        id: "group-sessions-swr-err",
+        description: "Couldn't fetch group sessions. Try reloading the page.",
+      });
+    },
+  });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Your Group Sessions</CardTitle>
-        <CardDescription>
-          Manage or go to your active group sessions.
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <div className="flex w-full flex-col gap-4">
-          {data.map(session => (
-            <Item asChild variant="outline" key={session.code}>
-              <Link href="#">
-                <ItemActions>
-                  <Button
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={async () => {
-                      await fetch(`/api/sessions/${session.code}`, {
-                        method: "DELETE",
-                      });
-                      mutate();
-                    }}>
-                    <Trash2 />
-                  </Button>
-                </ItemActions>
-                <ItemContent>
-                  <ItemTitle>{session.name}</ItemTitle>
-                  <ItemDescription>{session.description}</ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <ChevronRightIcon className="size-4" />
-                </ItemActions>
-              </Link>
-            </Item>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="flex w-full flex-col gap-2">
+      {data.map(session => (
+        <Item asChild variant="outline" key={session.code}>
+          <Link href="#">
+            <ItemActions>
+              <Button
+                variant="destructive"
+                size="icon-sm"
+                onClick={async () => {
+                  await fetch(`/api/sessions/${session.code}`, {
+                    method: "DELETE",
+                  });
+                  mutate();
+                }}>
+                <Trash2 />
+              </Button>
+            </ItemActions>
+            <ItemContent>
+              <ItemTitle>{session.name}</ItemTitle>
+              <ItemDescription>{session.description}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <ChevronRightIcon className="size-4" />
+            </ItemActions>
+          </Link>
+        </Item>
+      ))}
+    </div>
   );
 }
