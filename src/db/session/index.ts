@@ -1,7 +1,5 @@
-import {
-  sessionCreateSchema,
-  SessionCreateSchemaType,
-} from "@/components/forms/session-create";
+import { sessionCreateSchema } from "@/components/forms/session-create";
+import type { SessionCreateSchemaType } from "@/components/forms/session-create";
 import z from "zod";
 import redis, { k, REDIS_SEP } from "../redis";
 import { Seed } from "@/lib/seed";
@@ -107,7 +105,9 @@ export async function getGroupSessionsOfHost(hostId: string) {
       const parts = key.split(REDIS_SEP);
       const code = parts[5];
 
-      sessions.push(await getGroupSession(await redis.hGetAll(key), code, hostId));
+      sessions.push(
+        await getGroupSession(await redis.hGetAll(key), code, hostId)
+      );
     }
   }
 

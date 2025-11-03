@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { SessionJoinSchemaType } from "./schema";
+import type { SessionJoinSchemaType } from ".";
 
 const defaultSessionJoinData: SessionJoinSchemaType = {
   code: "",

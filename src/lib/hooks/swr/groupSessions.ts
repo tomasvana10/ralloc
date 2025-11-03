@@ -1,6 +1,7 @@
-import { GroupSessionData } from "@/db/session";
+import type { GroupSessionData } from "@/db/session";
 import { toast } from "sonner";
-import useSWR, { SWRConfiguration } from "swr";
+import useSWR from "swr";
+import type { SWRConfiguration } from "swr";
 
 export function useGroupSessionsSWR(
   hostId: string,

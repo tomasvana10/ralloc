@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import { SessionCreateSchemaType } from "./schema";
+import type { SessionCreateSchemaType } from ".";
 
-const defaultSessionCreateData: SessionCreateSchemaType = {
+export const defaultSessionCreateData: SessionCreateSchemaType = {
   groupSeed: "",
   groupSize: 2,
   name: "",
