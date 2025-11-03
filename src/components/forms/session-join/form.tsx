@@ -17,16 +17,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
 import { sessionJoinSchema, SessionJoinSchemaType } from ".";
+import { useSessionJoinStore } from "./store";
+import * as React from "react";
 
 export function SessionJoinForm() {
+  const state = useSessionJoinStore();
+
   const form = useForm<SessionJoinSchemaType>({
     resolver: zodResolver(sessionJoinSchema),
-    defaultValues: {
-      code: "",
-    },
+    defaultValues: state.data,
   });
 
-  function onSubmit(data: SessionJoinSchemaType) {}
+  const reset = () => {
+    state.reset();
+    form.reset(state.defaultData);
+  };
+
+  React.useEffect(() => {
+    const sub = form.watch(data =>
+      state.setData(data as Partial<SessionJoinSchemaType>)
+    );
+    return () => sub.unsubscribe();
+  }, [form, state.setData]);
+
+  function onSubmit(data: SessionJoinSchemaType) {
+    reset();
+  }
 
   return (
     <Card className="border-primary">

@@ -18,29 +18,34 @@ import { Textarea } from "../../ui/textarea";
 import { SimpleTooltip } from "../../tooltip";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
-import { sessionCreateSchema } from ".";
-import { useGroupSessionsSWR } from "@/lib/hooks/swr/groupSessions";
+import { sessionCreateSchema, SessionCreateSchemaType } from ".";
+import { useSessionCreateStore } from "./store";
+import React from "react";
 
-interface Props {
-  userId: string;
-}
+export function SessionCreateForm() {
+  const state = useSessionCreateStore();
 
-export function SessionCreateForm({ userId }: Props) {
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
     unknown,
     z.output<typeof sessionCreateSchema>
   >({
     resolver: zodResolver(sessionCreateSchema),
-    defaultValues: {
-      groupSeed: "",
-      groupSize: 2,
-      name: "",
-      description: "",
-    },
+    defaultValues: state.data,
     mode: "onChange",
   });
-  const { mutate } = useGroupSessionsSWR(userId, { revalidateOnMount: false });
+
+  const reset = () => {
+    state.reset();
+    form.reset(state.defaultData);
+  };
+
+  React.useEffect(() => {
+    const sub = form.watch(data =>
+      state.setData(data as Partial<SessionCreateSchemaType>)
+    );
+    return () => sub.unsubscribe();
+  }, [form, state.setData]);
 
   async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
     await fetch("/api/sessions", {
@@ -50,7 +55,7 @@ export function SessionCreateForm({ userId }: Props) {
     });
 
     toast.success("Successfully created a group session.");
-    mutate();
+    reset();
   }
 
   return (
@@ -187,10 +192,7 @@ export function SessionCreateForm({ userId }: Props) {
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal">
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => form.reset()}>
+          <Button type="button" variant="destructive" onClick={reset}>
             Reset
           </Button>
           <Button type="submit" form="form-create-session">

@@ -3,15 +3,11 @@
 import { SessionJoinForm } from "./forms/session-join";
 import { SessionCreateForm } from "./forms/session-create/form";
 
-interface Props {
-  userId: string;
-}
-
-export function HomeCards({ userId }: Props) {
+export function HomeCards() {
   return (
     <div className="flex flex-col gap-2">
       <SessionJoinForm />
-      <SessionCreateForm userId={userId} />
+      <SessionCreateForm />
     </div>
   );
 }

@@ -1,14 +1,11 @@
-import { auth } from "@/auth";
 import { HomeCards } from "@/components/home-cards";
 import MainTabs from "@/components/main-tabs";
 
 export default async function RootPage() {
-  const session = (await auth())!;
-
   return (
     <>
       <MainTabs className="mb-2" />
-      <HomeCards userId={session.user.id} />
+      <HomeCards />
     </>
   );
 }
