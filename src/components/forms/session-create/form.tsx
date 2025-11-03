@@ -16,6 +16,7 @@ import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Textarea } from "../../ui/textarea";
 import { SimpleTooltip } from "../../tooltip";
+import { Spinner } from "../../ui/spinner";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
 import {
@@ -24,9 +25,11 @@ import {
   type SessionCreateSchemaType,
 } from ".";
 import React from "react";
+import { useCreateGroupSessionSWR } from "@/lib/hooks/swr/group-sessions";
 
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
+  const swr = useCreateGroupSessionSWR();
 
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
@@ -50,15 +53,14 @@ export function SessionCreateForm() {
     return () => sub.unsubscribe();
   }, [form, state.setData]);
 
-  async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
-    await fetch("/api/sessions", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-
-    toast.success("Successfully created a group session.");
-    reset();
+  async function onSubmit(data: z.output<SessionCreateSchemaType>) {
+    try {
+      await swr.trigger(data);
+      toast.success("Successfully created a new group session.");
+      reset();
+    } catch (err) {
+      toast.error(`Error - ${(err as Error).message}`);
+    }
   }
 
   return (
@@ -198,8 +200,11 @@ export function SessionCreateForm() {
           <Button type="button" variant="destructive" onClick={reset}>
             Reset
           </Button>
-          <Button type="submit" form="form-create-session">
-            Create
+          <Button
+            type="submit"
+            form="form-create-session"
+            className="transition-none">
+            {swr.isMutating ? <Spinner /> : null}Create
           </Button>
         </Field>
       </CardFooter>

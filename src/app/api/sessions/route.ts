@@ -9,11 +9,11 @@ export async function POST(req: Request) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  if ((await getHostedSessionCount(userId)) > MAX_USER_SESSIONS)
+  if ((await getHostedSessionCount(userId)) + 1 > MAX_USER_SESSIONS)
     return Response.json(
       {
         error: {
-          message: `you have exceeded the maximum amount of active sessions (${MAX_USER_SESSIONS})`,
+          message: `You have exceeded the maximum amount of active sessions (${MAX_USER_SESSIONS})`,
         },
       },
       { status: 400 }

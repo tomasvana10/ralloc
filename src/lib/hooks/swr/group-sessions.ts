@@ -1,6 +1,8 @@
 import type { GroupSessionData } from "@/db/session";
-import { toast } from "sonner";
+import useSWRMutation from "swr/mutation";
 import useSWR, { type SWRConfiguration } from "swr";
+import type { SessionCreateSchemaType } from "@/components/forms/session-create";
+import type z from "zod";
 
 export function useGroupSessionsSWR(
   hostId: string,
@@ -16,15 +18,32 @@ export function useGroupSessionsSWR(
     {
       errorRetryCount: 1,
       fallbackData: [],
-      onError: err => {
-        toast.error(err.message, {
-          id: "group-sessions-swr-err",
-          description: "Try reloading the page.",
-        });
-      },
       ...options,
     }
   );
 
   return { data: data ?? [], ...rest };
+}
+
+export function useCreateGroupSessionSWR() {
+  return useSWRMutation(
+    "/api/sessions",
+    async (
+      url: string,
+      { arg }: { arg: z.output<SessionCreateSchemaType> }
+    ) => {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(arg),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data?.error?.message ?? "Unknown error");
+      }
+
+      return res.json();
+    }
+  );
 }
