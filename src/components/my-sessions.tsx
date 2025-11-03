@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRightIcon, Trash2 } from "lucide-react";
-import { useGroupSessionsSWR } from "@/lib/hooks/swr/groupSessions";
+import { useGroupSessionsSWR } from "@/lib/hooks/swr/group-sessions";
 import {
   Item,
   ItemActions,
