@@ -16,8 +16,7 @@ import {
 } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
-import { sessionJoinSchema, useSessionJoinStore } from ".";
-import type { SessionJoinSchemaType } from ".";
+import { sessionJoinSchema, useSessionJoinStore, type SessionJoinSchemaType } from ".";
 import * as React from "react";
 
 export function SessionJoinForm() {

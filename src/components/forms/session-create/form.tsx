@@ -18,8 +18,11 @@ import { Textarea } from "../../ui/textarea";
 import { SimpleTooltip } from "../../tooltip";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
-import { sessionCreateSchema, useSessionCreateStore } from ".";
-import type { SessionCreateSchemaType } from ".";
+import {
+  sessionCreateSchema,
+  useSessionCreateStore,
+  type SessionCreateSchemaType,
+} from ".";
 import React from "react";
 
 export function SessionCreateForm() {
