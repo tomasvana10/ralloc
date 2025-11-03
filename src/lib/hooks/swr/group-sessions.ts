@@ -4,7 +4,7 @@ import useSWR, { type SWRConfiguration } from "swr";
 import type { SessionCreateSchemaType } from "@/components/forms/session-create";
 import type z from "zod";
 
-export function useGroupSessionsSWR(
+export function useGetGroupSessionsSWR(
   hostId: string,
   options?: Partial<SWRConfiguration>
 ) {

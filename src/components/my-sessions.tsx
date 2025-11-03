@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRightIcon, Trash2 } from "lucide-react";
-import { useGroupSessionsSWR } from "@/lib/hooks/swr/group-sessions";
+import { useGetGroupSessionsSWR } from "@/lib/hooks/swr/group-sessions";
 import {
   Item,
   ItemActions,
@@ -18,7 +18,7 @@ interface Props {
 }
 
 export function MySessions({ userId }: Props) {
-  const { data, mutate } = useGroupSessionsSWR(userId, {
+  const { data, mutate } = useGetGroupSessionsSWR(userId, {
     onError: err => {
       toast.error(err.message, {
         id: "group-sessions-swr-err",
