@@ -1,13 +1,7 @@
 import redis from "@/db/redis";
-import type { MessageType } from "@/lib/session";
 import type { RouteContext } from "next-ws/server";
 import type { NextRequest } from "next/server";
 import type { WebSocket, WebSocketServer } from "ws";
-
-interface Message {
-  type: MessageType;
-  payload?: any;
-}
 
 export function GET() {
   const headers = new Headers();
