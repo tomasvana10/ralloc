@@ -1,6 +1,11 @@
-import { SESSION_CODE_LENGTH } from "@/lib/constants";
-import { REGEXP_ONLY_DIGITS_AND_CHARS } from "input-otp";
+import {
+  SESSION_CODE_CHARACTERS,
+  SESSION_CODE_CHARACTERS_EXCLUDE,
+  SESSION_CODE_LENGTH,
+} from "@/lib/constants";
 import z from "zod";
+
+const REGEXP_CODE = new RegExp(`^[${SESSION_CODE_CHARACTERS}]+$`);
 
 export const sessionJoinSchema = z.object({
   code: z
@@ -10,8 +15,10 @@ export const sessionJoinSchema = z.object({
       `Code must be ${SESSION_CODE_LENGTH} characters`
     )
     .regex(
-      new RegExp(REGEXP_ONLY_DIGITS_AND_CHARS),
-      "Code must be alphanumeric"
+      REGEXP_CODE,
+      `Code must be alphanumeric. These characters are never used in a code: ${Array.from(
+        SESSION_CODE_CHARACTERS_EXCLUDE
+      ).join(", ")}`
     ),
 });
 
