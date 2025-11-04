@@ -6,11 +6,11 @@ export const metadata: Metadata = {
   title: "Home · Ralloc",
 };
 
-export default async function RootPage() {
+export default function RootPage() {
   return (
-    <>
-      <RoutedMainTabs className="mb-2" />
+    <div className="flex flex-col gap-2 overflow-auto">
+      <RoutedMainTabs />
       <HomeCards />
-    </>
+    </div>
   );
 }

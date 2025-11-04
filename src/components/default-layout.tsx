@@ -3,6 +3,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
@@ -17,9 +18,9 @@ export async function DefaultLayout({
   const session = await auth();
 
   return (
-    <div className="flex justify-center sm:p-10 p-1">
+    <div className="flex justify-center sm:p-10 p-1 min-h-screen">
       <Card className="max-w-[700px] w-full">
-        <CardHeader className="flex justify-between">
+        <CardHeader className="flex justify-between max-[350px]:flex-col-reverse max-[450px]:gap-4">
           <div>
             <CardTitle className="text-3xl">Ralloc</CardTitle>
             <CardDescription className="mt-2">
@@ -31,7 +32,7 @@ export async function DefaultLayout({
             {session ? <Profile /> : null}
           </div>
         </CardHeader>
-        <CardContent>{children}</CardContent>
+        <CardContent className="max-sm:p-1">{children}</CardContent>
       </Card>
     </div>
   );

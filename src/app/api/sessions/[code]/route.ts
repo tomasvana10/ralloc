@@ -25,7 +25,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
 
   if (!session)
     return Response.json(
-      { error: { code: 404, message: "resource not found" } },
+      { error: { message: "resource not found" } },
       { status: 404 }
     );
 

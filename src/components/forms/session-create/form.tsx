@@ -25,11 +25,18 @@ import {
   type SessionCreateSchemaType,
 } from ".";
 import React from "react";
-import { useCreateGroupSessionSWR } from "@/lib/hooks/swr/group-sessions";
+import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
 
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
-  const swr = useCreateGroupSessionSWR();
+  const swr = useCreateGroupSessionSWRMutation({
+    onSuccess: () => {
+      toast.success("Successfully created a new group session");
+      reset();
+    },
+    onError: err =>
+      toast.error(err.message, { id: "createGroupSessionSWRErr" }),
+  });
 
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
@@ -54,13 +61,7 @@ export function SessionCreateForm() {
   }, [form, state.setData]);
 
   async function onSubmit(data: z.output<SessionCreateSchemaType>) {
-    try {
-      await swr.trigger(data);
-      toast.success("Successfully created a new group session.");
-      reset();
-    } catch (err) {
-      toast.error(`Error - ${(err as Error).message}`);
-    }
+    await swr.trigger(data).catch(() => null);
   }
 
   return (
@@ -72,7 +73,7 @@ export function SessionCreateForm() {
       <CardContent>
         <form id="form-create-session" onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
-            <div className="flex flex-row gap-2 max-[350px]:flex-col">
+            <div className="flex flex-row gap-2 max-[350px]:flex-col max-[350px]:gap-7">
               <Controller
                 name="name"
                 control={form.control}

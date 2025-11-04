@@ -26,7 +26,11 @@ export function ThemeCycler() {
   }
 
   return (
-    <Button variant="outline" size="icon-lg" onClick={cycleTheme}>
+    <Button
+      variant="outline"
+      size="icon-lg"
+      onClick={cycleTheme}
+      aria-label="Cycle theme">
       {theme === "light" && <Sun className="size-[1.2rem]" />}
       {theme === "dark" && <Moon className="size-[1.2rem]" />}
       {theme === "system" && <Monitor className="size-[1.2rem]" />}

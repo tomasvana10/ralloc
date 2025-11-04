@@ -1,8 +1,13 @@
 import type { GroupSessionData } from "@/db/session";
-import useSWRMutation from "swr/mutation";
+import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import useSWR, { type SWRConfiguration } from "swr";
 import type { SessionCreateSchemaType } from "@/components/forms/session-create";
 import type z from "zod";
+
+function throwIfUnauthorised(res: Response) {
+  if (res.url.includes("/signin"))
+    throw new Error("You are unauthenticated. Please reload the page.");
+}
 
 export function useGetGroupSessionsSWR(
   hostId: string,
@@ -12,7 +17,9 @@ export function useGetGroupSessionsSWR(
     `/api/host/${hostId}/sessions`,
     async url => {
       const res = await fetch(url);
-      if (!res.ok) throw new Error("Your group sessions could not be fetched");
+      throwIfUnauthorised(res);
+
+      if (!res.ok) throw new Error("Your group sessions couldn't be fetched");
       return (await res.json()).data;
     },
     {
@@ -25,7 +32,9 @@ export function useGetGroupSessionsSWR(
   return { data: data ?? [], ...rest };
 }
 
-export function useCreateGroupSessionSWR() {
+export function useCreateGroupSessionSWRMutation(
+  options?: Partial<SWRMutationConfiguration<any, Error, string>>
+) {
   return useSWRMutation(
     "/api/sessions",
     async (
@@ -37,13 +46,42 @@ export function useCreateGroupSessionSWR() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg),
       });
+      throwIfUnauthorised(res);
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data?.error?.message ?? "Unknown error");
+        throw new Error(data.error?.message ?? "Unknown error");
       }
 
       return res.json();
-    }
+    },
+    { ...options }
+  );
+}
+
+export function useDeleteGroupSessionsSWRMutation(
+  options?: Partial<SWRMutationConfiguration<string[], Error, string>>
+) {
+  return useSWRMutation(
+    "/api/sessions",
+    async (url: string, { arg: codes }: { arg: string[] }) => {
+      await Promise.all(
+        codes.map(async code => {
+          const res = await fetch(`${url}/${code}`, { method: "DELETE" });
+          throwIfUnauthorised(res);
+
+          if (!res.ok) {
+            if (res.status === 403)
+              throw new Error("You do not own this session");
+            else {
+              const data = await res.json();
+              throw new Error(data.error?.message ?? "Unknown error");
+            }
+          }
+        })
+      );
+      return codes;
+    },
+    { ...options }
   );
 }
