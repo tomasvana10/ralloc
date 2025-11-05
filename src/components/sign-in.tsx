@@ -38,13 +38,11 @@ export function SignInForm({ callbackUrl }: Props) {
         await signIn("google", {
           redirectTo: callbackUrl ?? "/",
         });
-      }}
-    >
+      }}>
       <Button
         type="submit"
         variant="outline"
-        className="flex whitespace-normal h-auto min-h-[2.5rem]"
-      >
+        className="flex whitespace-normal h-auto min-h-[2.5rem]">
         <Image
           src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
           alt="google logo"

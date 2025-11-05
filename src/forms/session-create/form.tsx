@@ -35,7 +35,7 @@ import { Switch } from "@/components/ui/switch";
 
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
-  const swr = useCreateGroupSessionSWRMutation({
+  const creator = useCreateGroupSessionSWRMutation({
     onSuccess: () => {
       toast.success("Successfully created a new group session");
       reset();
@@ -67,7 +67,7 @@ export function SessionCreateForm() {
   }, [form, state.setData]);
 
   async function onSubmit(data: z.output<SessionCreateSchemaType>) {
-    await swr.trigger(data).catch(() => null);
+    await creator.trigger(data).catch(() => null);
   }
 
   return (
@@ -216,8 +216,8 @@ export function SessionCreateForm() {
               type="submit"
               form="form-create-session"
               className="transition-none"
-              disabled={swr.isMutating}>
-              {swr.isMutating ? <Spinner /> : null}Create
+              disabled={creator.isMutating}>
+              {creator.isMutating ? <Spinner /> : null}Create
             </Button>
             <Controller
               name="locked"

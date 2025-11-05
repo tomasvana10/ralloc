@@ -6,11 +6,7 @@ import {
 import { CircleQuestionMark } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-interface Props {
-  tip: React.ReactNode;
-}
-
-export function SimpleTooltip({ tip }: Props) {
+export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {
   return (
     <>
       {/* desktop */}
