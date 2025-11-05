@@ -73,7 +73,7 @@ export function SessionJoinForm() {
                     onChange={val => {
                       const clean = val
                         .replace(
-                          new RegExp(`[^${SESSION_CODE_CHARACTERS}]`, "g"),
+                          new RegExp(`[^${SESSION_CODE_CHARACTERS}A-Z]`, "g"),
                           ""
                         )
                         .toLowerCase();
