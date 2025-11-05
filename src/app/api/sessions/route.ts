@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { sessionCreateSchema } from "@/components/forms/session-create";
+import { sessionCreateSchema } from "@/forms/session-create";
 import { setGroupSession } from "@/db/session";
 import { getHostedSessionCount } from "@/db/session/helpers";
 import { MAX_USER_SESSIONS } from "@/lib/constants";

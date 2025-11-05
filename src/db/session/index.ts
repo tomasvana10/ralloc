@@ -1,7 +1,7 @@
 import {
   sessionCreateSchema,
   type SessionCreateSchemaType,
-} from "@/components/forms/session-create";
+} from "@/forms/session-create";
 import z from "zod";
 import redis, { k, REDIS_SEP } from "../redis";
 import { Seed } from "@/lib/seed";

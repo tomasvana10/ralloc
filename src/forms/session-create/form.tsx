@@ -10,13 +10,18 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../ui/card";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../../ui/field";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
-import { SimpleTooltip } from "../../tooltip";
-import { Spinner } from "../../ui/spinner";
+} from "../../components/ui/card";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "../../components/ui/field";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { SimpleTooltip } from "../../components/tooltip";
+import { Spinner } from "../../components/ui/spinner";
 import { Seed } from "@/lib/seed";
 import { toast } from "sonner";
 import {
