@@ -17,5 +17,5 @@ export function getZodSafeParseErrorResponse<T>(
   parseResult: z.ZodSafeParseError<T>
 ) {
   const { name, message } = parseResult.error;
-  return Response.json({ name, message }, { status: 400 });
+  return Response.json({ error: { message, name } }, { status: 400 });
 }
