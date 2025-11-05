@@ -37,7 +37,6 @@ import {
   EmptyTitle,
 } from "./ui/empty";
 import Link from "next/link";
-import { Skeleton } from "./ui/skeleton";
 import { Spinner } from "./ui/spinner";
 
 type SelectedSessionsState = Set<string>;
@@ -90,7 +89,7 @@ export function MySessions({ userId }: { userId: string }) {
     new Set<string>()
   );
 
-  if (swrGetter.isLoading) return <Skeleton className="h-72 w-full" />;
+  if (swrGetter.isLoading) return <MySessionsLoading />;
   if (!swrGetter.data.length) return <MySessionsEmpty />;
 
   return (
@@ -259,5 +258,13 @@ function MySessionsEmpty() {
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
+  );
+}
+
+function MySessionsLoading() {
+  return (
+    <div className="flex justify-center p-6 md:p-12">
+      <Spinner className="size-24 stroke-1" />
+    </div>
   );
 }

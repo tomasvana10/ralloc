@@ -119,7 +119,7 @@ export function SessionCreateForm() {
                       value={String(field.value)}
                       onChange={field.onChange}
                       onKeyDown={e => {
-                        if (!/[0-9]|Backspace|Arrow/.test(e.key))
+                        if (!/[0-9]|Backspace|Arrow|Tab/.test(e.key))
                           e.preventDefault();
                       }}
                       id="form-create-session-group-size"
@@ -163,14 +163,8 @@ export function SessionCreateForm() {
                       tip={
                         <>
                           <p>
-                            An expandable, comma-separated list of regex-like
-                            expression to create a set of group names.
-                          </p>
-                          <br />
-                          <p>
-                            Supports a single numerical range (like{" "}
-                            <code>[1-50]</code>) and two character ranges (like{" "}
-                            <code>[a-z]</code> or <code>[A-Z]</code>).
+                            An comma-separated list of regex-like expressions or
+                            plain text to create a set of group names.
                           </p>
                           <br />
                           <p>
@@ -178,6 +172,15 @@ export function SessionCreateForm() {
                             {Seed.MAX_PARTS}. Any expanded values greater than{" "}
                             {Seed.MAX_PART_LENGTH} characters in length will be
                             truncated.
+                          </p>
+                          <br />
+                          <p>
+                            <b>Example 1:</b> <code>table [b-a]</code> yields{" "}
+                            <code>table b</code>, <code>table a</code>
+                            <br />
+                            <b>Example 2:</b> <code>a,b,[1-2]</code> yields{" "}
+                            <code>a</code>, <code>b</code>, <code>1</code>,{" "}
+                            <code>2</code>
                           </p>
                         </>
                       }
@@ -187,7 +190,7 @@ export function SessionCreateForm() {
                     {...field}
                     type="text"
                     autoComplete="off"
-                    placeholder="Router 10.0.1.1[10-50], Router 10.0.1.101"
+                    placeholder="Router 10.0.1.1[10-50], Router 10.0.1.101, Table [z-a]"
                     id="form-create-session-group-seed"
                     aria-invalid={fieldState.invalid}
                   />
