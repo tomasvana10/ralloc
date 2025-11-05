@@ -6,6 +6,7 @@ export const defaultSessionCreateData: SessionCreateSchemaType = {
   groupSize: 2,
   name: "",
   description: "",
+  locked: false,
 };
 
 export const useSessionCreateStore = create<{

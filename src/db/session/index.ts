@@ -62,10 +62,10 @@ export async function getGroups(
   return (await tx.exec()) as unknown as GroupSessionGroups;
 }
 
-export async function getGroupSession(
+export async function assembleGroupSession(
   metadata: Record<string, string>,
-  code: string,
-  hostId: string
+  hostId: string,
+  code: string
 ) {
   const parsedMetadata: GroupSessionMetadata = {
     ...metadata,
@@ -75,6 +75,7 @@ export async function getGroupSession(
     groupSize: Number(metadata.groupSize),
     name: metadata.name,
     description: metadata.description,
+    locked: Boolean(+metadata.locked),
   };
 
   const session: GroupSessionData = {
@@ -94,7 +95,7 @@ export async function getGroupSessionByCode(code: string) {
   const metadata = await redis.hGetAll(paths.metadata(hostId, code));
   if (!metadata) return null;
 
-  return await getGroupSession(metadata, code, hostId);
+  return await assembleGroupSession(metadata, hostId, code);
 }
 
 export async function getGroupSessionsOfHost(hostId: string) {
@@ -108,7 +109,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
       const code = parts[5];
 
       sessions.push(
-        await getGroupSession(await redis.hGetAll(key), code, hostId)
+        await assembleGroupSession(await redis.hGetAll(key), hostId, code)
       );
     }
   }
@@ -129,9 +130,39 @@ export async function setGroupSession(
 
   await redis.hSet(paths.metadata(hostId, code), {
     ...metadata,
+    locked: Number(metadata.locked).toString(),
     groupNames: JSON.stringify(metadata.groupNames),
   });
   await redis.set(paths.sessionHost(code), hostId);
+}
+
+export async function updateGroupSession(
+  data: Partial<z.output<typeof sessionCreateSchema>>,
+  hostId: string,
+  code: string
+) {
+  const _data = Object.fromEntries(
+    Object.entries(data).map(([key, value]) => {
+      let val: string;
+
+      switch (typeof value) {
+        case "boolean":
+          val = Number(value).toString();
+          break;
+        case "number":
+          val = value.toString();
+          break;
+        case "string":
+          val = value;
+          break;
+        default:
+          val = JSON.stringify(value);
+      }
+
+      return [key, val];
+    })
+  );
+  await redis.hSet(paths.metadata(hostId, code), _data);
 }
 
 export async function deleteGroupSession(hostId: string, code: string) {

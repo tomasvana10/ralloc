@@ -5,7 +5,7 @@ export const sessionCreateSchema = z.object({
   groupSeed: z
     .string()
     .min(5, "Seed must be at least 5 characters")
-    .max(150, "Seed must be at most 150 characters")
+    .max(250, "Seed must be at most 250 characters")
     .superRefine((val, ctx) => {
       const result = Seed.expand(val);
       if (result.issue === undefined) return;
@@ -60,6 +60,7 @@ export const sessionCreateSchema = z.object({
       val => !val || val.length >= 10,
       "Description must be at least 10 characters"
     ),
+  locked: z.boolean(),
 });
 
 export type SessionCreateSchemaType = z.infer<typeof sessionCreateSchema>;

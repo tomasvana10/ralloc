@@ -6,7 +6,9 @@ import {
   CheckIcon,
   ChevronRightIcon,
   LinkIcon,
+  LockIcon,
   TrashIcon,
+  UnlockIcon,
   XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,6 +24,7 @@ import {
 import {
   useDeleteGroupSessionsSWRMutation,
   useGetGroupSessionsSWR,
+  usePatchGroupSessionSWRMutation,
 } from "@/lib/hooks/swr/group-sessions";
 import * as React from "react";
 import { ScrollArea } from "./ui/scroll-area";
@@ -68,20 +71,26 @@ function selectedSessionsReducer(
 export function MySessions({ userId }: { userId: string }) {
   const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
 
-  const swrGetter = useGetGroupSessionsSWR(userId, {
+  const getter = useGetGroupSessionsSWR(userId, {
     onError: err =>
       toast.error(err.message, {
         id: "getGroupSessionsSWRErr",
       }),
   });
-  const swrDeleter = useDeleteGroupSessionsSWRMutation({
+  const deleter = useDeleteGroupSessionsSWRMutation({
     onSuccess: () => {
       toast.success("The selected sessions were deleted.");
       dispatchSelectedSession({ type: "clear" });
-      swrGetter.mutate();
+      getter.mutate();
     },
     onError: err =>
       toast.error(err.message, { id: "deleteGroupSessionsSWRErr" }),
+  });
+  const patcher = usePatchGroupSessionSWRMutation({
+    // used specifically to lock/unlock a session rn
+    onSuccess: () => getter.mutate(),
+    onError: err =>
+      toast.error(err.message, { id: "patchGroupSessionsSWRErr" }),
   });
 
   const [selectedSessions, dispatchSelectedSession] = React.useReducer(
@@ -89,8 +98,8 @@ export function MySessions({ userId }: { userId: string }) {
     new Set<string>()
   );
 
-  if (swrGetter.isLoading) return <MySessionsLoading />;
-  if (!swrGetter.data.length) return <MySessionsEmpty />;
+  if (getter.isLoading) return <MySessionsLoading />;
+  if (!getter.data.length) return <MySessionsEmpty />;
 
   return (
     <>
@@ -101,12 +110,14 @@ export function MySessions({ userId }: { userId: string }) {
             "flex flex-col max-h-[calc(100vh-20rem)]",
             hasScrollbar ? "pr-2" : "pr-0"
           )}>
-          {swrGetter.data.map(session => (
+          {getter.data.map(session => (
             <SessionBlock
               data={session}
               key={session.code}
               state={selectedSessions}
               dispatch={dispatchSelectedSession}
+              patcher={patcher}
+              getter={getter}
             />
           ))}
         </div>
@@ -116,8 +127,7 @@ export function MySessions({ userId }: { userId: string }) {
           <SessionActionItem
             state={selectedSessions}
             dispatch={dispatchSelectedSession}
-            deleteCallback={swrDeleter.trigger}
-            isDeleterMutating={swrDeleter.isMutating}
+            deleter={deleter}
           />
         ) : null}
       </AnimatePresence>
@@ -128,15 +138,11 @@ export function MySessions({ userId }: { userId: string }) {
 function SessionActionItem({
   state,
   dispatch,
-  deleteCallback,
-  isDeleterMutating,
+  deleter,
 }: {
   state: SelectedSessionsState;
   dispatch: React.Dispatch<SelectedSessionsAction>;
-  deleteCallback: ReturnType<
-    typeof useDeleteGroupSessionsSWRMutation
-  >["trigger"];
-  isDeleterMutating: boolean;
+  deleter: ReturnType<typeof useDeleteGroupSessionsSWRMutation>;
 }) {
   return (
     <motion.div
@@ -154,11 +160,11 @@ function SessionActionItem({
         <ItemActions>
           <Button
             onClick={async () =>
-              await deleteCallback(Array.from(state)).catch(() => null)
+              await deleter.trigger(Array.from(state)).catch(() => null)
             }
             variant="destructive"
             aria-label="Delete session(s)">
-            {isDeleterMutating ? <Spinner /> : <TrashIcon />}
+            {deleter.isMutating ? <Spinner /> : <TrashIcon />}
           </Button>
           <Button
             onClick={() => dispatch({ type: "clear" })}
@@ -175,14 +181,19 @@ function SessionBlock({
   data,
   state,
   dispatch,
+  patcher,
+  getter,
 }: {
   data: GroupSessionData;
   state: SelectedSessionsState;
   dispatch: React.Dispatch<SelectedSessionsAction>;
+  patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
+  getter: ReturnType<typeof useGetGroupSessionsSWR>;
 }) {
   const [copyStatus, setCopyStatus] = React.useState<"copied" | "default">(
     "default"
   );
+  const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
   const handleCopy = async () => {
     if (copyStatus === "copied") return;
@@ -222,6 +233,35 @@ function SessionBlock({
           </div>
         </ItemContent>
         <ItemActions>
+          <Button
+            variant="outline"
+            size="icon-lg"
+            aria-label="Lock or unlock session"
+            disabled={isMutatingThis}
+            onClick={async () => {
+              setIsMutatingThis(true);
+              getter.mutate(
+                prev =>
+                  prev?.map(session =>
+                    session.code === data.code
+                      ? { ...session, locked: !data.locked }
+                      : session
+                  ) ?? [],
+                { revalidate: false }
+              );
+              await patcher
+                .trigger({ code: data.code, data: { locked: !data.locked } })
+                .catch(() => null);
+              setIsMutatingThis(false);
+            }}>
+            {isMutatingThis ? (
+              <Spinner />
+            ) : data.locked ? (
+              <LockIcon />
+            ) : (
+              <UnlockIcon />
+            )}
+          </Button>
           <Button
             variant="outline"
             size="icon-lg"

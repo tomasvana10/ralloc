@@ -85,3 +85,34 @@ export function useDeleteGroupSessionsSWRMutation(
     { ...options }
   );
 }
+
+export function usePatchGroupSessionSWRMutation(
+  options?: Partial<SWRMutationConfiguration<any, Error, string>>
+) {
+  return useSWRMutation(
+    "/api/sessions",
+    async (
+      url: string,
+      {
+        arg,
+      }: {
+        arg: { code: string; data: Partial<z.output<SessionCreateSchemaType>> };
+      }
+    ) => {
+      const res = await fetch(`${url}/${arg.code}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(arg.data),
+      });
+      throwIfUnauthorised(res);
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error?.message ?? "Unknown error");
+      }
+
+      return res.json();
+    },
+    { ...options }
+  );
+}

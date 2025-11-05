@@ -31,6 +31,7 @@ import {
 } from ".";
 import React from "react";
 import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
+import { Switch } from "@/components/ui/switch";
 
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
@@ -210,15 +211,34 @@ export function SessionCreateForm() {
       </CardContent>
       <CardFooter>
         <Field orientation="horizontal">
-          <Button type="button" variant="destructive" onClick={reset}>
-            Reset
-          </Button>
-          <Button
-            type="submit"
-            form="form-create-session"
-            className="transition-none">
-            {swr.isMutating ? <Spinner /> : null}Create
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              type="submit"
+              form="form-create-session"
+              className="transition-none"
+              disabled={swr.isMutating}>
+              {swr.isMutating ? <Spinner /> : null}Create
+            </Button>
+            <Controller
+              name="locked"
+              control={form.control}
+              render={({ field }) => (
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="form-create-session-locked"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  <FieldLabel
+                    htmlFor="form-create-session-locked"
+                    className="text-sm select-none cursor-pointer">
+                    Locked
+                  </FieldLabel>
+                  <SimpleTooltip tip="Whether users can join groups or not. You can change this later." />
+                </div>
+              )}
+            />
+          </div>
         </Field>
       </CardFooter>
     </Card>
