@@ -16,9 +16,9 @@ export const sessionJoinSchema = z.object({
     )
     .regex(
       REGEXP_CODE,
-      `Code must be alphanumeric. These characters are never used in a code: ${Array.from(
+      `Code must be alphanumeric and lowercased. The characters ${Array.from(
         SESSION_CODE_CHARACTERS_EXCLUDE
-      ).join(", ")}`
+      ).join(", ")} are never used in a code.`
     ),
 });
 

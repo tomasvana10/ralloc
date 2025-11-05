@@ -45,7 +45,7 @@ export function SessionCreateForm() {
   >({
     resolver: zodResolver(sessionCreateSchema),
     defaultValues: state.data,
-    mode: "onChange",
+    mode: "onBlur",
   });
 
   const reset = () => {
@@ -117,7 +117,11 @@ export function SessionCreateForm() {
                       inputMode="numeric"
                       min={1}
                       value={String(field.value)}
-                      onChange={e => field.onChange(e.target.value)}
+                      onChange={field.onChange}
+                      onKeyDown={e => {
+                        if (!/[0-9]|Backspace|Arrow/.test(e.key))
+                          e.preventDefault();
+                      }}
                       id="form-create-session-group-size"
                       aria-invalid={fieldState.invalid}
                     />

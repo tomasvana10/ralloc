@@ -15,13 +15,14 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
-import { SESSION_CODE_LENGTH } from "@/lib/constants";
+import { SESSION_CODE_CHARACTERS, SESSION_CODE_LENGTH } from "@/lib/constants";
 import {
   sessionJoinSchema,
   useSessionJoinStore,
   type SessionJoinSchemaType,
 } from ".";
 import * as React from "react";
+import { toast } from "sonner";
 
 export function SessionJoinForm() {
   const state = useSessionJoinStore();
@@ -29,6 +30,7 @@ export function SessionJoinForm() {
   const form = useForm<SessionJoinSchemaType>({
     resolver: zodResolver(sessionJoinSchema),
     defaultValues: state.data,
+    mode: "onSubmit",
   });
 
   const reset = () => {
@@ -44,7 +46,7 @@ export function SessionJoinForm() {
   }, [form, state.setData]);
 
   function onSubmit(data: SessionJoinSchemaType) {
-    reset();
+    toast(data.code);
   }
 
   return (
@@ -52,8 +54,9 @@ export function SessionJoinForm() {
       <CardHeader>
         <CardTitle>Join a Group Session</CardTitle>
         <CardDescription>
-          Join a group session using a code. You can paste the code or type it
-          manually.
+          Join a group session using a{" "}
+          <strong>lowercase, alphanumeric code</strong>. You can paste the code
+          or type it manually.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -67,7 +70,15 @@ export function SessionJoinForm() {
                   <InputOTP
                     maxLength={SESSION_CODE_LENGTH}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={val => {
+                      const clean = val
+                        .replace(
+                          new RegExp(`[^${SESSION_CODE_CHARACTERS}]`, "g"),
+                          ""
+                        )
+                        .toLowerCase();
+                      field.onChange(clean);
+                    }}
                     aria-invalid={fieldState.invalid}>
                     <InputOTPGroup className="flex-wrap">
                       {Array.from({ length: SESSION_CODE_LENGTH }, (_, i) => (

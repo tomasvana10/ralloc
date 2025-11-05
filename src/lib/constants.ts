@@ -1,7 +1,7 @@
 export const SESSION_CODE_LENGTH = 6;
-export const SESSION_CODE_CHARACTERS_EXCLUDE = "0OIl1"; // exclude similar-looking characters for code legibility
+export const SESSION_CODE_CHARACTERS_EXCLUDE = "0l1"; // exclude similar-looking characters for code legibility
 export const SESSION_CODE_CHARACTERS = Array.from(
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  "abcdefghijklmnopqrstuvwxyz0123456789"
 )
   .filter(char => !SESSION_CODE_CHARACTERS_EXCLUDE.includes(char))
   .join("");

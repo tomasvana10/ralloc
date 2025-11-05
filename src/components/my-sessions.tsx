@@ -5,7 +5,7 @@ import {
   BrushCleaningIcon,
   CheckIcon,
   ChevronRightIcon,
-  CopyIcon,
+  LinkIcon,
   TrashIcon,
   XIcon,
 } from "lucide-react";
@@ -189,7 +189,9 @@ function SessionBlock({
     if (copyStatus === "copied") return;
 
     setCopyStatus("copied");
-    await navigator.clipboard.writeText(data.code);
+    await navigator.clipboard.writeText(
+      `${process.env.NEXT_PUBLIC_URL}/s/${data.code}`
+    );
     await new Promise(resolve => setTimeout(resolve, 1000));
     setCopyStatus("default");
   };
@@ -227,14 +229,16 @@ function SessionBlock({
             aria-label="Copy session code"
             onClick={handleCopy}>
             {copyStatus === "default" ? (
-              <CopyIcon className="size-4" />
+              <LinkIcon className="size-4" />
             ) : (
               <CheckIcon className="size-4" />
             )}
           </Button>
-          <Button variant="outline" size="icon-lg" aria-label="Go to session">
-            <ChevronRightIcon className="size-4" />
-          </Button>
+          <Link href={`/s/${data.code}`}>
+            <Button variant="outline" size="icon-lg" aria-label="Go to session">
+              <ChevronRightIcon className="size-4" />
+            </Button>
+          </Link>
         </ItemActions>
       </Label>
     </Item>

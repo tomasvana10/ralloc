@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function RootPage() {
   return (
-    <div className="flex flex-col gap-2 overflow-auto">
+    <div className="flex flex-col gap-2">
       <RoutedMainTabs />
       <HomeCards />
     </div>
