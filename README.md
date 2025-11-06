@@ -60,7 +60,7 @@ AUTH_<provider>_SECRET=...
 - [ ] Create `CONTRIBUTING.md`
 - [ ] Create support/help page (on the website or on github)
 - [ ] Implement group control - UI, websockets, etc.
-- [ ] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<userId>:<groupName>)
+- [ ] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<userId>:<groupName>`)
 - [ ] Consider Lua scripting to ensure atomicity when joining/leaving a group
 - [ ] Consider sliding window rate limits with redis based on user id
 - [ ] Consider adding alternative authentication methods (`GitHub`)
