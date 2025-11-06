@@ -43,7 +43,8 @@ AUTH_<provider>_SECRET=...
 ### Running with docker
 
 1. `cd .docker`
-2. **Build and up the images**: `docker compose -f compose.<prod | dev>.yaml up --build` (-d to start detached).
+2. Add any new runtime environment variables to [prod.Dockerfile](https://github.com/tomasvana10/ralloc/blob/main/.docker/prod.Dockerfile)
+3. **Build and up the images**: `docker compose -f compose.<prod | dev>.yaml up --build` (-d to start detached).
 
 ### Running without docker
 
