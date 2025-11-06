@@ -1,9 +1,13 @@
 services:
   ralloc:
     container_name: ralloc
+    # comment out if running without ci
     image: ghcr.io/tomasvana10/ralloc:latest
+    # comment out if running without ci
     labels:
       - com.centurylinklabs.watchtower.enable=true
+    
+    # uncomment if running with ci
     # build:
     #  context: ../
     #  dockerfile: .docker/prod.Dockerfile
@@ -36,6 +40,7 @@ services:
     networks:
       - ralloc_net
   
+  # comment out if runnning without ci
   watchtower:
     image: containrrr/watchtower
     container_name: ralloc-watchtower
