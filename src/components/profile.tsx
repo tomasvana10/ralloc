@@ -14,7 +14,7 @@ import { ClientAvatar } from "./avatar";
 
 async function handleSignOut() {
   "use server";
-  await signOut({ redirectTo: "/signin" });
+  await signOut({ redirectTo: "/auth/signin" });
 }
 
 export async function Profile() {
