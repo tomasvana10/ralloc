@@ -44,14 +44,24 @@ AUTH_<provider>_SECRET=...
 
 ### Running with docker
 
-1. `cd .docker`
-2. Build and up the images using `docker compose -f compose.<prod | dev>.yaml up --build` (`-d` to start detached).
+1. `docker network create ralloc_net`
+2. `cd .docker`
+
+**In development**: `docker compose -f compose.dev.yaml up --build` (`-d` to start detached).
+
+**In production with CI/CD**:
+1. `docker compose -f compose.prod-ci.yaml pull`
+2. `docker compose -f compose.prod-ci.yaml up`
+
+**In production without CI/CD**:
+1. `docker compose -f compose.prod-local.yaml up --build`
+
 
 ### Running without docker
 
-**For development**: `npm run dev`
+**In development**: `npm run dev`
 
-**For production**:
+**In production**:
 
 1. Remove `output: "standalone"` from `next.config.ts`.
 2. `npm run build && npm run start`
