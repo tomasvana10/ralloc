@@ -19,7 +19,11 @@ export function useGetGroupSessionsSWR(
       const res = await fetch(url);
       throwIfUnauthorised(res);
 
-      if (!res.ok) throw new Error("Your group sessions couldn't be fetched");
+      if (!res.ok) {
+        if (res.status === 403)
+          throw new Error("You do not own these sessions");
+        throw new Error("Your group sessions couldn't be fetched");
+      }
       return (await res.json()).data;
     },
     {
