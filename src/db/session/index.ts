@@ -5,7 +5,7 @@ import type {
 } from "@/forms/session-create";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
 import { Seed } from "@/lib/seed";
-import { generateSessionCode } from "@/lib/session";
+import { generateSessionCode } from "@/lib/utils";
 import redis, { k, REDIS_SEP } from "../redis";
 import { getHostId } from "./helpers";
 

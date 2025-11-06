@@ -1,6 +1,6 @@
 import Image from "next/image";
-import type { ProviderId } from "next-auth/providers";
 import { signIn } from "@/auth";
+import { PROVIDER_SVGS } from "@/lib/constants";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -10,13 +10,7 @@ import {
   CardTitle,
 } from "./ui/card";
 
-const providerSvgs = {
-  google: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
-  github:
-    "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
-} as const satisfies Partial<Record<ProviderId, string>>;
-
-type SupportedProvider = keyof typeof providerSvgs;
+type SupportedProvider = keyof typeof PROVIDER_SVGS;
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (
@@ -29,7 +23,7 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 [&>form]:flex-1 [&>form>button]:w-full [&>form>button]:whitespace-nowrap">
-          {(Object.keys(providerSvgs) as SupportedProvider[]).map(
+          {(Object.keys(PROVIDER_SVGS) as SupportedProvider[]).map(
             (provider) => (
               <SignInForm
                 key={provider}
@@ -65,7 +59,7 @@ export function SignInForm({
         variant="outline"
         className="flex whitespace-normal h-auto min-h-[2.5rem]">
         <Image
-          src={providerSvgs[provider]}
+          src={PROVIDER_SVGS[provider]}
           alt={`${provider} logo`}
           width="20"
           height="20"
