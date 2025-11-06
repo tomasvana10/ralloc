@@ -1,9 +1,12 @@
 services:
   ralloc:
     container_name: ralloc
-    build:
-      context: ../
-      dockerfile: .docker/prod.Dockerfile
+    image: ghcr.io/tomasvana10/ralloc:latest
+    labels:
+      - com.centurylinklabs.watchtower.enable=true
+    # build:
+    #  context: ../
+    #  dockerfile: .docker/prod.Dockerfile
     env_file:
       - ../.env.production
       - ../.env.local
@@ -30,6 +33,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 3
+    networks:
+      - ralloc_net
+  
+  watchtower:
+    image: containrrr/watchtower
+    container_name: ralloc-watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_POLL_INTERVAL=300
+      - WATCHTOWER_INCLUDE_STOPPED=false
+      - WATCHTOWER_LABEL_ENABLE=true
     networks:
       - ralloc_net
 
