@@ -1,0 +1,42 @@
+services:
+  ralloc-dev:
+    container_name: ralloc-dev
+    build:
+      context: ../
+      dockerfile: .docker/dev.Dockerfile
+    env_file:
+      - ../.env.development
+      - ../.env.local
+    volumes:
+      - ../src:/app/src
+      - ../public:/app/public
+    # restart: unless-stopped
+    ports:
+      - 3000:3000
+    networks:
+      - ralloc_net
+    depends_on:
+      redis:
+        condition: service_started
+
+  redis:
+    image: redis:8-alpine
+    container_name: ralloc-dev-redis
+    # restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./ralloc_dev_redis_data:/data
+      - ../redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - ralloc_net
+
+
+networks:
+  ralloc_net:
+    external: true
+
+
+volumes:
+  ralloc_dev_redis_data:
+    driver: local

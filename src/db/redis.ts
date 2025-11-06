@@ -1,7 +1,7 @@
 import { createClient } from "redis";
 
 const redisClientSingleton = () => {
-  const client = createClient({ url: "redis://localhost:6379" });
+  const client = createClient({ url: "redis://redis:6379" });
   client.on("error", err => console.error("redis client error", err));
   client.connect().catch(console.error);
   return client;
