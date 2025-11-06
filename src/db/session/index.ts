@@ -40,12 +40,14 @@ export const paths = {
   // single group
   group: (hostId: string, code: string, index: number) =>
     k("host", hostId, "session", code, "group", index),
-  // all metadata keys for a particular host
-  patternAllHostMetadataKeys: (hostId: string) =>
-    k("host", hostId, "session", "*", "metadata"),
-  // metadata key, as well as group:0, group:1, etc for a particular host and session
-  patternAllHostSessionKeys: (hostId: string, code: string) =>
-    k("host", hostId, "session", code, "*"),
+  patterns: {
+    // all metadata keys for a particular host
+    allHostMetadataKeys: (hostId: string) =>
+      k("host", hostId, "session", "*", "metadata"),
+    // metadata key, as well as group:0, group:1, etc for a particular host and session
+    allHostSessionKeys: (hostId: string, code: string) =>
+      k("host", hostId, "session", code, "*"),
+  },
 };
 
 export async function getGroups(
@@ -102,7 +104,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
   const sessions: GroupSessionData[] = [];
 
   for await (const batch of redis.scanIterator({
-    MATCH: paths.patternAllHostMetadataKeys(hostId),
+    MATCH: paths.patterns.allHostMetadataKeys(hostId),
   })) {
     for (const key of batch) {
       const parts = key.split(REDIS_SEP);
@@ -169,7 +171,7 @@ export async function deleteGroupSession(hostId: string, code: string) {
   const keys: string[] = [];
 
   for await (const key of redis.scanIterator({
-    MATCH: paths.patternAllHostSessionKeys(hostId, code),
+    MATCH: paths.patterns.allHostSessionKeys(hostId, code),
   })) {
     keys.push(...key);
   }

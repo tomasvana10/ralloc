@@ -7,7 +7,7 @@ export async function getHostId(code: string) {
 
 export async function getHostedSessionCount(hostId: string) {
   let count = 0;
-  const pattern = paths.patternAllHostMetadataKeys(hostId);
+  const pattern = paths.patterns.allHostMetadataKeys(hostId);
 
   for await (const batch of redis.scanIterator({ MATCH: pattern })) {
     count += batch.length;
