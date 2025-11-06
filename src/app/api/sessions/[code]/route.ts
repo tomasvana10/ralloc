@@ -18,7 +18,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   if (session.user.id !== hostId)
     return Response.json(
       { error: { message: "unauthorised" } },
-      { status: 403 }
+      { status: 403 },
     );
 
   await deleteGroupSession(hostId, code);
@@ -32,7 +32,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
   if (!groupSession)
     return Response.json(
       { error: { message: "resource not found" } },
-      { status: 404 }
+      { status: 404 },
     );
 
   return Response.json({ data: groupSession });
@@ -46,7 +46,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   if (session.user.id !== hostId)
     return Response.json(
       { error: { message: "unauthorised" } },
-      { status: 403 }
+      { status: 403 },
     );
 
   const body = await req.json();
@@ -57,7 +57,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   if (!Object.keys(body).length)
     return Response.json(
       { error: { message: "no data provided" } },
-      { status: 400 }
+      { status: 400 },
     );
 
   await updateGroupSession(parseResult.data, hostId, code);

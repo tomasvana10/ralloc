@@ -1,5 +1,8 @@
-import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -14,15 +17,12 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { Button } from "@/components/ui/button";
 import { SESSION_CODE_CHARACTERS, SESSION_CODE_LENGTH } from "@/lib/constants";
 import {
+  type SessionJoinSchemaType,
   sessionJoinSchema,
   useSessionJoinStore,
-  type SessionJoinSchemaType,
 } from ".";
-import * as React from "react";
-import { toast } from "sonner";
 
 export function SessionJoinForm() {
   const state = useSessionJoinStore();
@@ -39,14 +39,15 @@ export function SessionJoinForm() {
   };
 
   React.useEffect(() => {
-    const sub = form.watch(data =>
-      state.setData(data as Partial<SessionJoinSchemaType>)
+    const sub = form.watch((data) =>
+      state.setData(data as Partial<SessionJoinSchemaType>),
     );
     return () => sub.unsubscribe();
   }, [form, state.setData]);
 
   function onSubmit(data: SessionJoinSchemaType) {
     toast(data.code);
+    reset();
   }
 
   return (
@@ -70,11 +71,11 @@ export function SessionJoinForm() {
                   <InputOTP
                     maxLength={SESSION_CODE_LENGTH}
                     value={field.value}
-                    onChange={val => {
+                    onChange={(val) => {
                       const clean = val
                         .replace(
                           new RegExp(`[^${SESSION_CODE_CHARACTERS}A-Z]`, "g"),
-                          ""
+                          "",
                         )
                         .toLowerCase();
                       field.onChange(clean);
@@ -85,6 +86,7 @@ export function SessionJoinForm() {
                         <InputOTPSlot
                           {...field}
                           index={i}
+                          // biome-ignore lint/suspicious/noArrayIndexKey: slots are fixed length and stable
                           key={`otp-slot-${i}`}
                         />
                       ))}

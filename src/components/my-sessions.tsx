@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   BrushCleaningIcon,
   CheckIcon,
@@ -11,27 +11,19 @@ import {
   UnlockIcon,
   XIcon,
 } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 import { toast } from "sonner";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-  ItemActions,
-} from "./ui/item";
+import type { GroupSessionData } from "@/db/session";
+import { useHasScrollbar } from "@/lib/hooks/scrollbar";
 import {
   useDeleteGroupSessionsSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
 } from "@/lib/hooks/swr/group-sessions";
-import * as React from "react";
-import { ScrollArea } from "./ui/scroll-area";
-import type { GroupSessionData } from "@/db/session";
-import { useHasScrollbar } from "@/lib/hooks/scrollbar";
 import { cn } from "@/lib/utils";
-import { Label } from "./ui/label";
+import { Button } from "./ui/button";
+import { Checkbox } from "./ui/checkbox";
 import {
   Empty,
   EmptyDescription,
@@ -39,7 +31,15 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "./ui/empty";
-import Link from "next/link";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "./ui/item";
+import { Label } from "./ui/label";
+import { ScrollArea } from "./ui/scroll-area";
 import { Spinner } from "./ui/spinner";
 
 type SelectedSessionsState = Set<string>;
@@ -51,7 +51,7 @@ type SelectedSessionsAction =
 
 function selectedSessionsReducer(
   state: Set<string>,
-  action: SelectedSessionsAction
+  action: SelectedSessionsAction,
 ): Set<string> {
   switch (action.type) {
     case "add":
@@ -72,7 +72,7 @@ export function MySessions({ userId }: { userId: string }) {
   const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
 
   const getter = useGetGroupSessionsSWR(userId, {
-    onError: err =>
+    onError: (err) =>
       toast.error(err.message, {
         id: "getGroupSessionsSWRErr",
       }),
@@ -83,19 +83,19 @@ export function MySessions({ userId }: { userId: string }) {
       dispatchSelectedSession({ type: "clear" });
       getter.mutate();
     },
-    onError: err =>
+    onError: (err) =>
       toast.error(err.message, { id: "deleteGroupSessionsSWRErr" }),
   });
   const patcher = usePatchGroupSessionSWRMutation({
     // used specifically to lock/unlock a session rn
     onSuccess: () => getter.mutate(),
-    onError: err =>
+    onError: (err) =>
       toast.error(err.message, { id: "patchGroupSessionsSWRErr" }),
   });
 
   const [selectedSessions, dispatchSelectedSession] = React.useReducer(
     selectedSessionsReducer,
-    new Set<string>()
+    new Set<string>(),
   );
 
   if (getter.isLoading) return <MySessionsLoading />;
@@ -108,9 +108,9 @@ export function MySessions({ userId }: { userId: string }) {
           ref={ref}
           className={cn(
             "flex flex-col max-h-[calc(100vh-20rem)]",
-            hasScrollbar ? "pr-2" : "pr-0"
+            hasScrollbar ? "pr-2" : "pr-0",
           )}>
-          {getter.data.map(session => (
+          {getter.data.map((session) => (
             <SessionBlock
               data={session}
               key={session.code}
@@ -191,7 +191,7 @@ function SessionBlock({
   getter: ReturnType<typeof useGetGroupSessionsSWR>;
 }) {
   const [copyStatus, setCopyStatus] = React.useState<"copied" | "default">(
-    "default"
+    "default",
   );
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
@@ -200,9 +200,9 @@ function SessionBlock({
 
     setCopyStatus("copied");
     await navigator.clipboard.writeText(
-      `${process.env.NEXT_PUBLIC_URL}/s/${data.code}`
+      `${process.env.NEXT_PUBLIC_URL}/s/${data.code}`,
     );
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setCopyStatus("default");
   };
 
@@ -219,7 +219,7 @@ function SessionBlock({
               id={data.code}
               checked={state.has(data.code)}
               aria-label="Select session"
-              onCheckedChange={checked =>
+              onCheckedChange={(checked) =>
                 dispatch({
                   type: checked ? "add" : "remove",
                   payload: data.code,
@@ -241,13 +241,13 @@ function SessionBlock({
             onClick={async () => {
               setIsMutatingThis(true);
               getter.mutate(
-                prev =>
-                  prev?.map(session =>
+                (prev) =>
+                  prev?.map((session) =>
                     session.code === data.code
                       ? { ...session, locked: !data.locked }
-                      : session
+                      : session,
                   ) ?? [],
-                { revalidate: false }
+                { revalidate: false },
               );
               await patcher
                 .trigger({ code: data.code, data: { locked: !data.locked } })

@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
   if (session.user.id !== hostId)
     return Response.json(
       { error: { message: "unauthorised" } },
-      { status: 403 }
+      { status: 403 },
     );
 
   return Response.json({ data: await getGroupSessionsOfHost(hostId) });

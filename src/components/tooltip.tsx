@@ -1,9 +1,9 @@
+import { CircleQuestionMark } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { CircleQuestionMark } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {

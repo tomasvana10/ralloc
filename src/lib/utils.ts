@@ -1,6 +1,6 @@
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import z from "zod";
+import type z from "zod";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -14,7 +14,7 @@ export function areSameCase(a: string, b: string) {
 }
 
 export function getZodSafeParseErrorResponse<T>(
-  parseResult: z.ZodSafeParseError<T>
+  parseResult: z.ZodSafeParseError<T>,
 ) {
   const { name, message } = parseResult.error;
   return Response.json({ error: { message, name } }, { status: 400 });

@@ -1,7 +1,7 @@
-import redis from "@/db/redis";
-import type { RouteContext } from "next-ws/server";
 import type { NextRequest } from "next/server";
+import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
+import redis from "@/db/redis";
 
 export function GET() {
   const headers = new Headers();
@@ -12,16 +12,16 @@ export function GET() {
 
 export async function UPGRADE(
   client: WebSocket,
-  server: WebSocketServer,
-  request: NextRequest,
-  ctx: RouteContext<"/api/ws/[code]">
+  _server: WebSocketServer,
+  _request: NextRequest,
+  ctx: RouteContext<"/api/ws/[code]">,
 ) {
   const { code } = ctx.params;
   const key = `session:${code}`;
 
   const sub = redis.duplicate();
   await sub.connect();
-  await sub.subscribe(key, msg => {
+  await sub.subscribe(key, (msg) => {
     if (client.readyState === client.OPEN) client.send(msg);
   });
 

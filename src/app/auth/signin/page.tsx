@@ -1,7 +1,7 @@
-import { auth } from "@/auth";
-import { SignInCard } from "@/components/sign-in";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { SignInCard } from "@/components/sign-in";
 
 export const metadata: Metadata = {
   title: "Sign In",

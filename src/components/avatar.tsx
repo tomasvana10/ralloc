@@ -1,7 +1,7 @@
 "use client";
 
+import type * as AvatarPrimitive from "@radix-ui/react-avatar";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import * as AvatarPrimitive from "@radix-ui/react-avatar";
 
 export function ClientAvatar({
   image,
@@ -15,7 +15,7 @@ export function ClientAvatar({
   const initials =
     name
       ?.split(" ")
-      .map(p => p[0])
+      .map((p) => p[0])
       .join("")
       .toUpperCase() ?? "?";
 

@@ -1,8 +1,15 @@
 "use client";
 
-import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import React from "react";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import type { z } from "zod";
+import { Switch } from "@/components/ui/switch";
+import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
+import { Seed } from "@/lib/seed";
+import { SimpleTooltip } from "../../components/tooltip";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,21 +24,14 @@ import {
   FieldGroup,
   FieldLabel,
 } from "../../components/ui/field";
-import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { SimpleTooltip } from "../../components/tooltip";
 import { Spinner } from "../../components/ui/spinner";
-import { Seed } from "@/lib/seed";
-import { toast } from "sonner";
+import { Textarea } from "../../components/ui/textarea";
 import {
+  type SessionCreateSchemaType,
   sessionCreateSchema,
   useSessionCreateStore,
-  type SessionCreateSchemaType,
 } from ".";
-import React from "react";
-import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
-import { Switch } from "@/components/ui/switch";
 
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
@@ -40,7 +40,7 @@ export function SessionCreateForm() {
       toast.success("Successfully created a new group session");
       reset();
     },
-    onError: err =>
+    onError: (err) =>
       toast.error(err.message, { id: "createGroupSessionSWRErr" }),
   });
 
@@ -60,8 +60,8 @@ export function SessionCreateForm() {
   };
 
   React.useEffect(() => {
-    const sub = form.watch(data =>
-      state.setData(data as Partial<SessionCreateSchemaType>)
+    const sub = form.watch((data) =>
+      state.setData(data as Partial<SessionCreateSchemaType>),
     );
     return () => sub.unsubscribe();
   }, [form, state.setData]);
@@ -124,7 +124,7 @@ export function SessionCreateForm() {
                       min={1}
                       value={String(field.value)}
                       onChange={field.onChange}
-                      onKeyDown={e => {
+                      onKeyDown={(e) => {
                         if (!/[0-9]|Backspace|Arrow|Tab/.test(e.key))
                           e.preventDefault();
                       }}

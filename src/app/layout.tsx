@@ -1,8 +1,8 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
+import type { Metadata } from "next";
 import { DefaultLayout } from "@/components/default-layout";
 import { Toaster } from "@/components/ui/sonner";
-import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: {

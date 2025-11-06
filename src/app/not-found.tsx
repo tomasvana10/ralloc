@@ -1,7 +1,7 @@
-import { Alert, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { AlertCircleIcon } from "lucide-react";
 import Link from "next/link";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (

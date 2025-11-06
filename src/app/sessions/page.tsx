@@ -1,7 +1,7 @@
-import { auth } from "@/auth";
-import { RoutedMainTabs } from "@/components/routed-tabs";
-import { MySessions } from "@/components/my-sessions";
 import type { Metadata } from "next";
+import { auth } from "@/auth";
+import { MySessions } from "@/components/my-sessions";
+import { RoutedMainTabs } from "@/components/routed-tabs";
 
 export const metadata: Metadata = {
   title: "Sessions",

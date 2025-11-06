@@ -1,8 +1,8 @@
-import { paths } from ".";
 import redis from "../redis";
+import { paths } from ".";
 
 export async function getHostId(code: string) {
-  return (await redis.get(paths.sessionHost(code)))!;
+  return await redis.get(paths.sessionHost(code));
 }
 
 export async function getHostedSessionCount(hostId: string) {

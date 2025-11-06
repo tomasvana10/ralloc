@@ -14,9 +14,9 @@ export const useSessionCreateStore = create<{
   setData: (data: Partial<SessionCreateSchemaType>) => void;
   reset: () => void;
   defaultData: SessionCreateSchemaType;
-}>(set => ({
+}>((set) => ({
   data: defaultSessionCreateData,
-  setData: update => set(state => ({ data: { ...state.data, ...update } })),
+  setData: (update) => set((state) => ({ data: { ...state.data, ...update } })),
   reset: () => set({ data: defaultSessionCreateData }),
   defaultData: defaultSessionCreateData,
 }));

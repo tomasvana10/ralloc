@@ -1,8 +1,8 @@
-import type { GroupSessionData } from "@/db/session";
-import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import useSWR, { type SWRConfiguration } from "swr";
-import type { SessionCreateSchemaType } from "@/forms/session-create";
+import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import type z from "zod";
+import type { GroupSessionData } from "@/db/session";
+import type { SessionCreateSchemaType } from "@/forms/session-create";
 
 function throwIfUnauthorised(res: Response) {
   if (res.url.includes("/signin"))
@@ -11,11 +11,11 @@ function throwIfUnauthorised(res: Response) {
 
 export function useGetGroupSessionsSWR(
   hostId: string,
-  options?: Partial<SWRConfiguration>
+  options?: Partial<SWRConfiguration>,
 ) {
   const { data, ...rest } = useSWR<GroupSessionData[], Error>(
     `/api/host/${hostId}/sessions`,
-    async url => {
+    async (url) => {
       const res = await fetch(url);
       throwIfUnauthorised(res);
 
@@ -26,20 +26,20 @@ export function useGetGroupSessionsSWR(
       errorRetryCount: 1,
       fallbackData: [],
       ...options,
-    }
+    },
   );
 
   return { data: data ?? [], ...rest };
 }
 
 export function useCreateGroupSessionSWRMutation(
-  options?: Partial<SWRMutationConfiguration<any, Error, string>>
+  options?: Partial<SWRMutationConfiguration<any, Error, string>>,
 ) {
   return useSWRMutation(
     "/api/sessions",
     async (
       url: string,
-      { arg }: { arg: z.output<SessionCreateSchemaType> }
+      { arg }: { arg: z.output<SessionCreateSchemaType> },
     ) => {
       const res = await fetch(url, {
         method: "POST",
@@ -55,18 +55,18 @@ export function useCreateGroupSessionSWRMutation(
 
       return res.json();
     },
-    { ...options }
+    { ...options },
   );
 }
 
 export function useDeleteGroupSessionsSWRMutation(
-  options?: Partial<SWRMutationConfiguration<string[], Error, string>>
+  options?: Partial<SWRMutationConfiguration<string[], Error, string>>,
 ) {
   return useSWRMutation(
     "/api/sessions",
     async (url: string, { arg: codes }: { arg: string[] }) => {
       await Promise.all(
-        codes.map(async code => {
+        codes.map(async (code) => {
           const res = await fetch(`${url}/${code}`, { method: "DELETE" });
           throwIfUnauthorised(res);
 
@@ -78,16 +78,16 @@ export function useDeleteGroupSessionsSWRMutation(
               throw new Error(data.error?.message ?? "Unknown error");
             }
           }
-        })
+        }),
       );
       return codes;
     },
-    { ...options }
+    { ...options },
   );
 }
 
 export function usePatchGroupSessionSWRMutation(
-  options?: Partial<SWRMutationConfiguration<any, Error, string>>
+  options?: Partial<SWRMutationConfiguration<any, Error, string>>,
 ) {
   return useSWRMutation(
     "/api/sessions",
@@ -97,7 +97,7 @@ export function usePatchGroupSessionSWRMutation(
         arg,
       }: {
         arg: { code: string; data: Partial<z.output<SessionCreateSchemaType>> };
-      }
+      },
     ) => {
       const res = await fetch(`${url}/${arg.code}`, {
         method: "PATCH",
@@ -113,6 +113,6 @@ export function usePatchGroupSessionSWRMutation(
 
       return res.json();
     },
-    { ...options }
+    { ...options },
   );
 }

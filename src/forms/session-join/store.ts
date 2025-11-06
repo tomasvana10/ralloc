@@ -10,9 +10,9 @@ export const useSessionJoinStore = create<{
   setData: (data: Partial<SessionJoinSchemaType>) => void;
   reset: () => void;
   defaultData: SessionJoinSchemaType;
-}>(set => ({
+}>((set) => ({
   data: defaultSessionJoinData,
-  setData: update => set(state => ({ data: { ...state.data, ...update } })),
+  setData: (update) => set((state) => ({ data: { ...state.data, ...update } })),
   reset: () => set({ data: defaultSessionJoinData }),
   defaultData: defaultSessionJoinData,
 }));

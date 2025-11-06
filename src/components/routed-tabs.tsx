@@ -1,10 +1,10 @@
 "use client";
 
+import type * as TabsPrimitive from "@radix-ui/react-tabs";
+import { HomeIcon, ListIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
-import * as TabsPrimitive from "@radix-ui/react-tabs";
-import { HomeIcon, ListIcon, type LucideIcon } from "lucide-react";
 
 export type RoutedTabData = {
   value: string;
@@ -24,7 +24,7 @@ export function RoutedTabs({
   return (
     <Tabs value={pathname} className={className} {...props}>
       <TabsList className="bg-secondary dark:bg-muted w-full">
-        {tabs.map(tab => (
+        {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value} asChild>
             <Link href={tab.value}>
               <tab.icon />

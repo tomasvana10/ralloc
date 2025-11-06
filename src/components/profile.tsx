@@ -1,6 +1,8 @@
 "use server";
 
 import { auth, signOut } from "@/auth";
+import { ClientAvatar } from "./avatar";
+import { Button } from "./ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,8 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Button } from "./ui/button";
-import { ClientAvatar } from "./avatar";
 
 async function handleSignOut() {
   "use server";

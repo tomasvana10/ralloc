@@ -1,6 +1,6 @@
+import Image from "next/image";
 import { signIn } from "@/auth";
 import { Button } from "./ui/button";
-import Image from "next/image";
 import {
   Card,
   CardContent,

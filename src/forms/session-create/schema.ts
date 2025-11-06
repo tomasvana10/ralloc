@@ -1,5 +1,5 @@
-import { Seed } from "@/lib/seed";
 import z from "zod";
+import { Seed } from "@/lib/seed";
 
 export const sessionCreateSchema = z.object({
   groupSeed: z
@@ -57,8 +57,8 @@ export const sessionCreateSchema = z.object({
     .max(500, "Description must be at most 500 characters")
     .optional()
     .refine(
-      val => !val || val.length >= 10,
-      "Description must be at least 10 characters"
+      (val) => !val || val.length >= 10,
+      "Description must be at least 10 characters",
     ),
   locked: z.boolean(),
 });

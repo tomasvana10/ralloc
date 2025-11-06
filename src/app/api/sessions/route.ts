@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
-import { sessionCreateSchema } from "@/forms/session-create";
 import { setGroupSession } from "@/db/session";
 import { getHostedSessionCount } from "@/db/session/helpers";
+import { sessionCreateSchema } from "@/forms/session-create";
 import { MAX_USER_SESSIONS } from "@/lib/constants";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
           message: `You have exceeded the maximum amount of active sessions (${MAX_USER_SESSIONS})`,
         },
       },
-      { status: 400 }
+      { status: 400 },
     );
 
   const body = await req.json();

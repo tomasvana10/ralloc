@@ -1,14 +1,13 @@
 import { auth } from "@/auth";
+import { Profile } from "./profile";
+import { ThemeCycler } from "./theme-cycler";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Profile } from "./profile";
-import { ThemeCycler } from "./theme-cycler";
 
 export async function DefaultLayout({
   children,

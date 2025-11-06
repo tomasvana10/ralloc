@@ -1,13 +1,13 @@
-import {
+import type z from "zod";
+import type {
+  SessionCreateSchemaType,
   sessionCreateSchema,
-  type SessionCreateSchemaType,
 } from "@/forms/session-create";
-import z from "zod";
-import redis, { k, REDIS_SEP } from "../redis";
-import { Seed } from "@/lib/seed";
-import { getHostId } from "./helpers";
-import { generateSessionCode } from "@/lib/session";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
+import { Seed } from "@/lib/seed";
+import { generateSessionCode } from "@/lib/session";
+import redis, { k, REDIS_SEP } from "../redis";
+import { getHostId } from "./helpers";
 
 export type GroupSessionMetadata = {
   createdOn: number;
@@ -53,7 +53,7 @@ export const paths = {
 export async function getGroups(
   groupCount: number,
   hostId: string,
-  code: string
+  code: string,
 ) {
   const tx = redis.multi();
 
@@ -67,7 +67,7 @@ export async function getGroups(
 export async function assembleGroupSession(
   metadata: Record<string, string>,
   hostId: string,
-  code: string
+  code: string,
 ) {
   const parsedMetadata: GroupSessionMetadata = {
     ...metadata,
@@ -111,7 +111,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
       const code = parts[5];
 
       sessions.push(
-        await assembleGroupSession(await redis.hGetAll(key), hostId, code)
+        await assembleGroupSession(await redis.hGetAll(key), hostId, code),
       );
     }
   }
@@ -121,7 +121,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
 
 export async function setGroupSession(
   data: z.output<typeof sessionCreateSchema>,
-  hostId: string
+  hostId: string,
 ) {
   const code = generateSessionCode(SESSION_CODE_LENGTH);
   const metadata: GroupSessionMetadata = {
@@ -141,7 +141,7 @@ export async function setGroupSession(
 export async function updateGroupSession(
   data: Partial<z.output<typeof sessionCreateSchema>>,
   hostId: string,
-  code: string
+  code: string,
 ) {
   const _data = Object.fromEntries(
     Object.entries(data).map(([key, value]) => {
@@ -162,7 +162,7 @@ export async function updateGroupSession(
       }
 
       return [key, val];
-    })
+    }),
   );
   await redis.hSet(paths.metadata(hostId, code), _data);
 }
@@ -184,10 +184,12 @@ export async function deleteGroupSession(hostId: string, code: string) {
 
 export async function joinGroup(code: string, index: number, userId: string) {
   const hostId = await getHostId(code);
+  if (!hostId) return null;
   await redis.sAdd(paths.group(hostId, code, index), userId);
 }
 
 export async function leaveGroup(code: string, index: number, userId: string) {
   const hostId = await getHostId(code);
+  if (!hostId) return null;
   await redis.sRem(paths.group(hostId, code, index), userId);
 }

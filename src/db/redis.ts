@@ -2,11 +2,12 @@ import { createClient } from "redis";
 
 const redisClientSingleton = () => {
   const client = createClient({ url: "redis://redis:6379" });
-  client.on("error", err => console.error("redis client error", err));
+  client.on("error", (err) => console.error("redis client error", err));
   client.connect().catch(console.error);
   return client;
 };
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: intended usage
 declare const globalThis: {
   redisGlobal: ReturnType<typeof redisClientSingleton>;
 } & typeof global;
