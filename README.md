@@ -2,8 +2,6 @@
 
 Ralloc is a web-based tool designed for fast, ephemeral group allocation.
 
-Visit the deployment [here](https://ralloc.xyz).
-
 ## Guide
 
 todo
