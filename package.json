@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
-    "prepare": "next-ws patch && lefthook install"
+    "prepare": "next-ws patch && [ -d .git ] && lefthook install || echo \"won't initialise lefthook in docker environment\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

@@ -11,8 +11,10 @@ services:
       - ../src:/app/src
       - ../public:/app/public
     # restart: unless-stopped
+    environment:
+      - PORT=3001
     ports:
-      - 3000:3000
+      - 3001:3001
     networks:
       - ralloc_net
     depends_on:
@@ -24,9 +26,9 @@ services:
     container_name: ralloc-dev-redis
     # restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6378:6379"
     volumes:
-      - ./ralloc_dev_redis_data:/data
+      - ./ralloc_redis_data_dev:/data
       - ../redis.conf:/usr/local/etc/redis/redis.conf
     networks:
       - ralloc_net
@@ -38,5 +40,5 @@ networks:
 
 
 volumes:
-  ralloc_dev_redis_data:
+  ralloc_redis_data_dev:
     driver: local

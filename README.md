@@ -12,16 +12,18 @@ If you are interested in self-hosting ralloc, follow these steps.
 
 Requirements: `npm`, `git`
 
-1. Create an OAuth application (ralloc currently uses Google).
-2. `git clone https://github.com/tomasvana10/ralloc`
-3. `cd ralloc`
-4. `npm i`
-5. Create 3 environment files:
+1. Clone the repository using `git clone https://github.com/tomasvana10/ralloc`
+2. `cd ralloc`
+3. `npm i`
+4. Create however many OAuth applications you want (ralloc currently uses Google and GitHub).
+5. Configure the provider's SVG endpoints in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that ralloc uses, you can skip this step.
+6. Create 3 environment files:
 
 `.env.development`
 
 ```
-NEXT_PUBLIC_URL=http://localhost:3000
+# port should be 3001 if you are running with docker
+NEXT_PUBLIC_URL=http://localhost:3000 
 AUTH_URL=http://localhost:3000
 ```
 
@@ -43,8 +45,7 @@ AUTH_<provider>_SECRET=...
 ### Running with docker
 
 1. `cd .docker`
-2. Add any new runtime environment variables to [prod.Dockerfile](https://github.com/tomasvana10/ralloc/blob/main/.docker/prod.Dockerfile)
-3. **Build and up the images**: `docker compose -f compose.<prod | dev>.yaml up --build` (-d to start detached).
+2. Build and up the images using `docker compose -f compose.<prod | dev>.yaml up --build` (`-d` to start detached).
 
 ### Running without docker
 
@@ -60,6 +61,7 @@ AUTH_<provider>_SECRET=...
 - [ ] i18n through `next-intl` (probably - consider using crowdin for collab. aim to support japanese, czech, french and korean)
 - [ ] Consider making a wiki
 - [ ] Create `CONTRIBUTING.md`
+- [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
 - [ ] Implement group control - UI, websockets, etc.
 - [ ] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
