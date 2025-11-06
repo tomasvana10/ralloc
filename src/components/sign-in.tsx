@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ProviderId } from "next-auth/providers";
 import { signIn } from "@/auth";
 import { Button } from "./ui/button";
 import {
@@ -9,11 +10,15 @@ import {
   CardTitle,
 } from "./ui/card";
 
-interface Props {
-  callbackUrl?: string;
-}
+const providerSvgs = {
+  google: "https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg",
+  github:
+    "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+} as const satisfies Partial<Record<ProviderId, string>>;
 
-export function SignInCard({ callbackUrl }: Props) {
+type SupportedProvider = keyof typeof providerSvgs;
+
+export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (
     <Card>
       <CardHeader>
@@ -23,19 +28,35 @@ export function SignInCard({ callbackUrl }: Props) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <SignInForm callbackUrl={callbackUrl} />
+        <div className="flex flex-wrap gap-2 [&>form]:flex-1 [&>form>button]:w-full [&>form>button]:whitespace-nowrap">
+          {(Object.keys(providerSvgs) as SupportedProvider[]).map(
+            (provider) => (
+              <SignInForm
+                key={provider}
+                callbackUrl={callbackUrl}
+                provider={provider}
+              />
+            ),
+          )}
+        </div>
       </CardContent>
     </Card>
   );
 }
 
-export function SignInForm({ callbackUrl }: Props) {
+export function SignInForm({
+  callbackUrl,
+  provider,
+}: {
+  callbackUrl?: string;
+  provider: SupportedProvider;
+}) {
   return (
     <form
-      id="form-signin-google"
+      id={`form-signin-${provider}`}
       action={async () => {
         "use server";
-        await signIn("google", {
+        await signIn(provider, {
           redirectTo: callbackUrl ?? "/",
         });
       }}>
@@ -44,12 +65,14 @@ export function SignInForm({ callbackUrl }: Props) {
         variant="outline"
         className="flex whitespace-normal h-auto min-h-[2.5rem]">
         <Image
-          src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-          alt="google logo"
+          src={providerSvgs[provider]}
+          alt={`${provider} logo`}
           width="20"
           height="20"
         />
-        <span className="text-left">Sign in with Google</span>
+        <span className="text-left">
+          Sign in with {provider[0].toUpperCase() + provider.slice(1)}
+        </span>
       </Button>
     </form>
   );
