@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
   BrushCleaningIcon,
   CheckIcon,
@@ -11,6 +10,7 @@ import {
   UnlockIcon,
   XIcon,
 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
@@ -114,7 +114,7 @@ export function MySessions({ userId }: { userId: string }) {
             <SessionBlock
               data={session}
               key={session.code}
-              state={selectedSessions}
+              checked={selectedSessions.has(session.code)}
               dispatch={dispatchSelectedSession}
               patcher={patcher}
               getter={getter}
@@ -177,18 +177,22 @@ function SessionActionItem({
   );
 }
 
-function SessionBlock({
+const SessionBlock = React.memo(
+  _SessionBlock,
+  (prev, next) => prev.checked === next.checked && prev.data === next.data,
+);
+function _SessionBlock({
   data,
-  state,
+  checked,
   dispatch,
-  patcher,
   getter,
+  patcher,
 }: {
   data: GroupSessionData;
-  state: SelectedSessionsState;
+  checked: boolean;
   dispatch: React.Dispatch<SelectedSessionsAction>;
-  patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   getter: ReturnType<typeof useGetGroupSessionsSWR>;
+  patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
 }) {
   const [copyStatus, setCopyStatus] = React.useState<"copied" | "default">(
     "default",
@@ -217,7 +221,7 @@ function SessionBlock({
             <Checkbox
               className="size-6"
               id={data.code}
-              checked={state.has(data.code)}
+              checked={checked}
               aria-label="Select session"
               onCheckedChange={(checked) =>
                 dispatch({
