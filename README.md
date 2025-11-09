@@ -77,8 +77,8 @@ AUTH_<provider>_SECRET=...
 - [ ] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
 - [ ] Consider Lua scripting to ensure atomicity when joining/leaving a group
 - [ ] Consider sliding window rate limits with redis based on user id
-- [ ] Consider adding alternative authentication methods (`GitHub`)
 - [ ] Revise Redis DB structure for optimisations and removal of redundant keys
+- [X] Consider adding alternative authentication methods (`GitHub`)
 - [x] (_partial_) Document info for installation and usage on `README.md`
 - [x] [Containerise](https://github.com/vercel/next.js/tree/canary/examples/with-docker-compose) - include redis image
 - [x] Configure Cloudflare tunnel and security
