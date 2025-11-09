@@ -103,6 +103,15 @@ export function MySessions({ userId }: { userId: string }) {
 
   return (
     <>
+      <AnimatePresence>
+        {selectedSessions.size > 0 ? (
+          <SessionActionItem
+            state={selectedSessions}
+            dispatch={dispatchSelectedSession}
+            deleter={deleter}
+          />
+        ) : null}
+      </AnimatePresence>
       <ScrollArea>
         <div
           ref={ref}
@@ -122,15 +131,6 @@ export function MySessions({ userId }: { userId: string }) {
           ))}
         </div>
       </ScrollArea>
-      <AnimatePresence>
-        {selectedSessions.size > 0 ? (
-          <SessionActionItem
-            state={selectedSessions}
-            dispatch={dispatchSelectedSession}
-            deleter={deleter}
-          />
-        ) : null}
-      </AnimatePresence>
     </>
   );
 }
@@ -248,19 +248,19 @@ function _SessionBlock({
                 (prev) =>
                   prev?.map((session) =>
                     session.code === data.code
-                      ? { ...session, locked: !data.locked }
+                      ? { ...session, frozen: !data.frozen }
                       : session,
                   ) ?? [],
                 { revalidate: false },
               );
               await patcher
-                .trigger({ code: data.code, data: { locked: !data.locked } })
+                .trigger({ code: data.code, data: { frozen: !data.frozen } })
                 .catch(() => null);
               setIsMutatingThis(false);
             }}>
             {isMutatingThis ? (
               <Spinner />
-            ) : data.locked ? (
+            ) : data.frozen ? (
               <LockIcon />
             ) : (
               <UnlockIcon />
@@ -277,7 +277,7 @@ function _SessionBlock({
               <CheckIcon className="size-4" />
             )}
           </Button>
-          <Link href={`/s/${data.code}`}>
+          <Link href={`/s/${data.code}`} tabIndex={-1}>
             <Button variant="outline" size="icon-lg" aria-label="Go to session">
               <ChevronRightIcon className="size-4" />
             </Button>
