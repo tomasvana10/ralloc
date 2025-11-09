@@ -220,19 +220,19 @@ export function SessionCreateForm() {
               {creator.isMutating ? <Spinner /> : null}Create
             </Button>
             <Controller
-              name="locked"
+              name="frozen"
               control={form.control}
               render={({ field }) => (
                 <div className="flex items-center space-x-2">
                   <Switch
-                    id="form-create-session-locked"
+                    id="form-create-session-frozen"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
                   <FieldLabel
-                    htmlFor="form-create-session-locked"
+                    htmlFor="form-create-session-frozen"
                     className="text-sm select-none cursor-pointer">
-                    Locked
+                    Frozen
                   </FieldLabel>
                   <SimpleTooltip tip="Whether users can join groups or not. You can change this later." />
                 </div>

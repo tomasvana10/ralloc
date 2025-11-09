@@ -77,7 +77,7 @@ export async function assembleGroupSession(
     groupSize: Number(metadata.groupSize),
     name: metadata.name,
     description: metadata.description,
-    locked: Boolean(+metadata.locked),
+    frozen: Boolean(+metadata.frozen),
   };
 
   const session: GroupSessionData = {
@@ -132,7 +132,7 @@ export async function setGroupSession(
 
   await redis.hSet(paths.metadata(hostId, code), {
     ...metadata,
-    locked: Number(metadata.locked).toString(),
+    frozen: Number(metadata.frozen).toString(),
     groupNames: JSON.stringify(metadata.groupNames),
   });
   await redis.set(paths.sessionHost(code), hostId);

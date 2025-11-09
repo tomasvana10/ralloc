@@ -60,7 +60,7 @@ export const sessionCreateSchema = z.object({
       (val) => !val || val.length >= 10,
       "Description must be at least 10 characters",
     ),
-  locked: z.boolean(),
+  frozen: z.boolean(),
 });
 
 export type SessionCreateSchemaType = z.infer<typeof sessionCreateSchema>;
