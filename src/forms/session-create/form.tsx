@@ -51,7 +51,7 @@ export function SessionCreateForm() {
   >({
     resolver: zodResolver(sessionCreateSchema),
     defaultValues: state.data,
-    mode: "onBlur",
+    mode: "all",
   });
 
   const reset = () => {
