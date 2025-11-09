@@ -4,11 +4,13 @@ FROM node:20-alpine AS base
 
 FROM base AS builder
 
+RUN corepack enable
+
 WORKDIR /app
 
-# copy npm package and lockfile + install dependencies
-COPY package.json package-lock.json* .npmrc* ./
-RUN npm ci
+# install dependencies
+COPY package.json pnpm-lock.yaml* .npmrc* ./
+RUN pnpm install --frozen-lockfile
 
 # copy required files
 COPY src ./src
@@ -22,7 +24,7 @@ COPY postcss.config.mjs .
 ARG NEXT_PUBLIC_URL
 ENV NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
 
-RUN npm run build
+RUN pnpm run build
 
 FROM base AS runner
 
@@ -39,7 +41,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# telemetry
+# disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # run app

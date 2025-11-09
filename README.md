@@ -10,11 +10,11 @@ todo
 
 If you are interested in self-hosting ralloc, follow these steps.
 
-Requirements: `npm`, `git`
+Requirements: `pnpm`, `git`
 
 1. Clone the repository using `git clone https://github.com/tomasvana10/ralloc`
 2. `cd ralloc`
-3. `npm i`
+3. `pnpm i`
 4. Create however many OAuth applications you want (ralloc currently uses Google and GitHub).
 5. Configure the provider's SVG endpoints in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that ralloc uses, you can skip this step.
 6. Create 3 environment files:
@@ -59,12 +59,12 @@ AUTH_<provider>_SECRET=...
 
 ### Running without docker
 
-**In development**: `npm run dev`
+**In development**: `pnpm run dev`
 
 **In production**:
 
 1. Remove `output: "standalone"` from `next.config.ts`.
-2. `npm run build && npm run start`
+2. `pnpm run build && pnpm run start`
 
 ## Todo
 

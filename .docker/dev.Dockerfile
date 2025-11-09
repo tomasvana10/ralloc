@@ -2,11 +2,13 @@
 
 FROM node:20-alpine
 
+RUN corepack enable
+
 WORKDIR /app
 
-# copy npm package and lockfile + install dependencies
-COPY package.json package-lock.json* .npmrc* ./
-RUN npm ci
+# install dependencies
+COPY package.json pnpm-lock.yaml* .npmrc* ./
+RUN pnpm install --frozen-lockfile
 
 # copy required files
 COPY src ./src
@@ -15,8 +17,8 @@ COPY next.config.ts .
 COPY tsconfig.json .
 COPY postcss.config.mjs .
 
-# telemetry
+# disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
 # run app
-CMD npm run dev
+CMD pnpm run dev
