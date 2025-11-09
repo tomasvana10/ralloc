@@ -1,7 +1,8 @@
 # syntax=docker.io/docker/dockerfile:1
 
-FROM node:20-alpine
+FROM node:24-alpine
 
+# warning to self: corepack will no longer be included in node >25
 RUN corepack enable
 
 WORKDIR /app
