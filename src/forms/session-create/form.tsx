@@ -5,7 +5,6 @@ import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
-import { Switch } from "@/components/ui/switch";
 import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
 import { Seed } from "@/lib/seed";
 import { SimpleTooltip } from "../../components/tooltip";
@@ -210,36 +209,13 @@ export function SessionCreateForm() {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <div className="flex items-center gap-4">
-            <Button
-              type="submit"
-              form="form-create-session"
-              className="transition-none"
-              disabled={creator.isMutating}>
-              {creator.isMutating ? <Spinner /> : null}Create
-            </Button>
-            <Controller
-              name="frozen"
-              control={form.control}
-              render={({ field }) => (
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="form-create-session-frozen"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
-                  <FieldLabel
-                    htmlFor="form-create-session-frozen"
-                    className="text-sm select-none cursor-pointer">
-                    Frozen
-                  </FieldLabel>
-                  <SimpleTooltip tip="Whether users can join groups or not. You can change this later." />
-                </div>
-              )}
-            />
-          </div>
-        </Field>
+        <Button
+          type="submit"
+          form="form-create-session"
+          className="transition-none"
+          disabled={creator.isMutating}>
+          {creator.isMutating ? <Spinner /> : null}Create
+        </Button>
       </CardFooter>
     </Card>
   );
