@@ -19,7 +19,7 @@ COPY tsconfig.json .
 COPY postcss.config.mjs .
 
 # disable telemetry
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # run app
 CMD pnpm run dev
