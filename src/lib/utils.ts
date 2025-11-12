@@ -17,8 +17,17 @@ export function areSameCase(a: string, b: string) {
 export function getZodSafeParseErrorResponse<T>(
   parseResult: z.ZodSafeParseError<T>,
 ) {
-  const { name, message } = parseResult.error;
-  return Response.json({ error: { message, name } }, { status: 400 });
+  const messages = parseResult.error.issues.map((issue) => issue.message);
+
+  return Response.json(
+    {
+      error: {
+        name: parseResult.error.name,
+        message: messages.join("; "),
+      },
+    },
+    { status: 400 },
+  );
 }
 
 export function generateSessionCode(n: number): string {
