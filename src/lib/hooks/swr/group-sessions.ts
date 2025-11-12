@@ -63,28 +63,26 @@ export function useCreateGroupSessionSWRMutation(
   );
 }
 
-export function useDeleteGroupSessionsSWRMutation(
-  options?: Partial<SWRMutationConfiguration<string[], Error, string>>,
+export function useDeleteGroupSessionSWRMutation(
+  options?: Partial<SWRMutationConfiguration<string, Error, string>>,
 ) {
   return useSWRMutation(
     "/api/sessions",
-    async (url: string, { arg: codes }: { arg: string[] }) => {
-      await Promise.all(
-        codes.map(async (code) => {
-          const res = await fetch(`${url}/${code}`, { method: "DELETE" });
-          throwIfUnauthorised(res);
+    async (url: string, { arg }: { arg: { code: string } }) => {
+      const res = await fetch(`${url}/${arg.code}`, {
+        method: "DELETE",
+      });
+      throwIfUnauthorised(res);
 
-          if (!res.ok) {
-            if (res.status === 403)
-              throw new Error("You do not own this session");
-            else {
-              const data = await res.json();
-              throw new Error(data.error?.message ?? "Unknown error");
-            }
-          }
-        }),
-      );
-      return codes;
+      if (!res.ok) {
+        if (res.status === 403) throw new Error("You do not own this session");
+        else {
+          const data = await res.json();
+          throw new Error(data.error?.message ?? "Unknown error");
+        }
+      }
+
+      return arg.code;
     },
     { ...options },
   );

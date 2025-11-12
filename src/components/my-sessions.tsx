@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import type { GroupSessionData } from "@/db/session";
 import { useHasScrollbar } from "@/lib/hooks/scrollbar";
 import {
-  useDeleteGroupSessionsSWRMutation,
+  useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
 } from "@/lib/hooks/swr/group-sessions";
@@ -47,6 +47,7 @@ type SelectedSessionsState = Set<string>;
 type SelectedSessionsAction =
   | { type: "add"; payload: string }
   | { type: "remove"; payload: string }
+  | { type: "set"; payload: string[] }
   | { type: "clear" };
 
 function selectedSessionsReducer(
@@ -56,6 +57,8 @@ function selectedSessionsReducer(
   switch (action.type) {
     case "add":
       return new Set([...state, action.payload]);
+    case "set":
+      return new Set(action.payload);
     case "remove": {
       const next = new Set(state);
       next.delete(action.payload);
@@ -77,18 +80,15 @@ export function MySessions({ userId }: { userId: string }) {
         id: "getGroupSessionsSWRErr",
       }),
   });
-  const deleter = useDeleteGroupSessionsSWRMutation({
-    onSuccess: () => {
-      toast.success("The selected sessions were deleted.");
-      dispatchSelectedSession({ type: "clear" });
-      getter.mutate();
+  const deleter = useDeleteGroupSessionSWRMutation({
+    onSuccess: (code) => {
+      dispatchSelectedSession({ type: "remove", payload: code });
     },
     onError: (err) =>
       toast.error(err.message, { id: "deleteGroupSessionsSWRErr" }),
   });
   const patcher = usePatchGroupSessionSWRMutation({
     // used specifically to lock/unlock a session rn
-    onSuccess: () => getter.mutate(),
     onError: (err) =>
       toast.error(err.message, { id: "patchGroupSessionsSWRErr" }),
   });
@@ -109,6 +109,8 @@ export function MySessions({ userId }: { userId: string }) {
             state={selectedSessions}
             dispatch={dispatchSelectedSession}
             deleter={deleter}
+            getter={getter}
+            patcher={patcher}
           />
         ) : null}
       </AnimatePresence>
@@ -116,19 +118,21 @@ export function MySessions({ userId }: { userId: string }) {
         <div
           ref={ref}
           className={cn(
-            "flex flex-col max-h-[calc(100vh-20rem)]",
+            "flex flex-col max-h-[calc(100vh-20rem)] min-h-[100px]",
             hasScrollbar ? "pr-2" : "pr-0",
           )}>
-          {getter.data.map((session) => (
-            <SessionBlock
-              data={session}
-              key={session.code}
-              checked={selectedSessions.has(session.code)}
-              dispatch={dispatchSelectedSession}
-              patcher={patcher}
-              getter={getter}
-            />
-          ))}
+          {getter.data
+            .sort((a, b) => b.createdOn - a.createdOn)
+            .map((session) => (
+              <SessionBlock
+                data={session}
+                key={session.code}
+                checked={selectedSessions.has(session.code)}
+                dispatch={dispatchSelectedSession}
+                patcher={patcher}
+                getter={getter}
+              />
+            ))}
         </div>
       </ScrollArea>
     </>
@@ -138,37 +142,132 @@ export function MySessions({ userId }: { userId: string }) {
 function SessionActionItem({
   state,
   dispatch,
+  getter,
+  patcher,
   deleter,
 }: {
   state: SelectedSessionsState;
   dispatch: React.Dispatch<SelectedSessionsAction>;
-  deleter: ReturnType<typeof useDeleteGroupSessionsSWRMutation>;
+  getter: ReturnType<typeof useGetGroupSessionsSWR>;
+  patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
+  deleter: ReturnType<typeof useDeleteGroupSessionSWRMutation>;
 }) {
+  const [isLocking, setIsLocking] = React.useState(false);
+  const [isUnlocking, setIsUnlocking] = React.useState(false);
+
   return (
     <motion.div
       className="fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-4"
-      initial={{ y: 40, opacity: 0 }}
+      initial={{ y: 40, opacity: 0.01 }}
       animate={{ y: 0, opacity: 1 }}
-      exit={{ y: 40, opacity: 0 }}>
-      <Item className="bg-secondary rounded-sm border-border" size="sm">
+      exit={{ y: 40, opacity: 0 }}
+      style={{
+        // "prepare the blur surface during animation, avoiding the 'pop'"
+        // thank you chatykov g. peatee
+        WebkitBackdropFilter: "blur(8px)",
+        backdropFilter: "blur(8px)",
+        transform: "translateZ(0)",
+      }}>
+      <Item className="rounded-sm border-border gap-8" size="sm">
         <ItemContent>
-          <ItemTitle>
-            {state.size} session
-            {state.size > 1 ? "s" : ""} selected
-          </ItemTitle>
+          <div className="flex flex-row gap-4">
+            <Checkbox
+              id="multiple-session"
+              checked={getter.data.length === state.size}
+              className="size-6"
+              onCheckedChange={(checked) => {
+                if (!checked) dispatch({ type: "clear" });
+                else
+                  dispatch({
+                    type: "set",
+                    payload: getter.data.map(({ code }) => code),
+                  });
+              }}
+            />
+            <Label htmlFor="multiple-session">
+              <ItemTitle>
+                {state.size} session
+                {state.size > 1 ? "s" : ""} selected
+              </ItemTitle>
+            </Label>
+          </div>
         </ItemContent>
         <ItemActions>
           <Button
-            onClick={async () =>
-              await deleter.trigger(Array.from(state)).catch(() => null)
-            }
+            onClick={async () => {
+              let err = 0;
+              for (const code of state) {
+                await deleter.trigger({ code }).catch(() => {
+                  err = 1;
+                  return null;
+                });
+              }
+              !err &&
+                toast.success("The selected sessions were deleted.", {
+                  id: "deleteGroupSessions",
+                });
+              getter.mutate();
+            }}
             variant="destructive"
-            aria-label="Delete session(s)">
+            size="icon-lg"
+            aria-label="Delete one or more sessions"
+            disabled={deleter.isMutating}>
             {deleter.isMutating ? <Spinner /> : <TrashIcon />}
           </Button>
           <Button
+            onClick={async () => {
+              let err = 0;
+              setIsLocking(true);
+              for (const code of state) {
+                await patcher
+                  .trigger({ code, data: { frozen: true } })
+                  .catch(() => {
+                    err = 1;
+                    return null;
+                  });
+              }
+              setIsLocking(false);
+              !err &&
+                toast.success("The selected sessions were locked.", {
+                  id: "lockGroupSessions",
+                });
+              getter.mutate();
+            }}
+            variant="outline"
+            size="icon-lg"
+            aria-label="Lock one or more sessions"
+            disabled={isLocking}>
+            {isLocking ? <Spinner /> : <LockIcon />}
+          </Button>
+          <Button
+            onClick={async () => {
+              let err = 0;
+              setIsUnlocking(true);
+              for (const code of state) {
+                await patcher
+                  .trigger({ code, data: { frozen: false } })
+                  .catch(() => {
+                    err = 1;
+                    return null;
+                  });
+              }
+              setIsUnlocking(false);
+              !err &&
+                toast.success("The selected sessions were unlocked.", {
+                  id: "unlockGroupSessions",
+                });
+              getter.mutate();
+            }}
+            variant="outline"
+            size="icon-lg"
+            aria-label="Unlock one or more sessions"
+            disabled={isUnlocking}>
+            {isUnlocking ? <Spinner /> : <UnlockIcon />}
+          </Button>
+          <Button
+            size="icon-lg"
             onClick={() => dispatch({ type: "clear" })}
-            aria-label="Deselect all sessions">
+            aria-label="Deselect all selected sessions">
             <XIcon />
           </Button>
         </ItemActions>
@@ -191,8 +290,8 @@ function _SessionBlock({
   data: GroupSessionData;
   checked: boolean;
   dispatch: React.Dispatch<SelectedSessionsAction>;
-  getter: ReturnType<typeof useGetGroupSessionsSWR>;
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
+  getter: ReturnType<typeof useGetGroupSessionsSWR>;
 }) {
   const [copyStatus, setCopyStatus] = React.useState<"copied" | "default">(
     "default",
@@ -200,8 +299,6 @@ function _SessionBlock({
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
   const handleCopy = async () => {
-    if (copyStatus === "copied") return;
-
     setCopyStatus("copied");
     await navigator.clipboard.writeText(
       `${process.env.NEXT_PUBLIC_URL}/s/${data.code}`,
@@ -215,12 +312,12 @@ function _SessionBlock({
       asChild
       variant="outline"
       className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-[[aria-checked=true]]:bg-accent/20">
-      <Label htmlFor={data.code}>
+      <Label htmlFor={`single-session-${data.code}`}>
         <ItemContent>
           <div className="flex flex-row gap-4 items-center">
             <Checkbox
               className="size-6"
-              id={data.code}
+              id={`single-session-${data.code}`}
               checked={checked}
               aria-label="Select session"
               onCheckedChange={(checked) =>
@@ -256,6 +353,7 @@ function _SessionBlock({
               await patcher
                 .trigger({ code: data.code, data: { frozen: !data.frozen } })
                 .catch(() => null);
+              getter.mutate();
               setIsMutatingThis(false);
             }}>
             {isMutatingThis ? (
@@ -270,6 +368,7 @@ function _SessionBlock({
             variant="outline"
             size="icon-lg"
             aria-label="Copy session code"
+            disabled={copyStatus === "copied"}
             onClick={handleCopy}>
             {copyStatus === "default" ? (
               <LinkIcon className="size-4" />
