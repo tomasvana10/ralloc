@@ -59,9 +59,6 @@ importers:
       input-otp:
         specifier: ^1.4.2
         version: 1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      lefthook:
-        specifier: ^2.0.2
-        version: 2.0.2
       lucide-react:
         specifier: ^0.552.0
         version: 0.552.0(react@19.2.0)
@@ -129,6 +126,9 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      lefthook:
+        specifier: ^2.0.2
+        version: 2.0.2
       tailwindcss:
         specifier: ^4
         version: 4.1.14
