@@ -50,7 +50,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     );
 
   const body = await req.json();
-  const parseResult = sessionCreateSchema.partial().safeParse(body);
+  const parseResult = sessionCreateSchema.partial().strict().safeParse(body);
 
   if (!parseResult.success) return getZodSafeParseErrorResponse(parseResult);
 
