@@ -20,8 +20,7 @@ export function useGetGroupSessionsSWR(
       throwIfUnauthorised(res);
 
       if (!res.ok) {
-        if (res.status === 403)
-          throw new Error("You do not own these sessions");
+        if (res.status === 403) throw new Error("You don't own these sessions");
         throw new Error("Your group sessions couldn't be fetched");
       }
       return (await res.json()).data;
@@ -75,7 +74,7 @@ export function useDeleteGroupSessionSWRMutation(
       throwIfUnauthorised(res);
 
       if (!res.ok) {
-        if (res.status === 403) throw new Error("You do not own this session");
+        if (res.status === 403) throw new Error("You don't own this session");
         else {
           const data = await res.json();
           throw new Error(data.error?.message ?? "Unknown error");
