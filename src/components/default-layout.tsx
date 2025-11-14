@@ -1,10 +1,12 @@
 import { auth } from "@/auth";
+import { Footer } from "./footer";
 import { Profile } from "./profile";
 import { ThemeCycler } from "./theme-cycler";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "./ui/card";
@@ -32,6 +34,9 @@ export async function DefaultLayout({
           </div>
         </CardHeader>
         <CardContent className="max-sm:p-1">{children}</CardContent>
+        <CardFooter className="justify-center items-end h-full">
+          <Footer />
+        </CardFooter>
       </Card>
     </div>
   );
