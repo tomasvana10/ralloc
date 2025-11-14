@@ -4,6 +4,7 @@ import { Seed } from "@/lib/seed";
 export const sessionCreateSchema = z.object({
   groupSeed: z
     .string()
+    .trim()
     .min(5, "Seed must be at least 5 characters")
     .max(250, "Seed must be at most 250 characters")
     .superRefine((val, ctx) => {
@@ -28,17 +29,17 @@ export const sessionCreateSchema = z.object({
             code: "too_small",
             minimum: Seed.MIN_PARTS,
             origin: "array",
-            message: `Seed expansion yields too little values`,
+            message: "Seed expansion yields too little values",
           });
         case "too_many_char_ranges":
           return ctx.addIssue({
             code: "custom",
-            message: `You provided too many character ranges for a seed part`,
+            message: "You provided too many character ranges for a seed part",
           });
         case "too_many_num_ranges":
           return ctx.addIssue({
             code: "custom",
-            message: `You provided too many numerical ranges for a seed part`,
+            message: "You provided too many numerical ranges for a seed part",
           });
         case "duplicate_values":
           return ctx.addIssue({
@@ -47,13 +48,18 @@ export const sessionCreateSchema = z.object({
           });
       }
     }),
-  groupSize: z.coerce.number().min(1, "Groups must have at least 1 member"),
+  groupSize: z.coerce
+    .number()
+    .min(1, "Groups must have at least 1 member")
+    .max(100, "Groups must have at most 100 members"),
   name: z
     .string()
+    .trim()
     .min(5, "Name must be at least 5 characters")
     .max(50, "Name must be at most 50 characters"),
   description: z
     .string()
+    .trim()
     .max(500, "Description must be at most 500 characters")
     .optional()
     .refine(

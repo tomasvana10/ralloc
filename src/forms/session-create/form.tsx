@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { InfoIcon } from "lucide-react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -36,11 +37,10 @@ export function SessionCreateForm() {
   const state = useSessionCreateStore();
   const creator = useCreateGroupSessionSWRMutation({
     onSuccess: () => {
-      toast.success("Successfully created a new group session");
+      toast.success("Created a new group session");
       reset();
     },
-    onError: (err) =>
-      toast.error(err.message, { id: "createGroupSessionSWRErr" }),
+    onError: (err) => toast.error(err.message),
   });
 
   const form = useForm<
@@ -58,12 +58,23 @@ export function SessionCreateForm() {
     form.reset(state.defaultData);
   };
 
+  // update zustand state when form is modified
   React.useEffect(() => {
     const sub = form.watch((data) =>
       state.setData(data as Partial<SessionCreateSchemaType>),
     );
     return () => sub.unsubscribe();
   }, [form, state.setData]);
+
+  // prompt browser to ask user to confirm page reload (as data will be lost)
+  React.useEffect(() => {
+    const handler = (event: BeforeUnloadEvent) => {
+      if (form.formState.isDirty) event.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [form.formState.isDirty]);
 
   async function onSubmit(data: z.output<SessionCreateSchemaType>) {
     await creator.trigger(data).catch(() => null);
@@ -163,13 +174,12 @@ export function SessionCreateForm() {
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid} className="flex-[0.7]">
                   <FieldLabel htmlFor="form-create-session-group-seed" required>
-                    Group Seed{" "}
                     <SimpleTooltip
                       tip={
                         <>
                           <p>
                             An comma-separated list of regex-like expressions or
-                            plain text to create a set of group names.
+                            plain text to generate a set of group names.
                           </p>
                           <br />
                           <p>
@@ -190,18 +200,31 @@ export function SessionCreateForm() {
                         </>
                       }
                     />
+                    Group Seed
                   </FieldLabel>
                   <Input
                     {...field}
                     type="text"
                     autoComplete="off"
-                    placeholder="Router 10.0.1.1[10-50], Router 10.0.1.101, Table [z-a]"
+                    placeholder="Group [1-10], Router 10.0.1.1[10-50], Router 10.0.1.101"
                     id="form-create-session-group-seed"
                     aria-invalid={fieldState.invalid}
                   />
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
+                  {!fieldState.invalid &&
+                    form.getValues("groupSeed").length > 1 && (
+                      <div className="text-sm text-muted-foreground whitespace-nowrap flex items-center">
+                        <InfoIcon className="size-4 min-w-4 min-h-4" />
+                        <span className="pr-1.5 pl-1">Expands to: </span>
+                        <p className="text-ellipsis overflow-hidden">
+                          {Seed.expand(form.getValues("groupSeed"))
+                            .values.join(", ")
+                            .slice(0, 150)}
+                        </p>
+                      </div>
+                    )}
                 </Field>
               )}
             />
