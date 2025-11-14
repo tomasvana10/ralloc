@@ -200,7 +200,7 @@ function SessionActionItem({
                   return null;
                 });
               }
-              !err && toast.success("The selected sessions were deleted.", {});
+              !err && toast.success("The selected sessions were deleted.");
               getter.mutate();
             }}
             variant="destructive"
@@ -222,7 +222,7 @@ function SessionActionItem({
                   });
               }
               setIsLocking(false);
-              !err && toast.success("The selected sessions were locked.", {});
+              !err && toast.success("The selected sessions were locked.");
               getter.mutate();
             }}
             variant="outline"
@@ -244,7 +244,7 @@ function SessionActionItem({
                   });
               }
               setIsUnlocking(false);
-              !err && toast.success("The selected sessions were unlocked.", {});
+              !err && toast.success("The selected sessions were unlocked.");
               getter.mutate();
             }}
             variant="outline"
