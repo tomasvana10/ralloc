@@ -4,7 +4,7 @@ import { Separator } from "./ui/separator";
 export function Footer() {
   return (
     <div className="flex items-center justify-center w-full">
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden max-[400px]:hidden">
         <Separator className="w-full h-px" />
       </div>
 
@@ -37,7 +37,7 @@ export function Footer() {
         </Button>
       </div>
 
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden max-[400px]:hidden">
         <Separator className="w-full" />
       </div>
     </div>
