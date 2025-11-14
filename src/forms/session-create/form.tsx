@@ -206,7 +206,7 @@ export function SessionCreateForm() {
                     {...field}
                     type="text"
                     autoComplete="off"
-                    placeholder="Group [1-10], Router 10.0.1.1[10-50], Router 10.0.1.101"
+                    placeholder="Group [1-10], Group [a-c], Group [z-t]"
                     id="form-create-session-group-seed"
                     aria-invalid={fieldState.invalid}
                   />
