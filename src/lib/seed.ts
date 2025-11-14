@@ -11,7 +11,7 @@ interface ExpansionResult {
     | "duplicate_values";
 }
 
-export class Seed {
+export class GroupSeed {
   public static MAX_PART_LENGTH = 50;
   public static MAX_PARTS = 500;
   public static MIN_PARTS = 2;
@@ -25,13 +25,13 @@ export class Seed {
   ): ExpansionResult["issue"] | string[] {
     let results = [part];
 
-    const numRanges = [...part.matchAll(Seed.NUM_RANGE_REGEX)];
-    if (numRanges.length > Seed.MAX_NUM_RANGES_PER_PART)
+    const numRanges = [...part.matchAll(GroupSeed.NUM_RANGE_REGEX)];
+    if (numRanges.length > GroupSeed.MAX_NUM_RANGES_PER_PART)
       return "too_many_num_ranges";
     for (const [full, start, end] of numRanges) {
       if (start === end) return "invalid_range";
       const [a, b] = [Number(start), Number(end)];
-      if ((Math.abs(a - b) + 1) * results.length > Seed.MAX_PARTS)
+      if ((Math.abs(a - b) + 1) * results.length > GroupSeed.MAX_PARTS)
         return "too_big";
 
       const next: string[] = [];
@@ -49,14 +49,14 @@ export class Seed {
       results = next;
     }
 
-    const charRanges = [...part.matchAll(Seed.CHAR_RANGE_REGEX)];
-    if (charRanges.length > Seed.MAX_CHAR_RANGES_PER_PART)
+    const charRanges = [...part.matchAll(GroupSeed.CHAR_RANGE_REGEX)];
+    if (charRanges.length > GroupSeed.MAX_CHAR_RANGES_PER_PART)
       return "too_many_char_ranges";
     for (const [full, start, end] of charRanges) {
       if (start === end) return "invalid_range";
       if (!areSameCase(start, end)) return "invalid_range";
       const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
-      if ((Math.abs(b - a) + 1) * results.length > Seed.MAX_PARTS)
+      if ((Math.abs(b - a) + 1) * results.length > GroupSeed.MAX_PARTS)
         return "too_big";
 
       const next: string[] = [];
@@ -72,8 +72,8 @@ export class Seed {
       results = next;
     }
 
-    if (results.length > Seed.MAX_PARTS) return "too_big";
-    return results.map((r) => r.slice(0, Seed.MAX_PART_LENGTH));
+    if (results.length > GroupSeed.MAX_PARTS) return "too_big";
+    return results.map((r) => r.slice(0, GroupSeed.MAX_PART_LENGTH));
   }
 
   public static expand(input: string): ExpansionResult {
@@ -84,12 +84,12 @@ export class Seed {
     const values = [];
 
     for (const part of filtered) {
-      const result = Seed.expandRange(part);
+      const result = GroupSeed.expandRange(part);
       if (!Array.isArray(result)) return { values: [], issue: result };
       values.push(...result);
     }
 
-    if (values.length < Seed.MIN_PARTS)
+    if (values.length < GroupSeed.MIN_PARTS)
       return { values: [], issue: "too_short" };
     if (new Set(values).size < values.length)
       return { values: [], issue: "duplicate_values" };
@@ -98,7 +98,7 @@ export class Seed {
   }
 
   public static indexOf(input: string, part: string) {
-    const expansion = Seed.expand(input);
+    const expansion = GroupSeed.expand(input);
 
     if (!expansion.values.length) return -1;
 

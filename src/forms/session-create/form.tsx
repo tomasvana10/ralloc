@@ -7,7 +7,7 @@ import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
-import { Seed } from "@/lib/seed";
+import { GroupSeed } from "@/lib/seed";
 import { SimpleTooltip } from "../../components/tooltip";
 import { Button } from "../../components/ui/button";
 import {
@@ -184,9 +184,9 @@ export function SessionCreateForm() {
                           <br />
                           <p>
                             The amount of expanded values must not exceed{" "}
-                            {Seed.MAX_PARTS}. Any expanded values greater than{" "}
-                            {Seed.MAX_PART_LENGTH} characters in length will be
-                            truncated.
+                            {GroupSeed.MAX_PARTS}. Any expanded values greater
+                            than {GroupSeed.MAX_PART_LENGTH} characters in
+                            length will be truncated.
                           </p>
                           <br />
                           <p>
@@ -219,7 +219,7 @@ export function SessionCreateForm() {
                         <InfoIcon className="size-4 min-w-4 min-h-4" />
                         <span className="pr-1.5 pl-1">Expands to: </span>
                         <p className="text-ellipsis overflow-hidden">
-                          {Seed.expand(form.getValues("groupSeed"))
+                          {GroupSeed.expand(form.getValues("groupSeed"))
                             .values.join(", ")
                             .slice(0, 150)}
                         </p>
