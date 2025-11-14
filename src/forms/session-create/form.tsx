@@ -105,7 +105,7 @@ export function SessionCreateForm() {
                       type="text"
                       autoComplete="off"
                       placeholder="CyberSec Lab 9 Week 8"
-                      id="form-create-session-title"
+                      id="form-create-session-name"
                       aria-invalid={fieldState.invalid}
                     />
                     {fieldState.invalid && (
@@ -159,7 +159,7 @@ export function SessionCreateForm() {
                   <Textarea
                     {...field}
                     placeholder="Juniper router allocation for this week's lab."
-                    id="form-create-session-title"
+                    id="form-create-session-description"
                     aria-invalid={fieldState.invalid}
                   />
                   {fieldState.invalid && (
