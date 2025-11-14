@@ -84,13 +84,11 @@ export function MySessions({ userId }: { userId: string }) {
     onSuccess: (code) => {
       dispatchSelectedSession({ type: "remove", payload: code });
     },
-    onError: (err) =>
-      toast.error(err.message, { id: "deleteGroupSessionsSWRErr" }),
+    onError: (err) => toast.error(err.message),
   });
   const patcher = usePatchGroupSessionSWRMutation({
     // used specifically to lock/unlock a session rn
-    onError: (err) =>
-      toast.error(err.message, { id: "patchGroupSessionsSWRErr" }),
+    onError: (err) => toast.error(err.message),
   });
 
   const [selectedSessions, dispatchSelectedSession] = React.useReducer(
@@ -158,19 +156,19 @@ function SessionActionItem({
   return (
     <motion.div
       className="fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-4"
-      initial={{ y: 40, opacity: 0.01 }}
+      initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 40, opacity: 0 }}
       style={{
-        // "prepare the blur surface during animation, avoiding the 'pop'"
-        // thank you chatykov g. peatee
         WebkitBackdropFilter: "blur(8px)",
         backdropFilter: "blur(8px)",
         transform: "translateZ(0)",
       }}>
-      <Item className="rounded-sm border-border gap-8" size="sm">
+      <Item
+        className="rounded-sm border-border sm:gap-8 gap-4 justify-center max-sm:max-w-min sm:flex-nowrap"
+        size="sm">
         <ItemContent>
-          <div className="flex flex-row gap-4">
+          <div className="flex flex-row gap-4 justify-center items-center">
             <Checkbox
               id="multiple-session"
               checked={getter.data.length === state.size}
@@ -184,7 +182,7 @@ function SessionActionItem({
                   });
               }}
             />
-            <Label htmlFor="multiple-session">
+            <Label htmlFor="multiple-session" className="whitespace-nowrap">
               <ItemTitle>
                 {state.size} session
                 {state.size > 1 ? "s" : ""} selected
@@ -202,10 +200,7 @@ function SessionActionItem({
                   return null;
                 });
               }
-              !err &&
-                toast.success("The selected sessions were deleted.", {
-                  id: "deleteGroupSessions",
-                });
+              !err && toast.success("The selected sessions were deleted.", {});
               getter.mutate();
             }}
             variant="destructive"
@@ -227,10 +222,7 @@ function SessionActionItem({
                   });
               }
               setIsLocking(false);
-              !err &&
-                toast.success("The selected sessions were locked.", {
-                  id: "lockGroupSessions",
-                });
+              !err && toast.success("The selected sessions were locked.", {});
               getter.mutate();
             }}
             variant="outline"
@@ -252,10 +244,7 @@ function SessionActionItem({
                   });
               }
               setIsUnlocking(false);
-              !err &&
-                toast.success("The selected sessions were unlocked.", {
-                  id: "unlockGroupSessions",
-                });
+              !err && toast.success("The selected sessions were unlocked.", {});
               getter.mutate();
             }}
             variant="outline"
@@ -311,7 +300,7 @@ function _SessionBlock({
     <Item
       asChild
       variant="outline"
-      className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-[[aria-checked=true]]:bg-accent/20">
+      className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-aria-checked:bg-accent/20">
       <Label htmlFor={`single-session-${data.code}`}>
         <ItemContent>
           <div className="flex flex-row gap-4 items-center">
