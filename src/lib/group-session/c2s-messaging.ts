@@ -1,14 +1,14 @@
 import { z } from "zod";
 import { GroupSeed } from "../seed";
 
-export const GroupSessionC2SCode = z.enum(["JoinGroup", "LeaveGroup"]);
-export type GroupSessionC2SCode = z.infer<typeof GroupSessionC2SCode>;
+export const groupSessionC2SCode = z.enum(["JoinGroup", "LeaveGroup"]);
+export type GroupSessionC2SCode = z.infer<typeof groupSessionC2SCode>;
 
 /**
  * Payload to join a group
  */
 export const GroupSessionC2SJoinGroupPayload = z.object({
-  code: z.literal(GroupSessionC2SCode.enum.JoinGroup),
+  code: z.literal(groupSessionC2SCode.enum.JoinGroup),
   groupName: z.string().min(1).max(GroupSeed.MAX_PART_LENGTH),
 });
 
@@ -16,11 +16,11 @@ export const GroupSessionC2SJoinGroupPayload = z.object({
  * Payload to leave a group
  */
 export const GroupSessionC2SLeaveGroupPayload = z.object({
-  code: z.literal(GroupSessionC2SCode.enum.LeaveGroup),
+  code: z.literal(groupSessionC2SCode.enum.LeaveGroup),
 });
 
-export const GroupSessionC2SPayload = z.discriminatedUnion("code", [
+export const groupSessionC2SPayload = z.discriminatedUnion("code", [
   GroupSessionC2SJoinGroupPayload,
   GroupSessionC2SLeaveGroupPayload,
 ]);
-export type GroupSessionC2SPayload = z.infer<typeof GroupSessionC2SPayload>;
+export type GroupSessionC2SPayload = z.infer<typeof groupSessionC2SPayload>;

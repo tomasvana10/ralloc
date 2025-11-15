@@ -1,5 +1,5 @@
 import type { GroupSessionData } from "@/db/session";
-import type { GroupSessionC2SCode } from "./c2s-messaging";
+import type { groupSessionC2SCode } from "./c2s-messaging";
 
 export enum GroupSessionS2CCode {
   GroupUpdateStatus = "GroupUpdateStatus",
@@ -8,7 +8,7 @@ export enum GroupSessionS2CCode {
 
 type GroupUpdateStatusAction = Extract<
   "JoinGroup" | "LeaveGroup",
-  keyof typeof GroupSessionC2SCode.enum
+  keyof typeof groupSessionC2SCode.enum
 >;
 
 /**
