@@ -15,3 +15,7 @@ export async function getHostedSessionCount(hostId: string) {
 
   return count;
 }
+
+export async function doesGroupSessionExist(code: string) {
+  return await redis.exists(paths.sessionHost(code));
+}
