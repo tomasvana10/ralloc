@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { signIn } from "@/auth";
 import { PROVIDER_SVGS } from "@/lib/constants";
+import type { SupportedProvider } from "@/lib/types";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -9,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-
-type SupportedProvider = keyof typeof PROVIDER_SVGS;
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (

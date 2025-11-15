@@ -6,8 +6,9 @@ declare module "next-auth" {
       id: string;
       name?: string | null;
       email?: string | null;
-      image: string;
+      image?: string | null;
     };
+    provider: string;
   }
 
   interface User extends DefaultUser {
@@ -16,5 +17,6 @@ declare module "next-auth" {
 
   interface JWT {
     id?: string;
+    provider?: string;
   }
 }

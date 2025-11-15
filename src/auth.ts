@@ -9,11 +9,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     jwt: async ({ token, account, profile }) => {
       if (account && profile) {
         token.id = String(profile.sub || profile.id || token.id);
+        token.provider = account.provider;
       }
       return token;
     },
     session: async ({ session, token }) => {
       if (token.id) session.user.id = token.id as string;
+      if (token.provider) session.provider = token.provider as string;
+
       return session;
     },
   },
