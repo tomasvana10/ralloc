@@ -287,12 +287,12 @@ function _SessionBlock({
     <Item
       asChild
       variant="outline"
-      className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-aria-checked:bg-accent/20">
+      className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-aria-checked:bg-accent/20 max-sm:flex-col max-sm:items-start">
       <Label htmlFor={`single-session-${data.code}`}>
         <ItemContent>
           <div className="flex flex-row gap-4 items-center">
             <Checkbox
-              className="size-6"
+              className="size-6 max-sm:hidden"
               id={`single-session-${data.code}`}
               checked={checked}
               aria-label="Select session"
@@ -305,51 +305,72 @@ function _SessionBlock({
             />
             <div>
               <ItemTitle>
-                {data.name}
+                <span className="wrap-break-word hyphens-auto">
+                  {data.name}
+                </span>
                 <CopyableCode className="py-px" copyValue={data.code}>
                   {data.code}
                 </CopyableCode>
               </ItemTitle>
-              <ItemDescription>{data.description}</ItemDescription>
+              <ItemDescription className="mt-1 line-clamp-4">
+                {data.description}
+              </ItemDescription>
             </div>
           </div>
         </ItemContent>
-        <ItemActions>
-          <Button
-            variant="outline"
-            size="icon-lg"
-            aria-label="Lock or unlock session"
-            disabled={isMutatingThis}
-            onClick={async () => {
-              setIsMutatingThis(true);
-              getter.mutate(
-                (prev) =>
-                  prev?.map((session) =>
-                    session.code === data.code
-                      ? { ...session, frozen: !data.frozen }
-                      : session,
-                  ) ?? [],
-                { revalidate: false },
-              );
-              await patcher
-                .trigger({ code: data.code, data: { frozen: !data.frozen } })
-                .catch(() => null);
-              getter.mutate();
-              setIsMutatingThis(false);
-            }}>
-            {isMutatingThis ? (
-              <Spinner />
-            ) : data.frozen ? (
-              <LockIcon />
-            ) : (
-              <UnlockIcon />
-            )}
-          </Button>
-          <Link href={`/s/${data.code}`} tabIndex={-1}>
-            <Button variant="outline" size="icon-lg" aria-label="Go to session">
-              <ChevronRightIcon className="size-4" />
+        <ItemActions className="ml-auto max-sm:flex max-sm:justify-between max-sm:w-full">
+          <Checkbox
+            className="size-6 sm:hidden"
+            id={`single-session-${data.code}`}
+            checked={checked}
+            aria-label="Select session"
+            onCheckedChange={(checked) =>
+              dispatch({
+                type: checked ? "add" : "remove",
+                payload: data.code,
+              })
+            }
+          />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon-lg"
+              aria-label="Lock or unlock session"
+              disabled={isMutatingThis}
+              onClick={async () => {
+                setIsMutatingThis(true);
+                getter.mutate(
+                  (prev) =>
+                    prev?.map((session) =>
+                      session.code === data.code
+                        ? { ...session, frozen: !data.frozen }
+                        : session,
+                    ) ?? [],
+                  { revalidate: false },
+                );
+                await patcher
+                  .trigger({ code: data.code, data: { frozen: !data.frozen } })
+                  .catch(() => null);
+                getter.mutate();
+                setIsMutatingThis(false);
+              }}>
+              {isMutatingThis ? (
+                <Spinner />
+              ) : data.frozen ? (
+                <LockIcon />
+              ) : (
+                <UnlockIcon />
+              )}
             </Button>
-          </Link>
+            <Link href={`/s/${data.code}`} tabIndex={-1}>
+              <Button
+                variant="outline"
+                size="icon-lg"
+                aria-label="Go to session">
+                <ChevronRightIcon className="size-4" />
+              </Button>
+            </Link>
+          </div>
         </ItemActions>
       </Label>
     </Item>
