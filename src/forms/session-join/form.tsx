@@ -47,7 +47,7 @@ export function SessionJoinForm() {
     }).then((res) => res.ok);
 
     if (!exists)
-      form.setError("code", {
+      return form.setError("code", {
         message:
           "This group session doesn't exist. Please double check you entered the code correctly.",
       });
