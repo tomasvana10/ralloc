@@ -2,9 +2,7 @@
 
 import {
   BrushCleaningIcon,
-  CheckIcon,
   ChevronRightIcon,
-  LinkIcon,
   LockIcon,
   TrashIcon,
   UnlockIcon,
@@ -22,6 +20,7 @@ import {
   usePatchGroupSessionSWRMutation,
 } from "@/lib/hooks/swr/group-sessions";
 import { cn } from "@/lib/utils";
+import { CopyableCode } from "./code";
 import { Button } from "./ui/button";
 import { Checkbox } from "./ui/checkbox";
 import {
@@ -282,19 +281,7 @@ function _SessionBlock({
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   getter: ReturnType<typeof useGetGroupSessionsSWR>;
 }) {
-  const [copyStatus, setCopyStatus] = React.useState<"copied" | "default">(
-    "default",
-  );
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
-
-  const handleCopy = async () => {
-    setCopyStatus("copied");
-    await navigator.clipboard.writeText(
-      `${process.env.NEXT_PUBLIC_URL}/s/${data.code}`,
-    );
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setCopyStatus("default");
-  };
 
   return (
     <Item
@@ -317,7 +304,12 @@ function _SessionBlock({
               }
             />
             <div>
-              <ItemTitle>{data.name}</ItemTitle>
+              <ItemTitle>
+                {data.name}
+                <CopyableCode className="py-px" copyValue={data.code}>
+                  {data.code}
+                </CopyableCode>
+              </ItemTitle>
               <ItemDescription>{data.description}</ItemDescription>
             </div>
           </div>
@@ -351,18 +343,6 @@ function _SessionBlock({
               <LockIcon />
             ) : (
               <UnlockIcon />
-            )}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-lg"
-            aria-label="Copy session code"
-            disabled={copyStatus === "copied"}
-            onClick={handleCopy}>
-            {copyStatus === "default" ? (
-              <LinkIcon className="size-4" />
-            ) : (
-              <CheckIcon className="size-4" />
             )}
           </Button>
           <Link href={`/s/${data.code}`} tabIndex={-1}>
