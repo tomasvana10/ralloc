@@ -41,9 +41,7 @@ export function CopyableCode({
       type="button"
       disabled={isCopied}
       aria-label="copy value">
-      <code className={cn(defaultCodeStyles, className)} {...props}>
-        {isCopied ? "Copied!" : children}
-      </code>
+      <Code {...props}>{isCopied ? "Copied!" : children}</Code>
     </button>
   );
 }
