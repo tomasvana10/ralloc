@@ -23,6 +23,10 @@
         "noUnknownAtRules": "off",
         "noExplicitAny": "off"
       },
+      "correctness": {
+        "noUnusedImports": "error"
+      },
+
       "performance": {
         "noBarrelFile": "off"
       },
