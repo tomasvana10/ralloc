@@ -6,8 +6,7 @@ export const config: ProxyConfig = {
   matcher: [
     "/",
     "/sessions",
-    "/api/ws/:path*",
-    "/api/sessions/:path*",
-    "/api/host/:path*",
+    "/api/(host|session-ws|sessions)/:path*",
+    "/s/:path*",
   ],
 };
