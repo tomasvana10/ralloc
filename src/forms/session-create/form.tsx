@@ -178,7 +178,7 @@ export function SessionCreateForm() {
                       tip={
                         <>
                           <p>
-                            An comma-separated list of regex-like expressions or
+                            A comma-separated list of regex-like expressions or
                             plain text to generate a set of group names.
                           </p>
                           <br />
