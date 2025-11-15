@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
-import { groupSessionC2SPayload } from "@/lib/group-session/c2s-messaging";
+import { GroupSessionC2S } from "@/lib/group-session/c2s-messaging";
 
 export function GET() {
   const headers = new Headers();
@@ -30,7 +30,7 @@ export async function UPGRADE(
       return;
     }
 
-    const parseResult = groupSessionC2SPayload.safeParse(rawPayload);
+    const parseResult = GroupSessionC2S.payload.safeParse(rawPayload);
     // invalid payload
     if (parseResult.error) return;
 
