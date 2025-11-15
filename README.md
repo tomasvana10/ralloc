@@ -2,9 +2,8 @@
 
 Ralloc is a web-based tool designed for fast, ephemeral group allocation.
 
-## Guide
-
-todo
+- [Issues](https://github.com/tomasvana10/ralloc/issues)
+- [Wiki](https://github.com/tomasvana10/ralloc/wiki)
 
 ## Installation and self-hosting
 
@@ -74,10 +73,10 @@ AUTH_<provider>_SECRET=...
 - [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
 - [ ] Implement group control - UI, websockets, etc.
-- [ ] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
 - [ ] Consider Lua scripting to ensure atomicity when joining/leaving a group
 - [ ] Consider sliding window rate limits with redis based on user id
-- [ ] Revise Redis DB structure for optimisations and removal of redundant keys
+- [X] Revise Redis DB structure for optimisations and removal of redundant keys
+- [X] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
 - [X] Consider adding alternative authentication methods (`GitHub`)
 - [x] (_partial_) Document info for installation and usage on `README.md`
 - [x] [Containerise](https://github.com/vercel/next.js/tree/canary/examples/with-docker-compose) - include redis image
