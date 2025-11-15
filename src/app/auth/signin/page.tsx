@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { BasePage } from "@/components/base-page";
 import { SignInCard } from "@/components/sign-in";
 
 export const metadata: Metadata = {
@@ -15,5 +16,9 @@ export default async function Page({
   const session = await auth();
   if (session) return redirect("/");
 
-  return <SignInCard callbackUrl={(await searchParams)?.callbackUrl} />;
+  return (
+    <BasePage>
+      <SignInCard callbackUrl={(await searchParams)?.callbackUrl} />
+    </BasePage>
+  );
 }

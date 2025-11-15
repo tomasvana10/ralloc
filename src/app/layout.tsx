@@ -1,8 +1,6 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 import type { Metadata } from "next";
-import { DefaultLayout } from "@/components/default-layout";
-import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: {
@@ -27,10 +25,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          <DefaultLayout>
-            <main>{children}</main>
-            <Toaster position="top-right" richColors />
-          </DefaultLayout>
+          {children}
         </ThemeProvider>
       </body>
     </html>

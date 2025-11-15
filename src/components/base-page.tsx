@@ -1,7 +1,10 @@
+import { ChevronLeftIcon } from "lucide-react";
+import Link from "next/link";
 import { auth } from "@/auth";
 import { Footer } from "./footer";
 import { Profile } from "./profile";
 import { ThemeCycler } from "./theme-cycler";
+import { Button } from "./ui/button";
 import {
   Card,
   CardContent,
@@ -10,11 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import { Toaster } from "./ui/sonner";
 
-export async function DefaultLayout({
+export async function BasePage({
   children,
+  returnTo,
 }: Readonly<{
   children: React.ReactNode;
+  returnTo?: string;
 }>) {
   const session = await auth();
 
@@ -23,7 +29,21 @@ export async function DefaultLayout({
       <Card className="max-w-[700px] w-full">
         <CardHeader className="flex justify-between max-[350px]:flex-col-reverse max-[450px]:gap-4">
           <div>
-            <CardTitle className="text-3xl">Ralloc</CardTitle>
+            <CardTitle className="text-3xl">
+              <div className="flex items-center gap-2">
+                {returnTo && (
+                  <Link href={returnTo} tabIndex={-1} className="leading-0">
+                    <Button
+                      size="icon-sm"
+                      variant="outline"
+                      aria-label="Go back">
+                      <ChevronLeftIcon className="size-4" />
+                    </Button>
+                  </Link>
+                )}
+                <span>Ralloc</span>
+              </div>
+            </CardTitle>
             <CardDescription className="mt-2">
               The go-to tool for simple, ephemeral group allocation sessions.
             </CardDescription>
@@ -33,7 +53,10 @@ export async function DefaultLayout({
             {session ? <Profile /> : null}
           </div>
         </CardHeader>
-        <CardContent className="max-sm:p-1">{children}</CardContent>
+        <CardContent className="max-sm:p-1">
+          {children}
+          <Toaster position="top-right" richColors />
+        </CardContent>
         <CardFooter className="justify-center items-end h-full">
           <Footer />
         </CardFooter>
