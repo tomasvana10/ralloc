@@ -154,7 +154,7 @@ function SessionActionItem({
 
   return (
     <motion.div
-      className="fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-4"
+      className="fixed left-1/2 -translate-x-1/2 bottom-4 sm:bottom-auto sm:top-4 z-9999"
       initial={{ y: 40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 40, opacity: 0 }}
