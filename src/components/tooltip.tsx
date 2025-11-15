@@ -13,11 +13,11 @@ export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {
       <div className="hidden sm:block">
         <Tooltip>
           <TooltipTrigger asChild tabIndex={0}>
-            <span>
-              <CircleQuestionMark className="text-foreground size-4" />
-            </span>
+            <CircleQuestionMark className="text-foreground size-4" />
           </TooltipTrigger>
-          <TooltipContent>{tip}</TooltipContent>
+          <TooltipContent className="bg-secondary text-secondary-foreground border border-border text-sm">
+            {tip}
+          </TooltipContent>
         </Tooltip>
       </div>
 
@@ -25,9 +25,7 @@ export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {
       <div className="inline-flex sm:hidden">
         <Popover>
           <PopoverTrigger tabIndex={0}>
-            <span>
-              <CircleQuestionMark className="text-foreground size-4" />
-            </span>
+            <CircleQuestionMark className="text-foreground size-4" />
           </PopoverTrigger>
           <PopoverContent>{tip}</PopoverContent>
         </Popover>
