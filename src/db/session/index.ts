@@ -4,64 +4,77 @@ import type {
   sessionCreateSchema,
 } from "@/forms/session-create";
 import { SESSION_CODE_LENGTH } from "@/lib/constants";
-import { Seed } from "@/lib/seed";
+import { GroupSeed } from "@/lib/seed";
 import { generateSessionCode } from "@/lib/utils";
-import redis, { k, REDIS_SEP } from "../redis";
+import redis, { k, REDIS } from "../redis";
 import { getHostId } from "./helpers";
 
-export type GroupSessionMetadata = {
+export type GroupSessionMetadata = SessionCreateSchemaType & {
   createdOn: number;
-  /**
-   * The group names obtained from the initial seed expansion
-   */
-  groupNames: string[];
-} & SessionCreateSchemaType;
-
-/**
- * Nested array that represents groups and their members.
- * Indices of this array are synchronised with {@link GroupSessionMetadata.groupNames}
- *
- * @example [["user1", "user2"], ["user3", "user4"]]
- */
-export type GroupSessionGroups = string[][];
-
+  frozen: boolean;
+};
 export type GroupSessionData = GroupSessionMetadata & {
   code: string;
   hostId: string;
-  groups: GroupSessionGroups;
+  groups: GroupSessionGroupData[];
+};
+
+export type GroupSessionGroupMetadata = {
+  name: string;
+};
+export type GroupSessionGroupData = GroupSessionGroupMetadata & {
+  members: string[];
 };
 
 export const paths = {
-  // reverse mapping to determine host id from a session code
   sessionHost: (code: string) => k("session", code, "host"),
-  // single metadata
   metadata: (hostId: string, code: string) =>
     k("host", hostId, "session", code, "metadata"),
-  // single group
-  group: (hostId: string, code: string, index: number) =>
-    k("host", hostId, "session", code, "group", index),
+  groupMetadata: (hostId: string, code: string, groupName: string) =>
+    k("host", hostId, "session", code, "group", groupName, "gmetadata"),
+  groupMembers: (hostId: string, code: string, groupName: string) =>
+    k("host", hostId, "session", code, "group", groupName, "members"),
+  userGroup: (hostId: string, code: string, userId: string) =>
+    k("host", hostId, "session", code, "userGroup", userId),
   patterns: {
-    // all metadata keys for a particular host
     allHostMetadataKeys: (hostId: string) =>
       k("host", hostId, "session", "*", "metadata"),
-    // metadata key, as well as group:0, group:1, etc for a particular host and session
     allHostSessionKeys: (hostId: string, code: string) =>
       k("host", hostId, "session", code, "*"),
+    allGroupNames: (hostId: string, code: string) =>
+      k("host", hostId, "session", code, "group", "*", "gmetadata"),
   },
 };
 
-export async function getGroups(
-  groupCount: number,
-  hostId: string,
-  code: string,
-) {
-  const tx = redis.multi();
-
-  for (let i = 0; i < groupCount; i++) {
-    tx.sMembers(paths.group(hostId, code, i));
+export async function getGroups(hostId: string, code: string) {
+  const groupKeys: string[] = [];
+  for await (const key of redis.scanIterator({
+    MATCH: paths.patterns.allGroupNames(hostId, code),
+  })) {
+    groupKeys.push(...key);
   }
 
-  return (await tx.exec()) as unknown as GroupSessionGroups;
+  const tx = redis.multi();
+  const groupNames: string[] = [];
+  for (const key of groupKeys) {
+    const parts = key.split(REDIS.SEP);
+    const groupName = parts[REDIS.PREFIX_PARTS + 5];
+    groupNames.push(groupName);
+    //tx.hGetAll(paths.groupMetadata(hostId, code, groupName));
+    tx.sMembers(paths.groupMembers(hostId, code, groupName));
+  }
+
+  const results = (await tx.exec()) as unknown as Array<
+    Record<string, string> | string[]
+  >;
+  const groups: GroupSessionGroupData[] = [];
+  for (let i = 0; i < groupNames.length; i++) {
+    //const meta = results[i * 2] as Record<string, string>;
+    const members = results[i] as string[];
+    groups.push({ name: groupNames[i], members });
+  }
+
+  return groups;
 }
 
 export async function assembleGroupSession(
@@ -71,22 +84,19 @@ export async function assembleGroupSession(
 ) {
   const parsedMetadata: GroupSessionMetadata = {
     ...metadata,
-    createdOn: Number(metadata.createdOn),
-    groupNames: JSON.parse(metadata.groupNames || "[]"),
+    createdOn: +metadata.createdOn,
+    frozen: !!+metadata.frozen,
     groupSeed: metadata.groupSeed,
-    groupSize: Number(metadata.groupSize),
+    groupSize: +metadata.groupSize,
     name: metadata.name,
     description: metadata.description,
-    frozen: Boolean(+metadata.frozen),
   };
-
   const session: GroupSessionData = {
     ...parsedMetadata,
     code,
     hostId,
-    groups: await getGroups(parsedMetadata.groupNames.length, hostId, code),
+    groups: await getGroups(hostId, code),
   };
-
   return session;
 }
 
@@ -107,9 +117,8 @@ export async function getGroupSessionsOfHost(hostId: string) {
     MATCH: paths.patterns.allHostMetadataKeys(hostId),
   })) {
     for (const key of batch) {
-      const parts = key.split(REDIS_SEP);
-      const code = parts[5];
-
+      const parts = key.split(REDIS.SEP);
+      const code = parts[REDIS.PREFIX_PARTS + 3];
       sessions.push(
         await assembleGroupSession(await redis.hGetAll(key), hostId, code),
       );
@@ -124,18 +133,22 @@ export async function setGroupSession(
   hostId: string,
 ) {
   const code = generateSessionCode(SESSION_CODE_LENGTH);
-  const metadata: GroupSessionMetadata = {
-    createdOn: Date.now(),
-    groupNames: Seed.expand(data.groupSeed).values,
-    ...data,
-  };
+  const metadata: GroupSessionMetadata = { createdOn: Date.now(), ...data };
 
   await redis.hSet(paths.metadata(hostId, code), {
     ...metadata,
     frozen: Number(metadata.frozen).toString(),
-    groupNames: JSON.stringify(metadata.groupNames),
   });
   await redis.set(paths.sessionHost(code), hostId);
+
+  const groupNames = GroupSeed.expand(data.groupSeed).values;
+  const tx = redis.multi();
+  for (const groupName of groupNames) {
+    // placeholder (as of now) used to find all group names.
+    // NOTE: modify this to add group-specific metadata in the future
+    tx.hSet(paths.groupMetadata(hostId, code, groupName), { _: "_" });
+  }
+  await tx.exec();
 }
 
 export async function updateGroupSession(
@@ -146,7 +159,6 @@ export async function updateGroupSession(
   const _data = Object.fromEntries(
     Object.entries(data).map(([key, value]) => {
       let val: string;
-
       switch (typeof value) {
         case "boolean":
           val = Number(value).toString();
@@ -160,7 +172,6 @@ export async function updateGroupSession(
         default:
           val = JSON.stringify(value);
       }
-
       return [key, val];
     }),
   );
@@ -182,14 +193,30 @@ export async function deleteGroupSession(hostId: string, code: string) {
   await redis.del(paths.sessionHost(code));
 }
 
-export async function joinGroup(code: string, index: number, userId: string) {
+export async function joinGroup(
+  code: string,
+  groupName: string,
+  userId: string,
+) {
   const hostId = await getHostId(code);
   if (!hostId) return null;
-  await redis.sAdd(paths.group(hostId, code, index), userId);
+
+  const tx = redis.multi();
+  tx.sAdd(paths.groupMembers(hostId, code, groupName), userId);
+  tx.set(paths.userGroup(hostId, code, userId), groupName);
+  await tx.exec();
 }
 
-export async function leaveGroup(code: string, index: number, userId: string) {
+export async function leaveGroup(
+  code: string,
+  groupName: string,
+  userId: string,
+) {
   const hostId = await getHostId(code);
   if (!hostId) return null;
-  await redis.sRem(paths.group(hostId, code, index), userId);
+
+  const tx = redis.multi();
+  tx.sRem(paths.groupMembers(hostId, code, groupName), userId);
+  tx.del(paths.userGroup(hostId, code, userId));
+  await tx.exec();
 }
