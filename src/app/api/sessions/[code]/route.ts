@@ -4,7 +4,7 @@ import {
   getGroupSessionByCode,
   updateGroupSession,
 } from "@/db/session";
-import { getHostId } from "@/db/session/helpers";
+import { doesGroupSessionExist, getHostId } from "@/db/session/helpers";
 import { sessionCreateSchema } from "@/forms/session-create";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
@@ -62,4 +62,14 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
 
   await updateGroupSession(parseResult.data, hostId, code);
   return Response.json({ message: "success" });
+}
+
+export async function HEAD(_: Request, { params }: { params: Params }) {
+  const { code } = await params;
+
+  const exists = await doesGroupSessionExist(code);
+
+  return new Response(null, {
+    status: exists ? 200 : 404,
+  });
 }

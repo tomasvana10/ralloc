@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,17 +26,13 @@ import {
 
 export function SessionJoinForm() {
   const state = useSessionJoinStore();
-
   const form = useForm<SessionJoinSchemaType>({
     resolver: zodResolver(sessionJoinSchema),
     defaultValues: state.data,
     mode: "onSubmit",
   });
 
-  const reset = () => {
-    state.reset();
-    form.reset(state.defaultData);
-  };
+  const router = useRouter();
 
   React.useEffect(() => {
     const sub = form.watch((data) =>
@@ -45,9 +41,18 @@ export function SessionJoinForm() {
     return () => sub.unsubscribe();
   }, [form, state.setData]);
 
-  function onSubmit(data: SessionJoinSchemaType) {
-    toast(data.code);
-    reset();
+  async function onSubmit(data: SessionJoinSchemaType) {
+    const exists = await fetch(`/api/sessions/${data.code}`, {
+      method: "HEAD",
+    }).then((res) => res.ok);
+
+    if (!exists)
+      form.setError("code", {
+        message:
+          "This group session doesn't exist. Please double check you entered the code correctly.",
+      });
+
+    router.push(`/s/${data.code}`);
   }
 
   return (
@@ -78,6 +83,8 @@ export function SessionJoinForm() {
                           "",
                         )
                         .toLowerCase();
+                      if (form.getFieldState("code").error)
+                        form.clearErrors("code");
                       field.onChange(clean);
                     }}
                     aria-invalid={fieldState.invalid}>
@@ -102,11 +109,9 @@ export function SessionJoinForm() {
         </form>
       </CardContent>
       <CardFooter>
-        <Field orientation="horizontal">
-          <Button type="submit" form="form-join-session">
-            Join
-          </Button>
-        </Field>
+        <Button type="submit" form="form-join-session">
+          Join
+        </Button>
       </CardFooter>
     </Card>
   );
