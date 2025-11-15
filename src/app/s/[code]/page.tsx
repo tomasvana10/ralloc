@@ -29,7 +29,7 @@ export default async function GroupSessionPage({ params }: Props) {
   if (!(await doesGroupSessionExist(code))) notFound();
 
   return (
-    <BasePage returnTo="/sessions">
+    <BasePage returnTo="/">
       <p>placeholder (you are viewing session {code})</p>
     </BasePage>
   );

@@ -1,4 +1,4 @@
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronLeftIcon, HomeIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Footer } from "./footer";
@@ -15,6 +15,10 @@ import {
 } from "./ui/card";
 import { Toaster } from "./ui/sonner";
 
+const returnToIcons: Record<string, LucideIcon> = {
+  "/": HomeIcon,
+};
+
 export async function BasePage({
   children,
   returnTo,
@@ -23,6 +27,7 @@ export async function BasePage({
   returnTo?: string;
 }>) {
   const session = await auth();
+  const ReturnToIcon = !returnTo ? null : (returnToIcons[returnTo] ?? null);
 
   return (
     <div className="flex justify-center sm:p-10 p-1 min-h-screen">
@@ -30,14 +35,12 @@ export async function BasePage({
         <CardHeader className="flex justify-between max-[350px]:flex-col-reverse max-[450px]:gap-4">
           <div>
             <CardTitle className="text-3xl">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 {returnTo && (
                   <Link href={returnTo} tabIndex={-1} className="leading-0">
-                    <Button
-                      size="icon-sm"
-                      variant="outline"
-                      aria-label="Go back">
+                    <Button variant="outline" aria-label="Go back">
                       <ChevronLeftIcon className="size-4" />
+                      {ReturnToIcon && <ReturnToIcon className="size-4" />}
                     </Button>
                   </Link>
                 )}
