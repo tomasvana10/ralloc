@@ -115,7 +115,7 @@ export function MySessions({ userId }: { userId: string }) {
         <div
           ref={ref}
           className={cn(
-            "flex flex-col max-h-[calc(100vh-20rem)] min-h-[100px]",
+            "flex flex-col max-h-[calc(100vh-19.5rem)] min-h-[100px]",
             hasScrollbar ? "pr-2" : "pr-0",
           )}>
           {getter.data
@@ -312,7 +312,7 @@ function _SessionBlock({
                   {data.code}
                 </CopyableCode>
               </ItemTitle>
-              <ItemDescription className="mt-1 line-clamp-4">
+              <ItemDescription className="mt-1 line-clamp-3">
                 {data.description}
               </ItemDescription>
             </div>
