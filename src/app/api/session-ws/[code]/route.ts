@@ -151,14 +151,15 @@ export async function UPGRADE(
     }
 
     if (responsePayload.status === "failure") {
+      // first send the error payload so the client can inform the user
+      send(client, responsePayload);
+
       const now = Date.now();
       const timeout = now - state.lastSynchroniseDueToGroupUpdateError;
       // it has been long enough since the last synchronisation due to error
       // that we can send another synchronise payload
       if (timeout > GroupSessionS2C.GroupUpdateFailureSynchroniseTimeoutMS) {
         state.lastSynchroniseDueToGroupUpdateError = now;
-        // first send the error payload so the client can inform the user
-        send(client, responsePayload);
         await resynchronise(client, state, code);
       }
     } else {
