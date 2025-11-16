@@ -192,31 +192,3 @@ export async function deleteGroupSession(hostId: string, code: string) {
   }
   await redis.del(paths.sessionHost(code));
 }
-
-export async function joinGroup(
-  code: string,
-  groupName: string,
-  userId: string,
-) {
-  const hostId = await getHostId(code);
-  if (!hostId) return null;
-
-  const tx = redis.multi();
-  tx.sAdd(paths.groupMembers(hostId, code, groupName), userId);
-  tx.set(paths.userGroup(hostId, code, userId), groupName);
-  await tx.exec();
-}
-
-export async function leaveGroup(
-  code: string,
-  groupName: string,
-  userId: string,
-) {
-  const hostId = await getHostId(code);
-  if (!hostId) return null;
-
-  const tx = redis.multi();
-  tx.sRem(paths.groupMembers(hostId, code, groupName), userId);
-  tx.del(paths.userGroup(hostId, code, userId));
-  await tx.exec();
-}

@@ -72,13 +72,14 @@ AUTH_<provider>_SECRET=...
 - [ ] Create `CONTRIBUTING.md`
 - [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
-- [ ] Implement group control - UI, websockets, etc.
-- [ ] Consider Lua scripting to ensure atomicity when joining/leaving a group
-- [ ] Consider sliding window rate limits with redis based on user id
+- [ ] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
+- [ ] (!!!) SLIDING WINDOW RATE LIMITS FOR: initial synchronisation payload of websocket AND REST api
+- [ ] (**partial**) Implement group control - UI, websockets, etc.
+- [ ] (**partial**) Document info for installation and usage on `README.md`
+- [X] Consider Lua scripting to ensure atomicity when joining/leaving a group
 - [X] Revise Redis DB structure for optimisations and removal of redundant keys
 - [X] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
 - [X] Consider adding alternative authentication methods (`GitHub`)
-- [x] (_partial_) Document info for installation and usage on `README.md`
 - [x] [Containerise](https://github.com/vercel/next.js/tree/canary/examples/with-docker-compose) - include redis image
 - [x] Configure Cloudflare tunnel and security
 - [x] Buy domain `ralloc.xyz`

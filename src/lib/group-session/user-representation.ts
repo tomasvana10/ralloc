@@ -12,8 +12,8 @@ import type { SupportedProvider } from "../types";
  * other clients fetch this information from an API.
  */
 export class UserRepresentation {
-  public name: string;
   public userId: string;
+  public name: string;
   public avatarUrl: string;
   public provider: SupportedProvider;
 
@@ -22,15 +22,15 @@ export class UserRepresentation {
   /**
    * Uses ASCII Information Separator One
    */
-  private static UNIT_SEPARATOR = "\u001f";
+  public static UNIT_SEPARATOR = "\u001f";
   /**
    * Uses ASCII Information Separator Two
    */
-  private static UNIT_EMPTY = "\u001e";
+  public static UNIT_EMPTY = "\u001e";
 
   private static AVATAR_CONFIG: Record<
     SupportedProvider,
-    { urlPrefix: string; urlSuffix: string; matcher: RegExp | null }
+    { urlPrefix: string; urlSuffix: string; matcher: RegExp }
   > = {
     github: {
       urlPrefix: "https://avatars.githubusercontent.com/u/",
@@ -45,9 +45,9 @@ export class UserRepresentation {
   };
 
   private static DECOMPRESSION_MATCHER = new RegExp(
-    `^([^${this.UNIT_SEPARATOR}]+)` + // name
+    `^([^${this.UNIT_SEPARATOR}]+)` + // userId
       `${this.UNIT_SEPARATOR}` +
-      `([^${this.UNIT_SEPARATOR}]+)` + // userId
+      `([^${this.UNIT_SEPARATOR}]+)` + // name
       `${this.UNIT_SEPARATOR}` +
       `([^${this.UNIT_SEPARATOR}]+)` + // provider
       `${this.UNIT_SEPARATOR}` +
@@ -57,22 +57,22 @@ export class UserRepresentation {
   private static DEFAULT_IMAGE_URL = "https://ui-avatars.com/api/?name=";
 
   private constructor({
-    name,
     userId,
+    name,
     provider,
     avatar,
   }: {
-    name?: string | null;
     userId: string;
+    name?: string | null;
     provider: SupportedProvider;
     avatar: {
       url?: string | null;
       id?: string;
     };
   }) {
+    this.userId = userId;
     this.name = name ?? `User ${randomBytes(4).toString("hex")}`;
     this.provider = provider;
-    this.userId = userId;
 
     const { url: avatarUrl, id: avatarId } = avatar;
 
@@ -96,28 +96,28 @@ export class UserRepresentation {
    */
   public static from(session: Session) {
     return new UserRepresentation({
-      name: session.user.name,
       userId: session.user.id,
+      name: session.user.name,
       provider: session.provider as SupportedProvider,
       avatar: { url: session.user?.image },
     });
   }
 
   public static fromCompressedString(compressedString: string) {
-    const [, name, userId, provider, avatarId] = compressedString.match(
+    const [, userId, name, provider, avatarId] = compressedString.match(
       UserRepresentation.DECOMPRESSION_MATCHER,
     ) as string[];
 
     return new UserRepresentation({
-      name,
       userId,
+      name,
       provider: provider as SupportedProvider,
       avatar: { id: avatarId },
     });
   }
 
   public toCompressedString() {
-    return [this.name, this.userId, this.provider, this.avatarId].join(
+    return [this.userId, this.name, this.provider, this.avatarId].join(
       UserRepresentation.UNIT_SEPARATOR,
     );
   }
@@ -141,7 +141,7 @@ export class UserRepresentation {
   private getAvatarId(avatarUrl: string, provider: SupportedProvider) {
     const { matcher } = UserRepresentation.AVATAR_CONFIG[provider];
 
-    return avatarUrl.match(matcher!)?.[1] ?? UserRepresentation.UNIT_EMPTY;
+    return avatarUrl.match(matcher)?.[1] ?? UserRepresentation.UNIT_EMPTY;
   }
 
   /**
@@ -150,6 +150,6 @@ export class UserRepresentation {
   private getAvatarUrl(avatarId: string, provider: SupportedProvider) {
     const { urlPrefix, urlSuffix } = UserRepresentation.AVATAR_CONFIG[provider];
 
-    return `${urlPrefix}${avatarId}${urlSuffix}`;
+    return urlPrefix.concat(avatarId, urlSuffix);
   }
 }
