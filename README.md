@@ -21,9 +21,9 @@ Requirements: `pnpm`, `git`
 `.env.development`
 
 ```
-# port should be 3001 if you are running with docker
-NEXT_PUBLIC_URL=http://localhost:3000 
-AUTH_URL=http://localhost:3000
+# can set to 3000 if not using docker
+NEXT_PUBLIC_URL=http://localhost:3001 
+AUTH_URL=http://localhost:3001
 ```
 
 `.env.production`
@@ -44,9 +44,9 @@ AUTH_<provider>_SECRET=...
 ### Running with docker
 
 1. `docker network create ralloc_net`
-2. `cd .docker`
+2. `cd .docker`, then:
 
-**In development**: `docker compose -f compose.dev.yaml up --build` (`-d` to start detached).
+**In development**: `docker compose -f compose.dev.yaml up --build`
 
 **In production with CI/CD**:
 1. `docker compose -f compose.prod-ci.yaml pull`
@@ -63,7 +63,7 @@ AUTH_<provider>_SECRET=...
 **In production**:
 
 1. Remove `output: "standalone"` from `next.config.ts`.
-2. `pnpm run build && pnpm run start`
+2. `pnpm run deploy`
 
 ## Todo
 
