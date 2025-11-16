@@ -73,6 +73,7 @@ AUTH_<provider>_SECRET=...
 - [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
 - [ ] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
+- [ ] Implement forced group session expiry
 - [ ] (!!!) SLIDING WINDOW RATE LIMITS FOR: initial synchronisation payload of websocket AND REST api
 - [ ] (**partial**) Implement group control - UI, websockets, etc.
 - [ ] (**partial**) Document info for installation and usage on `README.md`
