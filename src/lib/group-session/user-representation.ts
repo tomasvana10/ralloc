@@ -2,21 +2,34 @@ import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
 import type { SupportedProvider } from "../types";
 
-type SupportedUrlProvider = SupportedProvider | "ui-avatars";
-
+/**
+ * Utility class that supports the storage of users in the Redis
+ * database as a set of fields, allowing other clients to reconstruct
+ * information such as their name and avatar URL.
+ *
+ * An alternative to the functionality this class provides would be
+ * persistently storing user details on session creation, and having
+ * other clients fetch this information from an API.
+ */
 export class UserRepresentation {
   public name: string;
   public userId: string;
   public avatarUrl: string;
+  public provider: SupportedProvider;
 
-  private sessionProvider: SupportedUrlProvider;
   private avatarId: string;
 
+  /**
+   * Uses ASCII Information Separator One
+   */
   private static UNIT_SEPARATOR = "\u001f";
-  private static NULL_UNIT = "\u001e";
+  /**
+   * Uses ASCII Information Separator Two
+   */
+  private static UNIT_EMPTY = "\u001e";
 
   private static AVATAR_CONFIG: Record<
-    SupportedUrlProvider,
+    SupportedProvider,
     { urlPrefix: string; urlSuffix: string; matcher: RegExp | null }
   > = {
     github: {
@@ -28,11 +41,6 @@ export class UserRepresentation {
       urlPrefix: "https://lh3.googleusercontent.com/a/",
       urlSuffix: "=s96-c",
       matcher: /^https?:\/\/lh3\.googleusercontent\.com\/a\/(.+)=s96-c$/,
-    },
-    "ui-avatars": {
-      urlPrefix: "https://ui-avatars.com/api/?name=",
-      urlSuffix: "",
-      matcher: null,
     },
   };
 
@@ -46,64 +54,80 @@ export class UserRepresentation {
       `([^${this.UNIT_SEPARATOR}]+)$`, // avatarId
   );
 
-  private static DEFAULT_IMAGE_URL = this.AVATAR_CONFIG["ui-avatars"].urlPrefix;
+  private static DEFAULT_IMAGE_URL = "https://ui-avatars.com/api/?name=";
 
-  private constructor(
-    name: string,
-    userId: string,
-    sessionProvider: SupportedUrlProvider,
-    avatar: { url?: string; id?: string },
-  ) {
-    this.name = name;
-    this.sessionProvider = sessionProvider;
+  private constructor({
+    name,
+    userId,
+    provider,
+    avatar,
+  }: {
+    name?: string | null;
+    userId: string;
+    provider: SupportedProvider;
+    avatar: {
+      url?: string | null;
+      id?: string;
+    };
+  }) {
+    this.name = name ?? `User ${randomBytes(4).toString("hex")}`;
+    this.provider = provider;
     this.userId = userId;
 
     const { url: avatarUrl, id: avatarId } = avatar;
 
-    if (sessionProvider === "ui-avatars") {
-      this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + name;
-      this.avatarId = UserRepresentation.NULL_UNIT;
+    if (avatarUrl === UserRepresentation.UNIT_EMPTY || !avatarUrl) {
+      this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + this.name;
+      this.avatarId = UserRepresentation.UNIT_EMPTY;
+      return;
+    }
+    if (avatarId === UserRepresentation.UNIT_EMPTY) {
+      this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + this.name;
+      this.avatarId = avatarId;
       return;
     }
 
-    this.avatarUrl =
-      avatarUrl ?? this.getAvatarUrl(avatarId!, this.sessionProvider);
-
-    this.avatarId =
-      avatarId ?? this.getAvatarId(avatarUrl!, this.sessionProvider);
+    this.avatarUrl = avatarUrl ?? this.getAvatarUrl(avatarId!, this.provider);
+    this.avatarId = avatarId ?? this.getAvatarId(avatarUrl!, this.provider);
   }
 
-  public static async from(session: Session) {
-    const username =
-      session.user.name ?? `User ${randomBytes(10).toString("hex")}`;
-    const image =
-      session.user?.image ?? UserRepresentation.DEFAULT_IMAGE_URL + username;
-
-    return new UserRepresentation(
-      username,
-      session.user.id,
-      image.startsWith(UserRepresentation.AVATAR_CONFIG["ui-avatars"].urlPrefix)
-        ? "ui-avatars"
-        : (session.provider as SupportedProvider),
-      { url: image },
-    );
+  /**
+   * Create a new {@link UserRepresentation} from a {@link Session}
+   */
+  public static from(session: Session) {
+    return new UserRepresentation({
+      name: session.user.name,
+      userId: session.user.id,
+      provider: session.provider as SupportedProvider,
+      avatar: { url: session.user?.image },
+    });
   }
 
   public static fromCompressedString(compressedString: string) {
-    const [, name, userId, sessionProvider, avatarId] = compressedString.match(
+    const [, name, userId, provider, avatarId] = compressedString.match(
       UserRepresentation.DECOMPRESSION_MATCHER,
     ) as string[];
 
-    return new UserRepresentation(
+    return new UserRepresentation({
       name,
       userId,
-      sessionProvider as SupportedUrlProvider,
-      {
-        id: avatarId,
-      },
+      provider: provider as SupportedProvider,
+      avatar: { id: avatarId },
+    });
+  }
+
+  public toCompressedString() {
+    return [this.name, this.userId, this.provider, this.avatarId].join(
+      UserRepresentation.UNIT_SEPARATOR,
     );
   }
 
+  /**
+   * Compare a raw user ID with a compressed user string to see if they
+   * are identical.
+   *
+   * This method only compares field 2 of the compressed data (`userId`)
+   */
   public static is(userId: string, compressedString: string) {
     return (
       UserRepresentation.fromCompressedString(compressedString).userId ===
@@ -111,28 +135,21 @@ export class UserRepresentation {
     );
   }
 
-  private getAvatarId(
-    avatarUrl: string,
-    sessionProvider: SupportedUrlProvider,
-  ) {
-    const { matcher } = UserRepresentation.AVATAR_CONFIG[sessionProvider];
+  /**
+   * Extract the avatar ID/discriminator from an avatar URL
+   */
+  private getAvatarId(avatarUrl: string, provider: SupportedProvider) {
+    const { matcher } = UserRepresentation.AVATAR_CONFIG[provider];
 
-    return avatarUrl.match(matcher!)?.[1] ?? UserRepresentation.NULL_UNIT;
+    return avatarUrl.match(matcher!)?.[1] ?? UserRepresentation.UNIT_EMPTY;
   }
 
-  private getAvatarUrl(
-    avatarId: string,
-    sessionProvider: SupportedUrlProvider,
-  ) {
-    const { urlPrefix, urlSuffix } =
-      UserRepresentation.AVATAR_CONFIG[sessionProvider];
+  /**
+   * Compose an avatar URL from an avatar ID/discriminator and provider
+   */
+  private getAvatarUrl(avatarId: string, provider: SupportedProvider) {
+    const { urlPrefix, urlSuffix } = UserRepresentation.AVATAR_CONFIG[provider];
 
     return `${urlPrefix}${avatarId}${urlSuffix}`;
-  }
-
-  public toCompressedString() {
-    return [this.name, this.userId, this.sessionProvider, this.avatarId].join(
-      UserRepresentation.UNIT_SEPARATOR,
-    );
   }
 }
