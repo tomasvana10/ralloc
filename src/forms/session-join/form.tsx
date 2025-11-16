@@ -32,6 +32,11 @@ export function SessionJoinForm() {
     mode: "onSubmit",
   });
 
+  const reset = () => {
+    state.reset();
+    form.reset(state.defaultData);
+  };
+
   const router = useRouter();
 
   React.useEffect(() => {
@@ -52,6 +57,7 @@ export function SessionJoinForm() {
           "This group session doesn't exist. Please double check you entered the code correctly.",
       });
 
+    reset();
     router.push(`/s/${data.code}`);
   }
 
