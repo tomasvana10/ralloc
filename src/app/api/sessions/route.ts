@@ -24,5 +24,5 @@ export async function POST(req: Request) {
   if (!parseResult.success) return getZodSafeParseErrorResponse(parseResult);
 
   await createGroupSession(parseResult.data, userId);
-  return Response.json({ message: "success" });
+  return Response.json({ message: "success" }, { status: 201 });
 }
