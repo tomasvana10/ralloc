@@ -64,30 +64,52 @@ function selectedSessionsReducer(
   }
 }
 
+const PATCHES_BEFORE_GET = 25;
+
 export function MySessions({ userId }: { userId: string }) {
   const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
+  const [patchCount, setPatchCount] = React.useState(0);
 
   const getter = useGetGroupSessionsSWR(userId, {
     onError: (err) =>
       toast.error(err.message, {
-        id: "getGroupSessionsSWRErr",
+        id: err.message,
       }),
   });
   const deleter = useDeleteGroupSessionSWRMutation({
     onSuccess: (code) => {
       dispatchSelectedSessions({ type: "remove", payload: code });
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(err.message, { id: err.message }),
   });
   const patcher = usePatchGroupSessionSWRMutation({
     // used specifically to lock/unlock a session rn
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(err.message, { id: err.message }),
   });
 
   const [selectedSessions, dispatchSelectedSessions] = React.useReducer(
     selectedSessionsReducer,
     new Set<string>(),
   );
+
+  function optimisticallyUpdateState(data: GroupSessionData) {
+    getter.mutate(
+      (prev) =>
+        prev?.map((session) =>
+          session.code === data.code
+            ? { ...session, frozen: !data.frozen }
+            : session,
+        ) ?? [],
+      { revalidate: false },
+    );
+  }
+
+  React.useEffect(() => {
+    if (patchCount >= PATCHES_BEFORE_GET) {
+      getter.mutate();
+      setPatchCount(0);
+    }
+  }, [patchCount, getter]);
 
   if (getter.isLoading) return <MySessionsLoading />;
   if (!getter.data.length) return <MySessionsEmpty />;
@@ -97,11 +119,14 @@ export function MySessions({ userId }: { userId: string }) {
       <AnimatePresence>
         {selectedSessions.size > 0 ? (
           <SessionActionItem
+            data={getter.data}
             state={selectedSessions}
             dispatch={dispatchSelectedSessions}
             deleter={deleter}
             getter={getter}
             patcher={patcher}
+            setPatchCount={setPatchCount}
+            optimisticallyUpdateState={optimisticallyUpdateState}
           />
         ) : null}
       </AnimatePresence>
@@ -121,7 +146,8 @@ export function MySessions({ userId }: { userId: string }) {
                 checked={selectedSessions.has(session.code)}
                 dispatch={dispatchSelectedSessions}
                 patcher={patcher}
-                getter={getter}
+                setPatchCount={setPatchCount}
+                optimisticallyUpdateState={optimisticallyUpdateState}
               />
             ))}
         </div>
@@ -131,17 +157,23 @@ export function MySessions({ userId }: { userId: string }) {
 }
 
 function SessionActionItem({
+  data,
   state,
   dispatch,
   getter,
   patcher,
   deleter,
+  setPatchCount,
+  optimisticallyUpdateState,
 }: {
+  data: GroupSessionData[];
   state: SelectedSessionsState;
   dispatch: React.Dispatch<SelectedSessionsAction>;
   getter: ReturnType<typeof useGetGroupSessionsSWR>;
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   deleter: ReturnType<typeof useDeleteGroupSessionSWRMutation>;
+  setPatchCount: React.Dispatch<React.SetStateAction<number>>;
+  optimisticallyUpdateState: (data: GroupSessionData) => void;
 }) {
   const [isLocking, setIsLocking] = React.useState(false);
   const [isUnlocking, setIsUnlocking] = React.useState(false);
@@ -212,11 +244,16 @@ function SessionActionItem({
                   .catch(() => {
                     err = 1;
                     return null;
+                  })
+                  .then(() => {
+                    optimisticallyUpdateState(
+                      data.find((d) => d.code === code)!,
+                    );
+                    setPatchCount((c) => c + 1);
                   });
               }
               setIsLocking(false);
               !err && toast.success("The selected sessions were locked.");
-              getter.mutate();
             }}
             variant="outline"
             size="icon-lg"
@@ -234,11 +271,16 @@ function SessionActionItem({
                   .catch(() => {
                     err = 1;
                     return null;
+                  })
+                  .then(() => {
+                    optimisticallyUpdateState(
+                      data.find((d) => d.code === code)!,
+                    );
+                    setPatchCount((c) => c + 1);
                   });
               }
               setIsUnlocking(false);
               !err && toast.success("The selected sessions were unlocked.");
-              getter.mutate();
             }}
             variant="outline"
             size="icon-lg"
@@ -266,14 +308,16 @@ function _SessionBlock({
   data,
   checked,
   dispatch,
-  getter,
   patcher,
+  setPatchCount,
+  optimisticallyUpdateState,
 }: {
   data: GroupSessionData;
   checked: boolean;
   dispatch: React.Dispatch<SelectedSessionsAction>;
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
-  getter: ReturnType<typeof useGetGroupSessionsSWR>;
+  setPatchCount: React.Dispatch<React.SetStateAction<number>>;
+  optimisticallyUpdateState: (data: GroupSessionData) => void;
 }) {
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
@@ -330,20 +374,12 @@ function _SessionBlock({
               disabled={isMutatingThis}
               onClick={async () => {
                 setIsMutatingThis(true);
-                getter.mutate(
-                  (prev) =>
-                    prev?.map((session) =>
-                      session.code === data.code
-                        ? { ...session, frozen: !data.frozen }
-                        : session,
-                    ) ?? [],
-                  { revalidate: false },
-                );
+                optimisticallyUpdateState(data);
                 await patcher
                   .trigger({ code: data.code, data: { frozen: !data.frozen } })
                   .catch(() => null);
-                getter.mutate();
                 setIsMutatingThis(false);
+                setPatchCount((c) => c + 1);
               }}>
               {isMutatingThis ? (
                 <Spinner />
