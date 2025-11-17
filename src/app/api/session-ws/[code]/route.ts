@@ -9,7 +9,10 @@ import {
   joinGroup,
   leaveGroup,
 } from "@/db/group-session";
-import { GroupSessionC2S, GroupSessionS2C } from "@/lib/group-session";
+import {
+  GroupSessionC2S,
+  GroupSessionS2C,
+} from "@/lib/group-session/messaging";
 import { UserRepresentation } from "@/lib/group-session/user-representation";
 
 export function GET() {

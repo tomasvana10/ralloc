@@ -3,7 +3,7 @@ import {
   SESSION_CODE_CHARACTERS,
   SESSION_CODE_CHARACTERS_EXCLUDE,
   SESSION_CODE_LENGTH,
-} from "@/lib/constants";
+} from "@/lib/group-session/constants";
 
 const REGEXP_CODE = new RegExp(`^[${SESSION_CODE_CHARACTERS}]+$`);
 

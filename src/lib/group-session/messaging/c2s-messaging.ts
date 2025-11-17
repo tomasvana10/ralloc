@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GroupSeed } from "../seed";
+import { GroupSeed } from "@/lib/seed";
 
 export namespace GroupSessionC2S {
   export const code = z.enum(["JoinGroup", "LeaveGroup"]);

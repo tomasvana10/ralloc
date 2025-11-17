@@ -17,7 +17,10 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { SESSION_CODE_CHARACTERS, SESSION_CODE_LENGTH } from "@/lib/constants";
+import {
+  SESSION_CODE_CHARACTERS,
+  SESSION_CODE_LENGTH,
+} from "@/lib/group-session/constants";
 import {
   type SessionJoinSchemaType,
   sessionJoinSchema,

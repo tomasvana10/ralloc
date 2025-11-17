@@ -3,7 +3,7 @@ import type {
   SessionCreateSchemaType,
   sessionCreateSchema,
 } from "@/forms/session-create";
-import { SESSION_CODE_LENGTH } from "@/lib/constants";
+import { SESSION_CODE_LENGTH } from "@/lib/group-session/constants";
 import { GroupSeed } from "@/lib/seed";
 import { generateSessionCode } from "@/lib/utils";
 import redis, { REDIS } from "../redis";

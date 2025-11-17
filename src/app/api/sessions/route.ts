@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { getHostedSessionCount, setGroupSession } from "@/db/group-session";
 import { sessionCreateSchema } from "@/forms/session-create";
-import { MAX_USER_SESSIONS } from "@/lib/constants";
+import { MAX_USER_SESSIONS } from "@/lib/group-session/constants";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
 export async function POST(req: Request) {

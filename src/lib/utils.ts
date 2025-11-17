@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type z from "zod";
-import { SESSION_CODE_CHARACTERS } from "./constants";
+import { SESSION_CODE_CHARACTERS } from "@/lib/group-session";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

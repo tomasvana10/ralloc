@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { GroupSessionC2S } from "@/lib/group-session";
+import { GroupSessionC2S } from "@/lib/group-session/messaging";
 import { useWebSocket } from "@/lib/hooks/websocket";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
