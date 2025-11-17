@@ -15,7 +15,7 @@ Requirements: `pnpm`, `git`
 2. `cd ralloc`
 3. `pnpm i`
 4. Create however many OAuth applications you want (ralloc currently uses Google and GitHub).
-5. Configure the provider's SVG endpoints in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that ralloc uses, you can skip this step.
+5. Configure the provider data in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that ralloc uses, you can skip this step.
 6. Create 3 environment files:
 
 `.env.development`

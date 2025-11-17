@@ -1,7 +1,7 @@
-import Image from "next/image";
 import { signIn } from "@/auth";
-import { PROVIDER_SVGS } from "@/lib/constants";
+import { PROVIDER_DATA } from "@/lib/constants";
 import type { SupportedProvider } from "@/lib/types";
+import { ProviderIcon } from "./provider-svgs";
 import { Button } from "./ui/button";
 import {
   Card,
@@ -22,15 +22,14 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 [&>form]:flex-1 [&>form>button]:w-full [&>form>button]:whitespace-nowrap">
-          {(Object.keys(PROVIDER_SVGS) as SupportedProvider[]).map(
-            (provider) => (
-              <SignInForm
-                key={provider}
-                callbackUrl={callbackUrl}
-                provider={provider}
-              />
-            ),
-          )}
+          {Object.entries(PROVIDER_DATA).map(([provider, data]) => (
+            <SignInForm
+              key={provider}
+              callbackUrl={callbackUrl}
+              provider={provider as SupportedProvider}
+              data={data}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>
@@ -40,9 +39,11 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
 export function SignInForm({
   callbackUrl,
   provider,
+  data,
 }: {
   callbackUrl?: string;
   provider: SupportedProvider;
+  data: (typeof PROVIDER_DATA)[keyof typeof PROVIDER_DATA];
 }) {
   return (
     <form
@@ -57,12 +58,7 @@ export function SignInForm({
         type="submit"
         variant="outline"
         className="flex whitespace-normal h-auto min-h-[2.5rem]">
-        <Image
-          src={PROVIDER_SVGS[provider]}
-          alt={`${provider} logo`}
-          width="20"
-          height="20"
-        />
+        {<ProviderIcon data={data} />}
         <span className="text-left">
           Sign in with {provider[0].toUpperCase() + provider.slice(1)}
         </span>
