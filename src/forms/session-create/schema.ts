@@ -61,7 +61,6 @@ export const sessionCreateSchema = z.object({
     .string()
     .trim()
     .max(1000, "Description must be at most 1000 characters")
-    .optional()
     .refine(
       (val) => !val || val.length >= 10,
       "Description must be at least 10 characters",
