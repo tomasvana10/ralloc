@@ -14,7 +14,7 @@ export async function loadLuaScript(
   name: string,
   relPath: string,
 ): Promise<LuaScript> {
-  const filePath = path.join(__dirname, relPath, name);
+  const filePath = path.join(__dirname, relPath, name.concat(".lua"));
   const source = fs.readFileSync(filePath, "utf8");
   return { sha: null, source };
 }

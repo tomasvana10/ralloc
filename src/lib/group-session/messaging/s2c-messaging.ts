@@ -38,7 +38,6 @@ export namespace GroupSessionS2C {
   export enum Code {
     GroupUpdateStatus = "GroupUpdateStatus",
     Synchronise = "Synchronise",
-    PotentialAbuse = "PotentialAbuse",
   }
 
   export namespace Payloads {
@@ -80,19 +79,7 @@ export namespace GroupSessionS2C {
       code: Code.Synchronise;
       data: GroupSessionData;
     };
-
-    /**
-     * Payload sent in response to clients that are likely abusing the
-     * websocket server :(
-     */
-    export type PotentialAbuse = {
-      code: Code.PotentialAbuse;
-      message: string;
-    };
   }
 
-  export type Payload =
-    | Payloads.GroupUpdateStatus
-    | Payloads.Synchronise
-    | Payloads.PotentialAbuse;
+  export type Payload = Payloads.GroupUpdateStatus | Payloads.Synchronise;
 }

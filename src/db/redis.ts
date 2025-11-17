@@ -33,7 +33,7 @@ const redis = globalThis.redisGlobal ?? redisClientSingleton();
 const redisPub = globalThis.redisPub ?? createPubClient(redis);
 
 export const REDIS = {
-  NAMESPACE: "ralloc",
+  NAMESPACE: "rlc",
   VERSION: "v1",
   SEP: ":",
   PREFIX_PARTS: 2,

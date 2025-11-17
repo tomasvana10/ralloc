@@ -10,6 +10,7 @@ import {
   leaveGroup,
   paths,
 } from "@/db/group-session";
+import { rateLimit } from "@/db/rate-limit";
 import redis, { createSubClient } from "@/db/redis";
 import {
   GroupSessionC2S,
@@ -94,9 +95,17 @@ export async function UPGRADE(
   const { code } = ctx.params;
 
   console.debug("new client connection");
-
   const hostId = (await getHostId(code))!;
   const session = (await auth())!;
+
+  const { res } = await rateLimit(
+    session.user.id,
+    "UPGRADE@sessions-ws/[code]",
+    12,
+    5,
+  );
+  if (res) client.close(1011, "rate limit exceeded");
+
   const pingInt = setInterval(() => {
     if (client.readyState === client.OPEN) client.ping();
   }, GroupSessionS2C.PingFrameIntervalMS);

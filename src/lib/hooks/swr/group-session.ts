@@ -4,9 +4,13 @@ import type z from "zod";
 import type { GroupSessionData } from "@/db/group-session";
 import type { SessionCreateSchemaType } from "@/forms/session-create";
 
-function throwIfUnauthorised(res: Response) {
+function throwIfUnauthorisedOrRateLimited(res: Response) {
   if (res.url.includes("/signin"))
     throw new Error("You are unauthenticated. Please reload the page.");
+  if (res.status === 429)
+    throw new Error(
+      "You are sending too many requests. Please try again in a bit.",
+    );
 }
 
 export function useGetGroupSessionsSWR(
@@ -17,7 +21,7 @@ export function useGetGroupSessionsSWR(
     `/api/host/${hostId}/sessions`,
     async (url) => {
       const res = await fetch(url);
-      throwIfUnauthorised(res);
+      throwIfUnauthorisedOrRateLimited(res);
 
       if (!res.ok) {
         if (res.status === 403) throw new Error("You don't own these sessions");
@@ -49,7 +53,7 @@ export function useCreateGroupSessionSWRMutation(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg),
       });
-      throwIfUnauthorised(res);
+      throwIfUnauthorisedOrRateLimited(res);
 
       if (!res.ok) {
         const data = await res.json();
@@ -71,7 +75,7 @@ export function useDeleteGroupSessionSWRMutation(
       const res = await fetch(`${url}/${arg.code}`, {
         method: "DELETE",
       });
-      throwIfUnauthorised(res);
+      throwIfUnauthorisedOrRateLimited(res);
 
       if (!res.ok) {
         if (res.status === 403) throw new Error("You don't own this session");
@@ -105,7 +109,7 @@ export function usePatchGroupSessionSWRMutation(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg.data),
       });
-      throwIfUnauthorised(res);
+      throwIfUnauthorisedOrRateLimited(res);
 
       if (!res.ok) {
         const data = await res.json();

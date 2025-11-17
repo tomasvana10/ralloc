@@ -1,5 +1,6 @@
 import { auth } from "@/auth";
 import { createGroupSession, getHostedSessionCount } from "@/db/group-session";
+import { rateLimit } from "@/db/rate-limit";
 import { sessionCreateSchema } from "@/forms/session-create";
 import { MAX_USER_SESSIONS } from "@/lib/group-session/constants";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
@@ -7,6 +8,14 @@ import { getZodSafeParseErrorResponse } from "@/lib/utils";
 export async function POST(req: Request) {
   const session = (await auth())!;
   const userId = session.user.id;
+
+  const { rheaders, res } = await rateLimit(
+    session.user.id,
+    "POST@sessions/",
+    15,
+    3,
+  );
+  if (res) return res;
 
   if ((await getHostedSessionCount(userId)) + 1 > MAX_USER_SESSIONS)
     return Response.json(
@@ -21,8 +30,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   const parseResult = sessionCreateSchema.safeParse(body);
 
-  if (!parseResult.success) return getZodSafeParseErrorResponse(parseResult);
+  if (!parseResult.success)
+    return rheaders(getZodSafeParseErrorResponse(parseResult));
 
   await createGroupSession(parseResult.data, userId);
-  return Response.json({ message: "success" }, { status: 201 });
+  return rheaders(Response.json({ message: "success" }, { status: 201 }));
 }
