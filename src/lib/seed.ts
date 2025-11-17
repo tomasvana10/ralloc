@@ -38,11 +38,15 @@ export class GroupSeed {
       for (const r of results) {
         if (a > b) {
           for (let i = a; i >= b; i--) {
-            next.push(r.replace(full, i.toString()));
+            next.push(
+              r.replace(full, i.toString()).slice(0, GroupSeed.MAX_PART_LENGTH),
+            );
           }
         } else {
           for (let i = a; i <= b; i++) {
-            next.push(r.replace(full, i.toString()));
+            next.push(
+              r.replace(full, i.toString()).slice(0, GroupSeed.MAX_PART_LENGTH),
+            );
           }
         }
       }
@@ -63,17 +67,25 @@ export class GroupSeed {
       for (const r of results) {
         if (a > b) {
           for (let i = a; i >= b; i--)
-            next.push(r.replace(full, String.fromCharCode(i)));
+            next.push(
+              r
+                .replace(full, String.fromCharCode(i))
+                .slice(0, GroupSeed.MAX_PART_LENGTH),
+            );
         } else {
           for (let i = a; i <= b; i++)
-            next.push(r.replace(full, String.fromCharCode(i)));
+            next.push(
+              r
+                .replace(full, String.fromCharCode(i))
+                .slice(0, GroupSeed.MAX_PART_LENGTH),
+            );
         }
       }
       results = next;
     }
 
     if (results.length > GroupSeed.MAX_PARTS) return "too_big";
-    return results.map((r) => r.slice(0, GroupSeed.MAX_PART_LENGTH));
+    return results;
   }
 
   public static expand(input: string): ExpansionResult {
@@ -83,9 +95,14 @@ export class GroupSeed {
       .filter(Boolean);
     const values = [];
 
+    let totalExpandedPartCount = 0;
+
     for (const part of filtered) {
       const result = GroupSeed.expandRange(part);
       if (!Array.isArray(result)) return { values: [], issue: result };
+      totalExpandedPartCount += result.length;
+      if (totalExpandedPartCount > GroupSeed.MAX_PARTS)
+        return { values: [], issue: "too_big" };
       values.push(...result);
     }
 
@@ -95,13 +112,5 @@ export class GroupSeed {
       return { values: [], issue: "duplicate_values" };
 
     return { values };
-  }
-
-  public static indexOf(input: string, part: string) {
-    const expansion = GroupSeed.expand(input);
-
-    if (!expansion.values.length) return -1;
-
-    return expansion.values.indexOf(part);
   }
 }
