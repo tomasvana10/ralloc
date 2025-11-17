@@ -28,11 +28,15 @@ export type GroupSessionGroupData = GroupSessionGroupMetadata & {
 };
 
 export async function getGroups(hostId: string, code: string) {
-  const groupKeys: string[] = [];
-  for await (const key of redis.scanIterator({
+  const groupKeys = new Set<string>();
+  for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allGroupNames(hostId, code),
+    COUNT: 1,
   })) {
-    groupKeys.push(...key);
+    batch.forEach((key) => {
+      groupKeys.add(key);
+      return;
+    });
   }
 
   const tx = redis.multi();
@@ -46,7 +50,7 @@ export async function getGroups(hostId: string, code: string) {
   }
 
   const results = (await tx.exec()) as unknown as Array<
-    Record<string, string> | string[]
+    /*Record<string, string> | */ string[]
   >;
   const groups: GroupSessionGroupData[] = [];
   for (let i = 0; i < groupNames.length; i++) {
@@ -63,17 +67,13 @@ export async function assembleGroupSession(
   hostId: string,
   code: string,
 ) {
-  const parsedMetadata: GroupSessionMetadata = {
-    ...metadata,
+  const session: GroupSessionData = {
     createdOn: +metadata.createdOn,
     frozen: !!+metadata.frozen,
     groupSeed: metadata.groupSeed,
     groupSize: +metadata.groupSize,
     name: metadata.name,
     description: metadata.description,
-  };
-  const session: GroupSessionData = {
-    ...parsedMetadata,
     code,
     hostId,
     groups: await getGroups(hostId, code),
@@ -92,43 +92,68 @@ export async function getGroupSessionByCode(code: string) {
 }
 
 export async function getGroupSessionsOfHost(hostId: string) {
-  const sessions: GroupSessionData[] = [];
-
+  const metadataKeys = new Set<string>();
   for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allHostMetadataKeys(hostId),
   })) {
-    for (const key of batch) {
-      const parts = key.split(REDIS.SEP);
-      const code = parts[REDIS.PREFIX_PARTS + 3];
-      sessions.push(
-        await assembleGroupSession(await redis.hGetAll(key), hostId, code),
-      );
-    }
+    batch.forEach((key) => {
+      metadataKeys.add(key);
+      return;
+    });
+  }
+
+  if (metadataKeys.size === 0) return [];
+
+  // record the codes during the pipeline for later assembly into a full group session
+  const codes: string[] = [];
+  // rule of thumb from redis docs is to use a pipeline if atomicity isn't
+  // important, as it reduces network and processing overhead
+  const pipeline = redis.multi();
+
+  for (const batch of metadataKeys) {
+    codes.push(batch.split(REDIS.SEP)[REDIS.PREFIX_PARTS + 3]);
+    pipeline.hGetAll(batch);
+  }
+  const sessions: GroupSessionData[] = [];
+  const pipelinedMetadata = await pipeline.execAsPipeline();
+
+  let i = 0;
+  for (const metadata of pipelinedMetadata) {
+    sessions.push(
+      await assembleGroupSession(
+        metadata as unknown as Record<string, string>,
+        hostId,
+        codes[i],
+      ),
+    );
+    i++;
   }
 
   return sessions;
 }
 
-export async function setGroupSession(
+export async function createGroupSession(
   data: z.output<typeof sessionCreateSchema>,
   hostId: string,
 ) {
   const code = generateSessionCode(SESSION_CODE_LENGTH);
   const metadata: GroupSessionMetadata = { createdOn: Date.now(), ...data };
 
-  await redis.hSet(paths.metadata(hostId, code), {
+  const tx = redis.multi();
+
+  tx.hSet(paths.metadata(hostId, code), {
     ...metadata,
-    frozen: Number(metadata.frozen).toString(),
+    frozen: (+metadata.frozen).toString(),
   });
-  await redis.set(paths.sessionHost(code), hostId);
+  tx.set(paths.sessionHost(code), hostId);
 
   const groupNames = GroupSeed.expand(data.groupSeed).values;
-  const tx = redis.multi();
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future
     tx.hSet(paths.groupMetadata(hostId, code, groupName), { _: "_" });
   }
+
   await tx.exec();
 }
 
@@ -142,7 +167,7 @@ export async function updateGroupSession(
       let val: string;
       switch (typeof value) {
         case "boolean":
-          val = Number(value).toString();
+          val = (+value).toString();
           break;
         case "number":
           val = value.toString();
@@ -160,16 +185,22 @@ export async function updateGroupSession(
 }
 
 export async function deleteGroupSession(hostId: string, code: string) {
-  const keys: string[] = [];
+  const sessionKeys = new Set<string>();
 
-  for await (const key of redis.scanIterator({
+  for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allHostSessionKeys(hostId, code),
+    COUNT: 1,
   })) {
-    keys.push(...key);
+    batch.forEach((key) => {
+      sessionKeys.add(key);
+      return;
+    });
   }
 
-  if (keys.length > 0) {
-    await redis.del(keys);
-  }
-  await redis.del(paths.sessionHost(code));
+  if (!sessionKeys.size) return;
+
+  await Promise.all([
+    redis.del([...sessionKeys]),
+    redis.del(paths.sessionHost(code)),
+  ]);
 }
