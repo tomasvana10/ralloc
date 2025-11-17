@@ -14,6 +14,9 @@ export function areSameCase(a: string, b: string) {
   );
 }
 
+/**
+ * Create a {@link Response} based on `parseResult`
+ */
 export function getZodSafeParseErrorResponse<T>(
   parseResult: z.ZodSafeParseError<T>,
 ) {

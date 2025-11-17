@@ -62,12 +62,12 @@ export function SessionCreateForm() {
     mode: "all",
   });
 
-  const reset = () => {
+  function reset() {
     state.reset();
     form.reset(state.defaultData);
-  };
+  }
 
-  // update zustand state when form is modified
+  // sync form to zustand store
   // biome-ignore lint/correctness/useExhaustiveDependencies: intended usage
   React.useEffect(() => {
     const sub = form.watch((data) => {

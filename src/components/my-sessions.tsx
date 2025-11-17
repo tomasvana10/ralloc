@@ -13,7 +13,7 @@ import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
 import type { GroupSessionData } from "@/db/group-session";
-import { useHasScrollbar } from "@/lib/hooks/scrollbar";
+import { useHasScrollbar } from "@/lib/hooks/has-scrollbar";
 import {
   useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,

@@ -34,13 +34,14 @@ export function SessionJoinForm() {
     mode: "onSubmit",
   });
 
-  const reset = () => {
+  function reset() {
     state.reset();
     form.reset(state.defaultData);
-  };
+  }
 
   const router = useRouter();
 
+  // sync form to zustand store
   React.useEffect(() => {
     const sub = form.watch((data) =>
       state.setData(data as Partial<SessionJoinSchemaType>),
@@ -49,6 +50,8 @@ export function SessionJoinForm() {
   }, [form, state.setData]);
 
   async function onSubmit(data: SessionJoinSchemaType) {
+    // TODO: prevent flicker that occurs when you resubmit with the error below already
+    // present (zod clears errors on submission then reapplies them)
     const exists = await fetch(`/api/sessions/${data.code}`, {
       method: "HEAD",
     }).then((res) => res.ok);
@@ -59,8 +62,9 @@ export function SessionJoinForm() {
           "This group session doesn't exist. Please double check you entered the code correctly.",
       });
 
+    // ensure the fields are clear if the user navigates back home (since the form has a global state)
     reset();
-    router.push(`/s/${data.code}`);
+    router.push(`/s/${data.code}`); // redirect the user to the session
   }
 
   return (

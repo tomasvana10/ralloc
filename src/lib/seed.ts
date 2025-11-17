@@ -11,7 +11,16 @@ interface ExpansionResult {
     | "duplicate_values";
 }
 
+/**
+ * Utility class to expand a CSV of regex-like expressions or plain text
+ * into a set of values
+ *
+ * {@link GroupSeed.expandRange} is particularly messy but takes care in
+ * preventing the CPU from exploding by exiting as soon as the value is invalid
+ * according the {@link GroupSeed}'s MAX and MIN restrictions
+ */
 export class GroupSeed {
+  public static PART_SEPARATOR = ",";
   public static MAX_PART_LENGTH = 50;
   public static MAX_PARTS = 500;
   public static MIN_PARTS = 2;
@@ -89,10 +98,9 @@ export class GroupSeed {
   }
 
   public static expand(input: string): ExpansionResult {
-    const filtered = input
-      .split(",")
-      .map((part) => part.trim())
-      .filter(Boolean);
+    // this used to trim and filter out empty strings, but zod
+    // takes care of it now
+    const filtered = input.split(GroupSeed.PART_SEPARATOR);
     const values = [];
 
     let totalExpandedPartCount = 0;

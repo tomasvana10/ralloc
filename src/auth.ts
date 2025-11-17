@@ -8,6 +8,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     authorized: async ({ auth }) => !!auth,
     jwt: async ({ token, account, profile }) => {
       if (account && profile) {
+        // acquire the account identifier and provider
         token.id = String(profile.sub || profile.id || token.id);
         token.provider = account.provider;
       }

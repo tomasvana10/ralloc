@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { GroupSeed } from "@/lib/seed";
 
+/**
+ * Client-to-server protocol library for a group session websockets
+ */
 export namespace GroupSessionC2S {
   export const code = z.enum(["JoinGroup", "LeaveGroup"]);
   export type Code = z.infer<typeof code>;

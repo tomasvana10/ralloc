@@ -5,6 +5,9 @@ import type {
 } from "@/db/group-session";
 import type { GroupSessionC2S } from ".";
 
+/**
+ * Server-to-client protocol library for group session websockets
+ */
 export namespace GroupSessionS2C {
   export namespace CloseEventCodes {
     export const GroupSessionWasDeleted = 4000;
@@ -26,6 +29,7 @@ export namespace GroupSessionS2C {
 
   /**
    * How frequently a ping frame should be sent to the client.
+   *
    * Recommended by Cloudflare on [this page](https://developers.cloudflare.com/network/websockets/)
    * to keep sockets alive.
    */

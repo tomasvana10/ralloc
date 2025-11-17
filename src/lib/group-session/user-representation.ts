@@ -126,7 +126,7 @@ export class UserRepresentation {
    * Compare a raw user ID with a compressed user string to see if they
    * are identical.
    *
-   * This method only compares field 2 of the compressed data (`userId`)
+   * This method only compares field 1 of the compressed data (`userId`)
    */
   public static is(userId: string, compressedString: string) {
     return (
@@ -136,7 +136,7 @@ export class UserRepresentation {
   }
 
   /**
-   * Extract the avatar ID/discriminator from an avatar URL
+   * Extract the avatar ID/discriminator from an avatar URL.
    */
   private getAvatarId(avatarUrl: string, provider: SupportedProvider) {
     const { matcher } = UserRepresentation.AVATAR_CONFIG[provider];
@@ -145,7 +145,7 @@ export class UserRepresentation {
   }
 
   /**
-   * Compose an avatar URL from an avatar ID/discriminator and provider
+   * Compose an avatar URL from an avatar ID/discriminator and provider.
    */
   private getAvatarUrl(avatarId: string, provider: SupportedProvider) {
     const { urlPrefix, urlSuffix } = UserRepresentation.AVATAR_CONFIG[provider];
