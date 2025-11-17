@@ -47,7 +47,7 @@ export function SessionCreateForm() {
       toast.success("Created a new group session");
       reset();
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(err.message, { id: err.message }),
   });
   const [showMarkdown, setShowMarkdown] = React.useState(false);
   const [reactMarkdown, setReactMarkdown] = useRemark();
