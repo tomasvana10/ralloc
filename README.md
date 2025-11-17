@@ -76,6 +76,9 @@ AUTH_<provider>_SECRET=...
 - [ ] (!!!) SLIDING WINDOW RATE LIMITS FOR: initial synchronisation payload of websocket AND REST api
 - [ ] (**partial**) Implement group control - UI, websockets, etc.
 - [ ] Write tests
+- [ ] Improve page metadata in general and possibly add sitemap
+- [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
+- [ ] Create a logo
 - [X] Document info for installation and usage on `README.md`
 - [X] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
 - [X] Lua scripting to ensure atomicity when joining/leaving a group
