@@ -7,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -82,46 +81,53 @@ export function SessionJoinForm() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <InputOTP
-                    maxLength={SESSION_CODE_LENGTH}
-                    value={field.value}
-                    onChange={(val) => {
-                      const clean = val
-                        .replace(
-                          new RegExp(`[^${SESSION_CODE_CHARACTERS}A-Z]`, "g"),
-                          "",
-                        )
-                        .toLowerCase();
-                      if (form.getFieldState("code").error)
-                        form.clearErrors("code");
-                      field.onChange(clean);
-                    }}
-                    aria-invalid={fieldState.invalid}>
-                    <InputOTPGroup className="flex-wrap">
-                      {Array.from({ length: SESSION_CODE_LENGTH }, (_, i) => (
-                        <InputOTPSlot
-                          {...field}
-                          index={i}
-                          // biome-ignore lint/suspicious/noArrayIndexKey: slots are fixed length and stable
-                          key={`otp-slot-${i}`}
-                        />
-                      ))}
-                    </InputOTPGroup>
-                  </InputOTP>
+                  <div className="flex gap-4 flex-wrap max-[400px]:justify-center">
+                    <InputOTP
+                      maxLength={SESSION_CODE_LENGTH}
+                      value={field.value}
+                      onChange={(val) => {
+                        const clean = val
+                          .replace(
+                            new RegExp(`[^${SESSION_CODE_CHARACTERS}A-Z]`, "g"),
+                            "",
+                          )
+                          .toLowerCase();
+                        if (form.getFieldState("code").error)
+                          form.clearErrors("code");
+                        field.onChange(clean);
+                      }}
+                      aria-invalid={fieldState.invalid}>
+                      <InputOTPGroup className="flex-wrap">
+                        {Array.from({ length: SESSION_CODE_LENGTH }, (_, i) => (
+                          <InputOTPSlot
+                            {...field}
+                            index={i}
+                            // biome-ignore lint/suspicious/noArrayIndexKey: slots are fixed length and stable
+                            key={`otp-slot-${i}`}
+                          />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                    <Button
+                      type="submit"
+                      className="max-[400px]:hidden min-w-[100px]">
+                      Join
+                    </Button>
+                  </div>
                   {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
+                    <div className="max-[400px]:flex w-full justify-center">
+                      <FieldError errors={[fieldState.error]} />
+                    </div>
                   )}
+                  <Button type="submit" className="min-[400px]:hidden w-1/2">
+                    Join
+                  </Button>
                 </Field>
               )}
             />
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter>
-        <Button type="submit" form="form-join-session">
-          Join
-        </Button>
-      </CardFooter>
     </Card>
   );
 }

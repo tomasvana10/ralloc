@@ -235,7 +235,7 @@ export function SessionCreateForm() {
         <Button
           type="submit"
           form="form-create-session"
-          className="transition-none"
+          className="transition-none min-w-[100px]"
           disabled={creator.isMutating}>
           {creator.isMutating ? <Spinner /> : null}Create
         </Button>
