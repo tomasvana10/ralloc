@@ -5,7 +5,7 @@ import { paths } from ".";
 
 type BaseGroupResult = "success" | "failure";
 
-const joinGroupScript = await loadLuaScript("join-group.lua", "session");
+const joinGroupScript = await loadLuaScript("join-group.lua", "group-session");
 export interface JoinGroupResult {
   error?: "full" | "alreadyAllocated" | "nonexistent";
 }
@@ -38,7 +38,10 @@ export async function joinGroup(
   };
 }
 
-const leaveGroupScript = await loadLuaScript("leave-group.lua", "session");
+const leaveGroupScript = await loadLuaScript(
+  "leave-group.lua",
+  "group-session",
+);
 export interface LeaveGroupResult {
   groupName?: string;
   error?: "notInGroup";
