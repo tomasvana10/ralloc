@@ -25,15 +25,15 @@ export function GET() {
 }
 
 interface State {
-  cache: {
-    groupSize: number;
-  };
+  // caching values that are frequently needed to join/leave groups
+  // reduces unecessary database calls
+  cache: Pick<GroupSessionData, "groupSize" | "frozen">;
   lastSynchroniseDueToGroupUpdateError: number;
   synchroniseCounter: number;
 }
 
-function updateCache(state: State, args: State["cache"]) {
-  state.cache.groupSize = args.groupSize;
+function updateCache(cache: State["cache"], args: State["cache"]) {
+  Object.assign(cache, args);
 }
 
 async function doSafeSync(state: State, code: string, ws: WebSocket) {
@@ -53,7 +53,7 @@ async function doSafeSync(state: State, code: string, ws: WebSocket) {
 async function prepareSyncPayload(state: State, code: string) {
   const data = await getGroupSessionByCode(code);
   if (!data) return null;
-  updateCache(state, { groupSize: data.groupSize });
+  updateCache(state.cache, { groupSize: data.groupSize, frozen: data.frozen });
 
   const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
     code: GroupSessionS2C.Code.Synchronise,
@@ -67,7 +67,7 @@ function prepareSyncPayloadFromExistingData(
   state: State,
   data: GroupSessionData,
 ) {
-  updateCache(state, { groupSize: data.groupSize });
+  updateCache(state.cache, { groupSize: data.groupSize, frozen: data.frozen });
 
   const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
     code: GroupSessionS2C.Code.Synchronise,
@@ -104,6 +104,7 @@ export async function UPGRADE(
   const state: State = {
     cache: {
       groupSize: 0,
+      frozen: false,
     },
     lastSynchroniseDueToGroupUpdateError: 0,
     synchroniseCounter: 0,
@@ -141,8 +142,6 @@ export async function UPGRADE(
   });
 
   client.on("message", async (rawPayload: any) => {
-    console.debug("new message");
-
     let serialisedPayload: Record<string, any>;
     try {
       serialisedPayload = JSON.parse(rawPayload);
@@ -165,6 +164,7 @@ export async function UPGRADE(
           session.user.id,
           UserRepresentation.from(session).toCompressedString(),
           state.cache.groupSize,
+          state.cache.frozen,
         );
 
         if (!result.error) {
@@ -189,7 +189,12 @@ export async function UPGRADE(
       }
 
       case "LeaveGroup": {
-        const result = await leaveGroup(code, hostId, session.user.id);
+        const result = await leaveGroup(
+          code,
+          hostId,
+          session.user.id,
+          state.cache.frozen,
+        );
 
         if (!result.error) {
           responsePayload = {

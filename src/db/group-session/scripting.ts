@@ -3,11 +3,12 @@ import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 import redis from "../redis";
 import { paths } from ".";
 
-type BaseGroupResult = "success" | "failure";
+type GroupResultStatus = "success" | "failure";
+type BaseGroupResultError = "frozen";
 
 const joinGroupScript = await loadLuaScript("join-group.lua", "group-session");
 export interface JoinGroupResult {
-  error?: "full" | "alreadyAllocated" | "nonexistent";
+  error?: BaseGroupResultError | "full" | "alreadyAllocated" | "nonexistent";
 }
 
 export async function joinGroup(
@@ -17,7 +18,13 @@ export async function joinGroup(
   userId: string,
   userRepresentation: string,
   groupSize: number,
+  frozen: boolean,
 ): Promise<JoinGroupResult> {
+  if (frozen)
+    return {
+      error: "frozen",
+    };
+
   const membersKey = paths.groupMembers(hostId, code, groupName);
   const userGroupKey = paths.userGroup(hostId, code, userId);
   const groupMetadataKey = paths.groupMetadata(hostId, code, groupName);
@@ -29,7 +36,7 @@ export async function joinGroup(
     arguments: [userRepresentation, groupSize.toString(), groupName],
   })) as string[];
 
-  const status: BaseGroupResult = result[0] as BaseGroupResult;
+  const status: GroupResultStatus = result[0] as GroupResultStatus;
   const message: string = result[1];
 
   return {
@@ -44,18 +51,23 @@ const leaveGroupScript = await loadLuaScript(
 );
 export interface LeaveGroupResult {
   groupName?: string;
-  error?: "notInGroup";
+  error?: BaseGroupResultError | "notInGroup";
 }
 
 export async function leaveGroup(
   code: string,
   hostId: string,
   userId: string,
+  frozen: boolean,
 ): Promise<LeaveGroupResult> {
+  if (frozen)
+    return {
+      error: "frozen",
+    };
+
   const userGroupKey = paths.userGroup(hostId, code, userId);
 
   const sha = await getLuaScriptSha(leaveGroupScript);
-
   const result = (await redis.evalSha(sha, {
     keys: [userGroupKey],
     arguments: [
@@ -64,7 +76,7 @@ export async function leaveGroup(
     ],
   })) as string[];
 
-  const status: BaseGroupResult = result[0] as BaseGroupResult;
+  const status: GroupResultStatus = result[0] as GroupResultStatus;
   const message: string = result[1];
 
   return {
