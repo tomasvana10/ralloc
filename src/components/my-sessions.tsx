@@ -30,13 +30,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "./ui/empty";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "./ui/item";
+import { Item, ItemActions, ItemContent, ItemTitle } from "./ui/item";
 import { Label } from "./ui/label";
 import { ScrollArea } from "./ui/scroll-area";
 import { Spinner } from "./ui/spinner";
@@ -312,10 +306,6 @@ function _SessionBlock({
                   {data.code}
                 </CopyableCode>
               </ItemTitle>
-              <ItemDescription
-                className={cn("line-clamp-3", data?.description && "mt-1")}>
-                {data.description}
-              </ItemDescription>
             </div>
           </div>
         </ItemContent>

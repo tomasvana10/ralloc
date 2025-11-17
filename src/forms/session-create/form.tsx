@@ -1,15 +1,16 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { InfoIcon } from "lucide-react";
+import { ScrollAreaViewport } from "@radix-ui/react-scroll-area";
+import { BadgeCheckIcon, InfoIcon } from "lucide-react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
+import { useRemark } from "react-remark";
 import { toast } from "sonner";
 import type { z } from "zod";
-import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-session";
-import { GroupSeed } from "@/lib/seed";
-import { SimpleTooltip } from "../../components/tooltip";
-import { Button } from "../../components/ui/button";
+import { SimpleTooltip } from "@/components/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,16 +18,22 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "@/components/ui/card";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
-} from "../../components/ui/field";
-import { Input } from "../../components/ui/input";
-import { Spinner } from "../../components/ui/spinner";
-import { Textarea } from "../../components/ui/textarea";
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-session";
+import { GroupSeed } from "@/lib/seed";
+import { cn } from "@/lib/utils";
 import {
   type SessionCreateSchemaType,
   sessionCreateSchema,
@@ -42,6 +49,8 @@ export function SessionCreateForm() {
     },
     onError: (err) => toast.error(err.message),
   });
+  const [showMarkdown, setShowMarkdown] = React.useState(false);
+  const [reactMarkdown, setReactMarkdown] = useRemark();
 
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
@@ -59,10 +68,12 @@ export function SessionCreateForm() {
   };
 
   // update zustand state when form is modified
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intended usage
   React.useEffect(() => {
-    const sub = form.watch((data) =>
-      state.setData(data as Partial<SessionCreateSchemaType>),
-    );
+    const sub = form.watch((data) => {
+      state.setData(data as Partial<SessionCreateSchemaType>);
+      setReactMarkdown(data?.description ?? "");
+    });
     return () => sub.unsubscribe();
   }, [form, state.setData]);
 
@@ -153,15 +164,52 @@ export function SessionCreateForm() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel htmlFor="form-create-session-description">
-                    Description
+                  <FieldLabel
+                    htmlFor="form-create-session-description"
+                    className="has-data-[state=checked]:bg-card! max-sm:flex-col max-sm:items-start max-sm:gap-2 flex-row">
+                    <div className="flex gap-1">
+                      <span>Description </span>
+                      <Badge variant="outline" asChild>
+                        <a
+                          href="https://commonmark.org/help/"
+                          target="_blank"
+                          rel="noopener">
+                          <BadgeCheckIcon /> Markdown supported
+                        </a>
+                      </Badge>
+                    </div>
+                    <div className="flex gap-1 w-full justify-end max-sm:justify-start">
+                      <Label htmlFor="preview-switch">Preview</Label>
+                      <Switch
+                        id="preview-switch"
+                        onCheckedChange={setShowMarkdown}
+                      />
+                    </div>
                   </FieldLabel>
-                  <Textarea
-                    {...field}
-                    placeholder="Juniper router allocation for this week's lab."
-                    id="form-create-session-description"
-                    aria-invalid={fieldState.invalid}
-                  />
+                  {showMarkdown ? (
+                    <ScrollArea
+                      className={cn(
+                        field.value.length > 25 ? "h-[200px]" : "h-[100px]",
+                        "border border-input rounded-md",
+                      )}>
+                      <ScrollAreaViewport className="px-2">
+                        <div className="markdown">{reactMarkdown}</div>
+                      </ScrollAreaViewport>
+                      <ScrollBar orientation="vertical" />
+                    </ScrollArea>
+                  ) : (
+                    <Textarea
+                      {...field}
+                      className="h-25"
+                      placeholder={
+                        "## Juniper router allocation for this week's lab. " +
+                        "\n" +
+                        "Visit [this link](https://example.com) for more information."
+                      }
+                      id="form-create-session-description"
+                      aria-invalid={fieldState.invalid}
+                    />
+                  )}
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
