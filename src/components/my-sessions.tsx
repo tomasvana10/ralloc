@@ -312,7 +312,8 @@ function _SessionBlock({
                   {data.code}
                 </CopyableCode>
               </ItemTitle>
-              <ItemDescription className="mt-1 line-clamp-3">
+              <ItemDescription
+                className={cn("line-clamp-3", data?.description && "mt-1")}>
                 {data.description}
               </ItemDescription>
             </div>
