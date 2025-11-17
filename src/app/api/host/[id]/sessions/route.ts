@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getGroupSessionsOfHost } from "@/db/session";
+import { getGroupSessionsOfHost } from "@/db/group-session";
 
 type Params = Promise<{ id: string }>;
 

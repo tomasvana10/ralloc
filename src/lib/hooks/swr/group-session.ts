@@ -1,7 +1,7 @@
 import useSWR, { type SWRConfiguration } from "swr";
 import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import type z from "zod";
-import type { GroupSessionData } from "@/db/session";
+import type { GroupSessionData } from "@/db/group-session";
 import type { SessionCreateSchemaType } from "@/forms/session-create";
 
 function throwIfUnauthorised(res: Response) {

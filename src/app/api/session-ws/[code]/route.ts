@@ -2,11 +2,14 @@ import type { NextRequest } from "next/server";
 import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
-import { getGroupSessionByCode } from "@/db/session";
-import { doesGroupSessionExist, getHostId } from "@/db/session/helpers";
-import { joinGroup, leaveGroup } from "@/db/session/scripting";
-import { GroupSessionC2S } from "@/lib/group-session/c2s-messaging";
-import { GroupSessionS2C } from "@/lib/group-session/s2c-messaging";
+import {
+  doesGroupSessionExist,
+  getGroupSessionByCode,
+  getHostId,
+  joinGroup,
+  leaveGroup,
+} from "@/db/group-session";
+import { GroupSessionC2S, GroupSessionS2C } from "@/lib/group-session";
 import { UserRepresentation } from "@/lib/group-session/user-representation";
 
 export function GET() {

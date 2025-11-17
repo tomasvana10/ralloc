@@ -12,13 +12,13 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
-import type { GroupSessionData } from "@/db/session";
+import type { GroupSessionData } from "@/db/group-session";
 import { useHasScrollbar } from "@/lib/hooks/scrollbar";
 import {
   useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
-} from "@/lib/hooks/swr/group-sessions";
+} from "@/lib/hooks/swr/group-session";
 import { cn } from "@/lib/utils";
 import { CopyableCode } from "./code";
 import { Button } from "./ui/button";

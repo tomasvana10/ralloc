@@ -2,8 +2,10 @@ import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { BasePage } from "@/components/base-page";
 import GroupSessionViewer from "@/components/group-session-viewer";
-import { getGroupSessionByCode } from "@/db/session";
-import { doesGroupSessionExist } from "@/db/session/helpers";
+import {
+  doesGroupSessionExist,
+  getGroupSessionByCode,
+} from "@/db/group-session";
 
 interface Props {
   params: Promise<{ code: string }>;

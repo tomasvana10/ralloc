@@ -6,7 +6,7 @@ import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
-import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-sessions";
+import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-session";
 import { GroupSeed } from "@/lib/seed";
 import { SimpleTooltip } from "../../components/tooltip";
 import { Button } from "../../components/ui/button";

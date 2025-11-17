@@ -1,10 +1,11 @@
 import { auth } from "@/auth";
 import {
   deleteGroupSession,
+  doesGroupSessionExist,
   getGroupSessionByCode,
+  getHostId,
   updateGroupSession,
-} from "@/db/session";
-import { doesGroupSessionExist, getHostId } from "@/db/session/helpers";
+} from "@/db/group-session";
 import { sessionCreateSchema } from "@/forms/session-create";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 

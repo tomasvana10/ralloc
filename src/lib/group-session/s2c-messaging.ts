@@ -1,6 +1,9 @@
-import type { GroupSessionData } from "@/db/session";
-import type { JoinGroupResult, LeaveGroupResult } from "@/db/session/scripting";
-import type { GroupSessionC2S } from "./c2s-messaging";
+import type {
+  GroupSessionData,
+  JoinGroupResult,
+  LeaveGroupResult,
+} from "@/db/group-session";
+import type { GroupSessionC2S } from ".";
 
 export namespace GroupSessionS2C {
   export namespace CloseEventCodes {
