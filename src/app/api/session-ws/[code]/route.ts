@@ -3,12 +3,14 @@ import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
 import {
-  doesGroupSessionExist,
+  type GroupSessionData,
   getGroupSessionByCode,
   getHostId,
   joinGroup,
   leaveGroup,
+  paths,
 } from "@/db/group-session";
+import redis, { createSubClient } from "@/db/redis";
 import {
   GroupSessionC2S,
   GroupSessionS2C,
@@ -23,20 +25,56 @@ export function GET() {
 }
 
 interface State {
-  cachedGroupSize: number;
+  cache: {
+    groupSize: number;
+  };
   lastSynchroniseDueToGroupUpdateError: number;
   synchroniseCounter: number;
 }
 
-async function resynchronise(ws: WebSocket, state: State, code: string) {
-  const newData = (await getGroupSessionByCode(code))!;
-  state.cachedGroupSize = newData.groupSize;
+function updateCache(state: State, args: State["cache"]) {
+  state.cache.groupSize = args.groupSize;
+}
+
+async function doSafeSync(state: State, code: string, ws: WebSocket) {
+  const syncPayload = await prepareSyncPayload(state, code);
+  if (syncPayload) {
+    send(ws, syncPayload);
+    return true;
+  } else {
+    ws.close(
+      GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
+      "The group session was deleted",
+    );
+    return false;
+  }
+}
+
+async function prepareSyncPayload(state: State, code: string) {
+  const data = await getGroupSessionByCode(code);
+  if (!data) return null;
+  updateCache(state, { groupSize: data.groupSize });
 
   const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
     code: GroupSessionS2C.Code.Synchronise,
-    data: newData,
+    data,
   };
-  send(ws, syncPayload);
+
+  return syncPayload;
+}
+
+function prepareSyncPayloadFromExistingData(
+  state: State,
+  data: GroupSessionData,
+) {
+  updateCache(state, { groupSize: data.groupSize });
+
+  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
+    code: GroupSessionS2C.Code.Synchronise,
+    data,
+  };
+
+  return syncPayload;
 }
 
 function send(ws: WebSocket, payload: GroupSessionS2C.Payload) {
@@ -59,32 +97,51 @@ export async function UPGRADE(
 
   const hostId = (await getHostId(code))!;
   const session = (await auth())!;
-
-  const initialData = (await getGroupSessionByCode(code))!;
-  const initialSyncPayload: GroupSessionS2C.Payloads.Synchronise = {
-    code: GroupSessionS2C.Code.Synchronise,
-    data: initialData,
-  };
-  send(client, initialSyncPayload);
+  const pingInt = setInterval(() => {
+    if (client.readyState === client.OPEN) client.ping();
+  }, GroupSessionS2C.PingFrameIntervalMS);
 
   const state: State = {
-    cachedGroupSize: initialData.groupSize,
+    cache: {
+      groupSize: 0,
+    },
     lastSynchroniseDueToGroupUpdateError: 0,
     synchroniseCounter: 0,
   };
 
+  if (!(await doSafeSync(state, code, client))) return;
+
+  const sub = await createSubClient(redis);
+
+  await sub.subscribe(paths.pubsub.patched(code), async (msg) => {
+    const stringifiedPayload = JSON.stringify(
+      prepareSyncPayloadFromExistingData(state, JSON.parse(msg)),
+    );
+    for (const c of server.clients) {
+      sendStringified(c, stringifiedPayload);
+    }
+  });
+
+  // the JoinGroup and LeaveGroup scripts already have checks that
+  // would return a fail code if the group session was deleted as
+  // a message was being processed. since this is extremely unlikely,
+  // an error message unindicative of what actually happened is a worthy
+  // tradeoff
+  await sub.subscribe(paths.pubsub.deleted(code), () =>
+    client.close(
+      GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
+      "The group session was deleted",
+    ),
+  );
+
+  client.on("close", () => {
+    sub.unsubscribe();
+    sub.quit();
+    clearInterval(pingInt);
+  });
+
   client.on("message", async (rawPayload: any) => {
     console.debug("new message");
-
-    // IMPORTANT! Implement pub/sub to close the websocket as the group session is deleted
-    // instead of checking if it exists for every message (also to reflect changes made
-    // throught the api)
-
-    if (!(await doesGroupSessionExist(code)))
-      return client.close(
-        GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
-        "The group session was deleted",
-      );
 
     let serialisedPayload: Record<string, any>;
     try {
@@ -107,7 +164,7 @@ export async function UPGRADE(
           payload.groupName,
           session.user.id,
           UserRepresentation.from(session).toCompressedString(),
-          state.cachedGroupSize,
+          state.cache.groupSize,
         );
 
         if (!result.error) {
@@ -166,7 +223,7 @@ export async function UPGRADE(
       // that we can send another synchronise payload
       if (timeout > GroupSessionS2C.GroupUpdateFailureSynchroniseTimeoutMS) {
         state.lastSynchroniseDueToGroupUpdateError = now;
-        await resynchronise(client, state, code);
+        if (!(await doSafeSync(state, code, client))) return;
       }
     } else {
       // successful response will be sent, thus increment the counter
@@ -187,7 +244,7 @@ export async function UPGRADE(
         // a full re-synchronisation should occur to ensure the client's data
         // is up to date
         state.synchroniseCounter = 0;
-        await resynchronise(client, state, code);
+        if (!(await doSafeSync(state, code, client))) return;
       }
     }
   });

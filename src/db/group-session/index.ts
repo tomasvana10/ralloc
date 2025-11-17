@@ -18,6 +18,10 @@ export const paths = {
     allGroupNames: (hostId: string, code: string) =>
       k("host", hostId, "session", code, "group", "*", "gmetadata"),
   },
+  pubsub: {
+    patched: (code: string) => k("gpatched", code),
+    deleted: (code: string) => k("gdeleted", code),
+  },
 };
 
 export * from "./actions";

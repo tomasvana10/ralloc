@@ -4,8 +4,10 @@ import {
   doesGroupSessionExist,
   getGroupSessionByCode,
   getHostId,
+  paths,
   updateGroupSession,
 } from "@/db/group-session";
+import { redisPub } from "@/db/redis";
 import { sessionCreateSchema } from "@/forms/session-create";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
@@ -23,6 +25,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
     );
 
   await deleteGroupSession(hostId, code);
+  redisPub.publish(paths.pubsub.deleted(code), "");
   return Response.json({ message: "success" });
 }
 
@@ -62,6 +65,10 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     );
 
   await updateGroupSession(parseResult.data, hostId, code);
+  redisPub.publish(
+    paths.pubsub.patched(code),
+    JSON.stringify(await getGroupSessionByCode(code)),
+  );
   return Response.json({ message: "success" });
 }
 

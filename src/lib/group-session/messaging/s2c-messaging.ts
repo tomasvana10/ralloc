@@ -24,6 +24,13 @@ export namespace GroupSessionS2C {
    */
   export const GroupUpdateFailureSynchroniseTimeoutMS = 3000;
 
+  /**
+   * How frequently a ping frame should be sent to the client.
+   * Recommended by Cloudflare on [this page](https://developers.cloudflare.com/network/websockets/)
+   * to keep sockets alive.
+   */
+  export const PingFrameIntervalMS = 45000;
+
   export enum Code {
     GroupUpdateStatus = "GroupUpdateStatus",
     Synchronise = "Synchronise",

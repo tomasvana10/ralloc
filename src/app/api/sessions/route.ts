@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { getHostedSessionCount, setGroupSession } from "@/db/group-session";
+import { createGroupSession, getHostedSessionCount } from "@/db/group-session";
 import { sessionCreateSchema } from "@/forms/session-create";
 import { MAX_USER_SESSIONS } from "@/lib/group-session/constants";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
@@ -23,6 +23,6 @@ export async function POST(req: Request) {
 
   if (!parseResult.success) return getZodSafeParseErrorResponse(parseResult);
 
-  await setGroupSession(parseResult.data, userId);
+  await createGroupSession(parseResult.data, userId);
   return Response.json({ message: "success" });
 }
