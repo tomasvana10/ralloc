@@ -67,23 +67,31 @@ AUTH_<provider>_SECRET=...
 
 ## Todo
 
-- [ ] i18n through `next-intl` (probably - consider using crowdin for collab. aim to support japanese, czech, french and korean)
-- [ ] Consider making a wiki
+### Important
+
 - [ ] Create `CONTRIBUTING.md`
-- [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
+- [ ] Create privacy and usage related markdown documents
 - [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
 - [ ] (!!!) SLIDING WINDOW RATE LIMITS FOR: initial synchronisation payload of websocket AND REST api
 - [ ] (**partial**) Implement group control - UI, websockets, etc.
+- [ ] Write tests
 - [X] Document info for installation and usage on `README.md`
 - [X] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
-- [X] Consider Lua scripting to ensure atomicity when joining/leaving a group
+- [X] Lua scripting to ensure atomicity when joining/leaving a group
 - [X] Revise Redis DB structure for optimisations and removal of redundant keys
 - [X] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
-- [X] Consider adding alternative authentication methods (`GitHub`)
+- [X] Add alternative authentication methods (`GitHub`)
 - [x] [Containerise](https://github.com/vercel/next.js/tree/canary/examples/with-docker-compose) - include redis image
 - [x] Configure Cloudflare tunnel and security
 - [x] Buy domain `ralloc.xyz`
 - [x] Implement home and session viewer
 - [x] Implement REST API for sessions
 - [x] Add basic Google authentication
+
+### To consider
+- [ ] i18n through `next-intl` (probably - consider using crowdin for collab. aim to support japanese, czech, french and korean)
+- [ ] Make a wiki
+- [ ] Support joining multiple groups (probably not)
+- [ ] Support for deleting and adding groups
+- [ ] Individual group freezing (should be pretty easy if I need to do it)
