@@ -72,11 +72,11 @@ AUTH_<provider>_SECRET=...
 - [ ] Create `CONTRIBUTING.md`
 - [ ] Create privacy and usage related markdown documents
 - [ ] Create support/help page (on the website or on github)
-- [ ] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
-- [ ] Implement forced group session expiry
+- [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
 - [ ] (!!!) SLIDING WINDOW RATE LIMITS FOR: initial synchronisation payload of websocket AND REST api
 - [ ] (**partial**) Implement group control - UI, websockets, etc.
-- [ ] (**partial**) Document info for installation and usage on `README.md`
+- [X] Document info for installation and usage on `README.md`
+- [X] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
 - [X] Consider Lua scripting to ensure atomicity when joining/leaving a group
 - [X] Revise Redis DB structure for optimisations and removal of redundant keys
 - [X] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
