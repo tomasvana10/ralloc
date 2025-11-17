@@ -11,11 +11,11 @@ export function ThemeCycler() {
 
   React.useEffect(() => setMounted(true), []);
 
-  const cycleTheme = React.useCallback(() => {
+  function cycleTheme() {
     if (theme === "light") setTheme("dark");
     else if (theme === "dark") setTheme("system");
     else setTheme("light");
-  }, [theme, setTheme]);
+  }
 
   if (!mounted) {
     return (

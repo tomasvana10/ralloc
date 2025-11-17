@@ -37,10 +37,10 @@ export function RoutedTabs({
   );
 }
 
+const routedMainTabs: RoutedTabData = [
+  { value: "/", label: "Home", icon: HomeIcon },
+  { value: "/sessions", label: "Sessions", icon: ListIcon },
+];
 export function RoutedMainTabs({ className, ...props }: Props) {
-  const tabs: RoutedTabData = [
-    { value: "/", label: "Home", icon: HomeIcon },
-    { value: "/sessions", label: "Sessions", icon: ListIcon },
-  ];
-  return <RoutedTabs className={className} tabs={tabs} {...props} />;
+  return <RoutedTabs className={className} tabs={routedMainTabs} {...props} />;
 }

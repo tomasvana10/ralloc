@@ -81,7 +81,7 @@ export function MySessions({ userId }: { userId: string }) {
   });
   const deleter = useDeleteGroupSessionSWRMutation({
     onSuccess: (code) => {
-      dispatchSelectedSession({ type: "remove", payload: code });
+      dispatchSelectedSessions({ type: "remove", payload: code });
     },
     onError: (err) => toast.error(err.message),
   });
@@ -90,7 +90,7 @@ export function MySessions({ userId }: { userId: string }) {
     onError: (err) => toast.error(err.message),
   });
 
-  const [selectedSessions, dispatchSelectedSession] = React.useReducer(
+  const [selectedSessions, dispatchSelectedSessions] = React.useReducer(
     selectedSessionsReducer,
     new Set<string>(),
   );
@@ -104,7 +104,7 @@ export function MySessions({ userId }: { userId: string }) {
         {selectedSessions.size > 0 ? (
           <SessionActionItem
             state={selectedSessions}
-            dispatch={dispatchSelectedSession}
+            dispatch={dispatchSelectedSessions}
             deleter={deleter}
             getter={getter}
             patcher={patcher}
@@ -125,7 +125,7 @@ export function MySessions({ userId }: { userId: string }) {
                 data={session}
                 key={session.code}
                 checked={selectedSessions.has(session.code)}
-                dispatch={dispatchSelectedSession}
+                dispatch={dispatchSelectedSessions}
                 patcher={patcher}
                 getter={getter}
               />
