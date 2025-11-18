@@ -104,7 +104,11 @@ export async function UPGRADE(
     12,
     5,
   );
-  if (res) client.close(1011, "rate limit exceeded");
+  if (res)
+    client.close(
+      GroupSessionS2C.CloseEventCodes.RateLimited,
+      "rate limit exceeded",
+    );
 
   const pingInt = setInterval(() => {
     if (client.readyState === client.OPEN) client.ping();

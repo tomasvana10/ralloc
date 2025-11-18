@@ -11,6 +11,7 @@ import type { GroupSessionC2S } from ".";
 export namespace GroupSessionS2C {
   export namespace CloseEventCodes {
     export const GroupSessionWasDeleted = 4000;
+    export const RateLimited = 4001;
   }
 
   /**
