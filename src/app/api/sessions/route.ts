@@ -33,6 +33,6 @@ export async function POST(req: Request) {
   if (!parseResult.success)
     return rheaders(getZodSafeParseErrorResponse(parseResult));
 
-  await createGroupSession(parseResult.data, userId);
-  return rheaders(Response.json({ message: "success" }, { status: 201 }));
+  const code = await createGroupSession(parseResult.data, userId);
+  return rheaders(Response.json({ code }, { status: 201 }));
 }

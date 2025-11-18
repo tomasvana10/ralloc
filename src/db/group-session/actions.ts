@@ -155,6 +155,7 @@ export async function createGroupSession(
   }
 
   await tx.exec();
+  return code;
 }
 
 export async function updateGroupSession(

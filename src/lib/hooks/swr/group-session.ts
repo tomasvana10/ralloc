@@ -30,7 +30,9 @@ export function useGetGroupSessionsSWR(
 }
 
 export function useCreateGroupSessionSWRMutation(
-  options?: Partial<SWRMutationConfiguration<any, Error, string>>,
+  options?: Partial<
+    SWRMutationConfiguration<Pick<GroupSessionData, "code">, Error, string>
+  >,
 ) {
   return useSWRMutation(
     "/api/sessions",
@@ -72,7 +74,7 @@ export function useDeleteGroupSessionSWRMutation(
 }
 
 export function usePatchGroupSessionSWRMutation(
-  options?: Partial<SWRMutationConfiguration<any, Error, string>>,
+  options?: Partial<SWRMutationConfiguration<void, Error, string>>,
 ) {
   return useSWRMutation(
     "/api/sessions",
@@ -89,8 +91,8 @@ export function usePatchGroupSessionSWRMutation(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg.data),
       });
-      return await checkResponse(res, {
-        hasJSONBody: true,
+      await checkResponse(res, {
+        hasJSONBody: false,
         errCtx: "Update group session",
       });
     },

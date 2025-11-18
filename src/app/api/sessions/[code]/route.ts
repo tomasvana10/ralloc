@@ -70,7 +70,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     paths.pubsub.patched(code),
     JSON.stringify(await getGroupSessionByCode(code)),
   );
-  return rheaders(Response.json({ message: "success" }));
+  return rheaders(new Response());
 }
 
 export async function HEAD(_: Request, { params }: { params: Params }) {
