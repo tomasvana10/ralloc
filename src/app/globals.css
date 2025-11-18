@@ -338,7 +338,7 @@
 .markdown ul,
 .markdown ol {
   margin: 1rem 0;
-  padding-left: 1rem;
+  padding-left: 0.5rem;
   list-style-position: inside;
   color: var(--foreground);
 }
@@ -346,7 +346,7 @@
 @media (min-width: 460px) {
   .markdown ul,
   .markdown ol {
-    padding-left: 2rem;
+    padding-left: 1rem;
   }
 }
 
