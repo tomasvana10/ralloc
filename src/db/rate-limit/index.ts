@@ -48,7 +48,8 @@ async function applyRateLimit(
  *
  * @returns The `{ rheaders }` callback if a rate limit wasn't applied,
  * allowing the handler to apply rate-limit related information their
- * existing response. Otherwise, {@link rateLimit}
+ * existing response. Otherwise, {@link rateLimit} returns `{ res }`
+ * for the caller to immediately return due to a rate-limit being applied.
  *
  */
 export async function rateLimit(
