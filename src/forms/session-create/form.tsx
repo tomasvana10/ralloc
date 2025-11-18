@@ -2,6 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { BadgeCheckIcon, InfoIcon } from "lucide-react";
+import Link from "next/link";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useRemark } from "react-remark";
@@ -42,8 +43,18 @@ import {
 export function SessionCreateForm() {
   const state = useSessionCreateStore();
   const creator = useCreateGroupSessionSWRMutation({
-    onSuccess: () => {
-      toast.success("Created a new group session");
+    onSuccess: (data) => {
+      toast.success(() => (
+        <span>
+          Created a{" "}
+          <Link
+            href={`/s/${data.code}`}
+            className="text-primary underline-offset-4 hover:underline">
+            new group session
+          </Link>
+          !
+        </span>
+      ));
       reset();
     },
     onError: (err) => toast.error(err.message, { id: err.message }),
