@@ -3,15 +3,7 @@ import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import type z from "zod";
 import type { GroupSessionData } from "@/db/group-session";
 import type { SessionCreateSchemaType } from "@/forms/session-create";
-
-function throwIfUnauthorisedOrRateLimited(res: Response) {
-  if (res.url.includes("/signin"))
-    throw new Error("You are unauthenticated. Please reload the page.");
-  if (res.status === 429)
-    throw new Error(
-      "You are sending too many requests. Please try again in a bit.",
-    );
-}
+import { checkResponse } from "./response";
 
 export function useGetGroupSessionsSWR(
   hostId: string,
@@ -21,13 +13,11 @@ export function useGetGroupSessionsSWR(
     `/api/host/${hostId}/sessions`,
     async (url) => {
       const res = await fetch(url);
-      throwIfUnauthorisedOrRateLimited(res);
-
-      if (!res.ok) {
-        if (res.status === 403) throw new Error("You don't own these sessions");
-        throw new Error("Your group sessions couldn't be fetched");
-      }
-      return (await res.json()).data;
+      const json = await checkResponse(res, {
+        hasJSONBody: true,
+        errCtx: "Fetch group session",
+      });
+      return json.data;
     },
     {
       errorRetryCount: 1,
@@ -53,14 +43,10 @@ export function useCreateGroupSessionSWRMutation(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg),
       });
-      throwIfUnauthorisedOrRateLimited(res);
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error?.message ?? "Unknown error");
-      }
-
-      return res.json();
+      return await checkResponse(res, {
+        hasJSONBody: true,
+        errCtx: "Create group session",
+      });
     },
     { ...options },
   );
@@ -75,16 +61,10 @@ export function useDeleteGroupSessionSWRMutation(
       const res = await fetch(`${url}/${arg.code}`, {
         method: "DELETE",
       });
-      throwIfUnauthorisedOrRateLimited(res);
-
-      if (!res.ok) {
-        if (res.status === 403) throw new Error("You don't own this session");
-        else {
-          const data = await res.json();
-          throw new Error(data.error?.message ?? "Unknown error");
-        }
-      }
-
+      await checkResponse(res, {
+        hasJSONBody: false,
+        errCtx: "Delete group session",
+      });
       return arg.code;
     },
     { ...options },
@@ -109,14 +89,10 @@ export function usePatchGroupSessionSWRMutation(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(arg.data),
       });
-      throwIfUnauthorisedOrRateLimited(res);
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error?.message ?? "Unknown error");
-      }
-
-      return res.json();
+      return await checkResponse(res, {
+        hasJSONBody: true,
+        errCtx: "Update group session",
+      });
     },
     { ...options },
   );

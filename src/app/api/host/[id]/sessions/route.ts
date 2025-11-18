@@ -17,11 +17,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
 
   if (res) return res;
 
-  if (session.user.id !== hostId)
-    return Response.json(
-      { error: { message: "unauthorised" } },
-      { status: 403 },
-    );
+  if (session.user.id !== hostId) new Response(null, { status: 403 });
 
   return rheaders(
     Response.json({ data: await getGroupSessionsOfHost(hostId) }),
