@@ -7,16 +7,17 @@ Ralloc is a web-based tool designed for fast, ephemeral group allocation.
 
 ## Installation and self-hosting
 
-If you are interested in self-hosting ralloc, follow these steps.
+If you are interested in self-hosting Ralloc, follow these steps.
 
-Requirements: `pnpm`, `git`
+Requirements: [`pnpm`](https://pnpm.io/installation)
 
 1. Clone the repository using `git clone https://github.com/tomasvana10/ralloc`
 2. `cd ralloc`
 3. `pnpm i`
-4. Create however many OAuth applications you want (ralloc currently uses Google and GitHub).
-5. Configure the provider data in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that ralloc uses, you can skip this step.
-6. Create 3 environment files:
+4. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
+5. Create however many OAuth applications you want (Ralloc currently uses Google and GitHub).
+6. Configure the provider data in [constants.ts](https://github.com/tomasvana10/ralloc/blob/main/src/lib/constants.ts). If you intend to use the providers that Ralloc uses, you can skip this step.
+7. Create 3 environment files:
 
 `.env.development`
 
