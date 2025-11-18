@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ScrollAreaViewport } from "@radix-ui/react-scroll-area";
 import { BadgeCheckIcon, InfoIcon } from "lucide-react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -179,7 +178,11 @@ export function SessionCreateForm() {
                       </Badge>
                     </div>
                     <div className="flex gap-1 w-full justify-end max-sm:justify-start">
-                      <Label htmlFor="preview-switch">Preview</Label>
+                      <Label
+                        htmlFor="preview-switch"
+                        className="text-card-foreground">
+                        Preview
+                      </Label>
                       <Switch
                         id="preview-switch"
                         onCheckedChange={setShowMarkdown}
@@ -189,12 +192,10 @@ export function SessionCreateForm() {
                   {showMarkdown ? (
                     <ScrollArea
                       className={cn(
-                        field.value.length > 25 ? "h-[200px]" : "h-[100px]",
-                        "border border-input rounded-md",
+                        field.value.length > 25 ? "h-[300px]" : "h-[100px]",
+                        "border border-input rounded-md wrap-break-word hyphens-auto",
                       )}>
-                      <ScrollAreaViewport className="px-2">
-                        <div className="markdown">{reactMarkdown}</div>
-                      </ScrollAreaViewport>
+                      <div className="markdown px-2">{reactMarkdown}</div>
                       <ScrollBar orientation="vertical" />
                     </ScrollArea>
                   ) : (
