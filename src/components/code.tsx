@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { RING_BUTTON_STYLES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface CodeProps extends React.HTMLAttributes<HTMLElement> {}
@@ -37,11 +38,12 @@ export function CopyableCode({
 
   return (
     <button
-      onClick={handleCopy}
       type="button"
+      onClick={handleCopy}
       disabled={isCopied}
-      aria-label="copy value">
-      <Code {...props}>{isCopied ? "Copied!" : children}</Code>
+      aria-label="copy value"
+      className={cn(RING_BUTTON_STYLES, className)}>
+      <code {...props}>{isCopied ? "Copied!" : children}</code>
     </button>
   );
 }

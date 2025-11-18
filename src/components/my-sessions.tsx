@@ -64,6 +64,20 @@ function selectedSessionsReducer(
   }
 }
 
+function optimisticallyUpdateSessions(
+  original: GroupSessionData,
+  changed: Partial<GroupSessionData>,
+  getter: ReturnType<typeof useGetGroupSessionsSWR>,
+) {
+  getter.mutate(
+    (prev) =>
+      prev?.map((session) =>
+        session.code === original.code ? { ...session, ...changed } : session,
+      ) ?? [],
+    { revalidate: false },
+  );
+}
+
 const PATCHES_BEFORE_GET = 25;
 
 export function MySessions({ userId }: { userId: string }) {
@@ -92,18 +106,6 @@ export function MySessions({ userId }: { userId: string }) {
     new Set<string>(),
   );
 
-  function optimisticallyUpdateState(data: GroupSessionData) {
-    getter.mutate(
-      (prev) =>
-        prev?.map((session) =>
-          session.code === data.code
-            ? { ...session, frozen: !data.frozen }
-            : session,
-        ) ?? [],
-      { revalidate: false },
-    );
-  }
-
   React.useEffect(() => {
     if (patchCount >= PATCHES_BEFORE_GET) {
       getter.mutate();
@@ -126,7 +128,6 @@ export function MySessions({ userId }: { userId: string }) {
             getter={getter}
             patcher={patcher}
             setPatchCount={setPatchCount}
-            optimisticallyUpdateState={optimisticallyUpdateState}
           />
         ) : null}
       </AnimatePresence>
@@ -145,9 +146,9 @@ export function MySessions({ userId }: { userId: string }) {
                 key={session.code}
                 checked={selectedSessions.has(session.code)}
                 dispatch={dispatchSelectedSessions}
+                getter={getter}
                 patcher={patcher}
                 setPatchCount={setPatchCount}
-                optimisticallyUpdateState={optimisticallyUpdateState}
               />
             ))}
         </div>
@@ -164,7 +165,6 @@ function SessionActionItem({
   patcher,
   deleter,
   setPatchCount,
-  optimisticallyUpdateState,
 }: {
   data: GroupSessionData[];
   state: SelectedSessionsState;
@@ -173,7 +173,6 @@ function SessionActionItem({
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   deleter: ReturnType<typeof useDeleteGroupSessionSWRMutation>;
   setPatchCount: React.Dispatch<React.SetStateAction<number>>;
-  optimisticallyUpdateState: (data: GroupSessionData) => void;
 }) {
   const [isLocking, setIsLocking] = React.useState(false);
   const [isUnlocking, setIsUnlocking] = React.useState(false);
@@ -246,8 +245,10 @@ function SessionActionItem({
                     return null;
                   })
                   .then(() => {
-                    optimisticallyUpdateState(
+                    optimisticallyUpdateSessions(
                       data.find((d) => d.code === code)!,
+                      { frozen: true },
+                      getter,
                     );
                     setPatchCount((c) => c + 1);
                   });
@@ -273,8 +274,10 @@ function SessionActionItem({
                     return null;
                   })
                   .then(() => {
-                    optimisticallyUpdateState(
+                    optimisticallyUpdateSessions(
                       data.find((d) => d.code === code)!,
+                      { frozen: false },
+                      getter,
                     );
                     setPatchCount((c) => c + 1);
                   });
@@ -308,16 +311,16 @@ function _SessionBlock({
   data,
   checked,
   dispatch,
+  getter,
   patcher,
   setPatchCount,
-  optimisticallyUpdateState,
 }: {
   data: GroupSessionData;
   checked: boolean;
   dispatch: React.Dispatch<SelectedSessionsAction>;
+  getter: ReturnType<typeof useGetGroupSessionsSWR>;
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   setPatchCount: React.Dispatch<React.SetStateAction<number>>;
-  optimisticallyUpdateState: (data: GroupSessionData) => void;
 }) {
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
@@ -374,7 +377,11 @@ function _SessionBlock({
               disabled={isMutatingThis}
               onClick={async () => {
                 setIsMutatingThis(true);
-                optimisticallyUpdateState(data);
+                optimisticallyUpdateSessions(
+                  data,
+                  { frozen: !data.frozen },
+                  getter,
+                );
                 await patcher
                   .trigger({ code: data.code, data: { frozen: !data.frozen } })
                   .catch(() => null);
