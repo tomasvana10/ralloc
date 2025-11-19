@@ -2,7 +2,7 @@ import type z from "zod";
 import type {
   SessionCreateSchemaType,
   sessionCreateSchema,
-} from "@/forms/session-create";
+} from "@/features/forms/session-create";
 import { SESSION_CODE_LENGTH } from "@/lib/group-session/constants";
 import { GroupSeed } from "@/lib/seed";
 import { generateSessionCode } from "@/lib/utils";

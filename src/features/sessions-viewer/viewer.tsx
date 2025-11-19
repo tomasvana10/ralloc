@@ -12,6 +12,25 @@ import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import * as React from "react";
 import { toast } from "sonner";
+import { CopyableCode } from "@/components/code";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
 import { useHasScrollbar } from "@/lib/hooks/has-scrollbar";
 import {
@@ -20,67 +39,16 @@ import {
   usePatchGroupSessionSWRMutation,
 } from "@/lib/hooks/swr/group-session";
 import { cn } from "@/lib/utils";
-import { CopyableCode } from "./code";
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "./ui/empty";
-import { Item, ItemActions, ItemContent, ItemTitle } from "./ui/item";
-import { Label } from "./ui/label";
-import { ScrollArea } from "./ui/scroll-area";
-import { Spinner } from "./ui/spinner";
-
-type SelectedSessionsState = Set<string>;
-
-type SelectedSessionsAction =
-  | { type: "add"; payload: string }
-  | { type: "remove"; payload: string }
-  | { type: "set"; payload: string[] }
-  | { type: "clear" };
-
-function selectedSessionsReducer(
-  state: Set<string>,
-  action: SelectedSessionsAction,
-): Set<string> {
-  switch (action.type) {
-    case "add":
-      return new Set([...state, action.payload]);
-    case "set":
-      return new Set(action.payload);
-    case "remove": {
-      const next = new Set(state);
-      next.delete(action.payload);
-      return next;
-    }
-    case "clear":
-      return new Set();
-    default:
-      return state;
-  }
-}
-
-function optimisticallyUpdateSessions(
-  original: GroupSessionData,
-  changed: Partial<GroupSessionData>,
-  getter: ReturnType<typeof useGetGroupSessionsSWR>,
-) {
-  getter.mutate(
-    (prev) =>
-      prev?.map((session) =>
-        session.code === original.code ? { ...session, ...changed } : session,
-      ) ?? [],
-    { revalidate: false },
-  );
-}
+  type SelectedSessionsAction,
+  type SelectedSessionsState,
+  selectedSessionsReducer,
+} from "./hooks";
+import { optimisticallyUpdateSessions } from "./utils";
 
 const PATCHES_BEFORE_GET = 25;
 
-export function MySessions({ userId }: { userId: string }) {
+export function SessionsViewer({ userId }: { userId: string }) {
   const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
   const [patchCount, setPatchCount] = React.useState(0);
 
@@ -120,7 +88,7 @@ export function MySessions({ userId }: { userId: string }) {
     <>
       <AnimatePresence>
         {selectedSessions.size > 0 ? (
-          <SessionActionItem
+          <ActionItem
             data={getter.data}
             state={selectedSessions}
             dispatch={dispatchSelectedSessions}
@@ -157,7 +125,7 @@ export function MySessions({ userId }: { userId: string }) {
   );
 }
 
-function SessionActionItem({
+function ActionItem({
   data,
   state,
   dispatch,

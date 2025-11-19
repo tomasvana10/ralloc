@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { createGroupSession, getHostedSessionCount } from "@/db/group-session";
 import { rateLimit } from "@/db/rate-limit";
-import { sessionCreateSchema } from "@/forms/session-create";
+import { sessionCreateSchema } from "@/features/forms/session-create";
 import { MAX_USER_SESSIONS } from "@/lib/group-session/constants";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 

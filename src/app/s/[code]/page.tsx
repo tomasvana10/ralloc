@@ -7,7 +7,7 @@ import {
   getGroupSessionByCode,
   getHostId,
 } from "@/db/group-session";
-import { GroupSessionViewer } from "@/group-session-viewer";
+import { GroupSessionViewer } from "@/features/group-session-viewer";
 import { UserRepresentation } from "@/lib/group-session";
 
 interface Props {

@@ -9,7 +9,7 @@ import {
 } from "@/db/group-session";
 import { rateLimit } from "@/db/rate-limit";
 import { redisPub } from "@/db/redis";
-import { sessionCreateSchema } from "@/forms/session-create";
+import { sessionCreateSchema } from "@/features/forms/session-create";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
 type Params = Promise<{ code: string }>;
