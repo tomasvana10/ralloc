@@ -6,11 +6,11 @@ import {
   GroupSessionS2C,
 } from "@/lib/group-session/messaging";
 import { useWebSocket } from "@/lib/hooks/websocket";
-import { canSend, getGroupUpdateErrorRepresentation } from "./utils";
+import { canSend, getFullGroupUpdateErrorMessage } from "./utils";
 
 type GroupSessionState = GroupSessionData | null;
 
-type GroupSessionModificationAction =
+type GroupSessionUpdateAction =
   | {
       type: "JoinGroup";
       payload: Extract<
@@ -32,7 +32,7 @@ type GroupSessionModificationAction =
 
 function groupSessionReducer(
   state: GroupSessionState,
-  action: GroupSessionModificationAction,
+  action: GroupSessionUpdateAction,
 ): GroupSessionState {
   if (action.type === "Synchronise") {
     return action.payload;
@@ -164,7 +164,7 @@ export function useGroupSession({
                 },
                 type: data.action === "JoinGroup" ? "LeaveGroup" : "JoinGroup",
               });
-              onError?.(getGroupUpdateErrorRepresentation(data.error));
+              onError?.(getFullGroupUpdateErrorMessage(data.error));
             } else if (!data.isReply) {
               // this payload isn't a direct reply to the original client, but
               // a one of the payloads broadcasted to all the other clients,

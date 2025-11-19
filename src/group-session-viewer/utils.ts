@@ -1,6 +1,6 @@
 import type { GroupSessionS2C } from "@/lib/group-session/messaging";
 
-export function getGroupUpdateErrorRepresentation(
+export function getFullGroupUpdateErrorMessage(
   error: Extract<
     GroupSessionS2C.Payloads.GroupUpdateStatus,
     { ok: 0 }
