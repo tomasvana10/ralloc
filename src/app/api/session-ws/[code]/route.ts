@@ -182,7 +182,7 @@ export async function UPGRADE(
 
         if (!result.error) {
           responsePayload = {
-            status: "success",
+            ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
@@ -192,7 +192,7 @@ export async function UPGRADE(
           };
         } else {
           responsePayload = {
-            status: "failure",
+            ok: 0,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             error: result.error,
@@ -211,7 +211,7 @@ export async function UPGRADE(
 
         if (!result.error) {
           responsePayload = {
-            status: "success",
+            ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
@@ -221,7 +221,7 @@ export async function UPGRADE(
           };
         } else {
           responsePayload = {
-            status: "failure",
+            ok: 0,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             error: result.error,
@@ -231,7 +231,7 @@ export async function UPGRADE(
       }
     }
 
-    if (responsePayload.status === "failure") {
+    if (!responsePayload.ok) {
       // first send the error payload so the client can inform the user
       send(client, responsePayload);
 

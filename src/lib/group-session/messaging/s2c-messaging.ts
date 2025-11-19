@@ -52,7 +52,7 @@ export namespace GroupSessionS2C {
      */
     export type GroupUpdateStatus =
       | {
-          status: "success";
+          ok: 1;
           code: Code.GroupUpdateStatus;
           action: GroupUpdateStatusAction;
           context: {
@@ -61,7 +61,7 @@ export namespace GroupSessionS2C {
           };
         }
       | {
-          status: "failure";
+          ok: 0;
           code: Code.GroupUpdateStatus;
           action: GroupUpdateStatusAction;
           error: JoinGroupResult["error"] | LeaveGroupResult["error"];
@@ -71,9 +71,9 @@ export namespace GroupSessionS2C {
      * Payload sent to the client when:
      *  1. They connect to the websocket.
      *  2. They have sent a JoinGroup or LeaveGroup payload which resulted
-     *     in a {@link GroupUpdateStatusPayload} of `status: 0` being sent
-     *     in return at least NOT_IMPLEMENTED_YET times.
-     *  3. A {@link GroupUpdateStatusPayload} of `status: 1` was sent to
+     *     in a {@link GroupUpdateStatusPayload} of `ok: 1` being sent
+     *     in return at least {@link SuccessfulResponsesBeforeResynchronise} times.
+     *  3. A {@link GroupUpdateStatusPayload} of `ok: 0` was sent to
      *     the client.
      */
     export type Synchronise = {
