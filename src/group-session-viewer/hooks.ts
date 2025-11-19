@@ -108,7 +108,9 @@ export function useGroupSession({
           type: "JoinGroup",
         });
       } else {
-        onError?.("Please try joining the group again");
+        onError?.(
+          "Your client can no longer connect to the server. Please refresh the page.",
+        );
       }
     },
     [ws, onError],
@@ -128,7 +130,9 @@ export function useGroupSession({
           type: "LeaveGroup",
         });
       } else {
-        onError?.("Please try leaving the group again");
+        onError?.(
+          "Your client can no longer connect to the server. Please refresh the page.",
+        );
       }
     },
     [ws, onError],
