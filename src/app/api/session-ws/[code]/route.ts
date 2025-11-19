@@ -194,7 +194,7 @@ export async function UPGRADE(
               groupName: payload.groupName,
               userId: rep,
             },
-            asReply: 1,
+            isReply: 1,
           };
         } else {
           responsePayload = {
@@ -228,7 +228,7 @@ export async function UPGRADE(
               groupName: result.groupName!,
               userId: rep,
             },
-            asReply: 1,
+            isReply: 1,
           };
         } else {
           responsePayload = {
@@ -264,10 +264,10 @@ export async function UPGRADE(
       state.synchroniseCounter++;
 
       const replyPayload = JSON.stringify(responsePayload);
-      // all clients other than this one will have asReply set to 0, informing them
+      // all clients other than this one will have isReply set to 0, informing them
       // that no optimistic update was performed (and thus a proper update of the data
       // must occur)
-      responsePayload.asReply = 0;
+      responsePayload.isReply = 0;
       const broadcastPayload = JSON.stringify(responsePayload);
       for (const c of server.clients) {
         if (c === client) sendStringified(c, replyPayload);

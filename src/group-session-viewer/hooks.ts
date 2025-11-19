@@ -165,7 +165,7 @@ export function useGroupSession({
                 type: data.action === "JoinGroup" ? "LeaveGroup" : "JoinGroup",
               });
               onError?.(getGroupUpdateErrorRepresentation(data.error));
-            } else if (!data.asReply) {
+            } else if (!data.isReply) {
               // this payload isn't a direct reply to the original client, but
               // a one of the payloads broadcasted to all the other clients,
               // so we must update the state.

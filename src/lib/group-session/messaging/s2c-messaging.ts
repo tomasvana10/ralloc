@@ -59,7 +59,7 @@ export namespace GroupSessionS2C {
             groupName: string;
             userId: string;
           };
-          asReply: 0 | 1;
+          isReply: 0 | 1;
         }
       | {
           ok: 0;
