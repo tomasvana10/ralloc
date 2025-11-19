@@ -42,9 +42,9 @@ export namespace GroupSessionS2C {
   }
 
   export namespace Payloads {
-    export type GroupUpdateStatusAction = Extract<
+    type _GroupUpdateStatusAction = Extract<
       "JoinGroup" | "LeaveGroup",
-      keyof typeof GroupSessionC2S.code.enum
+      GroupSessionC2S.Code
     >;
 
     /**
@@ -54,7 +54,7 @@ export namespace GroupSessionS2C {
       | {
           ok: 1;
           code: Code.GroupUpdateStatus;
-          action: GroupUpdateStatusAction;
+          action: _GroupUpdateStatusAction;
           context: {
             groupName: string;
             userId: string;
@@ -64,7 +64,7 @@ export namespace GroupSessionS2C {
       | {
           ok: 0;
           code: Code.GroupUpdateStatus;
-          action: GroupUpdateStatusAction;
+          action: _GroupUpdateStatusAction;
           context: {
             groupName: string;
             userId: string;
