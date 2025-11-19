@@ -2,7 +2,7 @@ local groupMembersKey = KEYS[1]
 local userGroupKey = KEYS[2]
 local groupMetadataKey = KEYS[3]
 
-local userRepresentation = ARGV[1]
+local compressedUser = ARGV[1]
 local groupSize = tonumber(ARGV[2])
 local groupName = ARGV[3]
 
@@ -25,7 +25,7 @@ if current >= groupSize then
 end
 
 -- user can join this group!
-redis.call("SADD", groupMembersKey, userRepresentation) -- userRepresentation is used solely for the groupMembers set
+redis.call("SADD", groupMembersKey, compressedUser) -- compressedUser is used solely for the groupMembers set
 redis.call("SET", userGroupKey, groupName) -- userId (part of userGroupKey) is used here to make lookups for step 1 MUCH easier
 
 return {"success", ""}

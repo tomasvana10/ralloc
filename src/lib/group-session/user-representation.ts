@@ -123,15 +123,19 @@ export class UserRepresentation {
   }
 
   /**
-   * Compare a raw user ID with a compressed user string to see if they
-   * are identical.
-   *
-   * This method only compares field 1 of the compressed data (`userId`)
+   * Compare two compressed strings to see if their ids match
    */
-  public static is(userId: string, compressedString: string) {
+  public static areSameCompressedUser(
+    aCompressed: string,
+    bCompressed: string,
+  ) {
+    const indexA = aCompressed.indexOf(UserRepresentation.UNIT_SEPARATOR);
+    const indexB = bCompressed.indexOf(UserRepresentation.UNIT_SEPARATOR);
+
+    if (indexA === -1 || indexB === -1) return false;
+
     return (
-      UserRepresentation.fromCompressedString(compressedString).userId ===
-      userId
+      aCompressed.substring(0, indexA) === bCompressed.substring(0, indexB)
     );
   }
 

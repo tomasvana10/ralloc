@@ -42,7 +42,7 @@ export namespace GroupSessionS2C {
   }
 
   export namespace Payloads {
-    type GroupUpdateStatusAction = Extract<
+    export type GroupUpdateStatusAction = Extract<
       "JoinGroup" | "LeaveGroup",
       keyof typeof GroupSessionC2S.code.enum
     >;
@@ -59,12 +59,20 @@ export namespace GroupSessionS2C {
             groupName: string;
             userId: string;
           };
+          asReply: 0 | 1;
         }
       | {
           ok: 0;
           code: Code.GroupUpdateStatus;
           action: GroupUpdateStatusAction;
-          error: JoinGroupResult["error"] | LeaveGroupResult["error"];
+          context: {
+            groupName: string;
+            userId: string;
+          };
+          error: Extract<
+            JoinGroupResult["error"] | LeaveGroupResult["error"],
+            string
+          >;
         };
 
     /**
@@ -74,7 +82,8 @@ export namespace GroupSessionS2C {
      *     in a {@link GroupUpdateStatusPayload} of `ok: 1` being sent
      *     in return at least {@link SuccessfulResponsesBeforeResynchronise} times.
      *  3. A {@link GroupUpdateStatusPayload} of `ok: 0` was sent to
-     *     the client.
+     *     the client and it has been at least {@link GroupUpdateFailureSynchroniseTimeoutMS}
+     *     miliseconds since the last such payload.
      */
     export type Synchronise = {
       code: Code.Synchronise;

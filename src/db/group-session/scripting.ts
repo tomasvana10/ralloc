@@ -1,4 +1,4 @@
-import { UserRepresentation } from "@/lib/group-session/user-representation";
+import { UserRepresentation } from "@/lib/group-session";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 import redis from "../redis";
 import { paths } from ".";
@@ -16,7 +16,7 @@ export async function joinGroup(
   hostId: string,
   groupName: string,
   userId: string,
-  userRepresentation: string,
+  compressedUser: string,
   groupSize: number,
   frozen: boolean,
 ): Promise<JoinGroupResult> {
@@ -33,7 +33,7 @@ export async function joinGroup(
 
   const result = (await redis.evalSha(sha, {
     keys: [membersKey, userGroupKey, groupMetadataKey],
-    arguments: [userRepresentation, groupSize.toString(), groupName],
+    arguments: [compressedUser, groupSize.toString(), groupName],
   })) as string[];
 
   const status: GroupResultStatus = result[0] as GroupResultStatus;

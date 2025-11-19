@@ -10,7 +10,6 @@ import {
   leaveGroup,
   paths,
 } from "@/db/group-session";
-import { rateLimit } from "@/db/rate-limit";
 import redis, { createSubClient } from "@/db/redis";
 import {
   GroupSessionC2S,
@@ -26,8 +25,10 @@ export function GET() {
 }
 
 interface State {
-  // caching values that are frequently needed to join/leave groups
-  // reduces unecessary database calls
+  /**
+   * Store for values that are needed to join/leave groups.
+   * Updated
+   */
   cache: Pick<GroupSessionData, "groupSize" | "frozen">;
   lastSynchroniseDueToGroupUpdateError: number;
   synchroniseCounter: number;
@@ -97,9 +98,11 @@ export async function UPGRADE(
   console.debug("new client connection");
   const hostId = (await getHostId(code))!;
   const session = (await auth())!;
+  const userId = session.user.id;
 
+  /*
   const { res } = await rateLimit(
-    session.user.id,
+    userId,
     "UPGRADE@sessions-ws/[code]",
     12,
     5,
@@ -109,6 +112,7 @@ export async function UPGRADE(
       GroupSessionS2C.CloseEventCodes.RateLimited,
       "rate limit exceeded",
     );
+    */
 
   const pingInt = setInterval(() => {
     if (client.readyState === client.OPEN) client.ping();
@@ -128,11 +132,11 @@ export async function UPGRADE(
   const sub = await createSubClient(redis);
 
   await sub.subscribe(paths.pubsub.patched(code), async (msg) => {
-    const stringifiedPayload = JSON.stringify(
+    const replyPayload = JSON.stringify(
       prepareSyncPayloadFromExistingData(state, JSON.parse(msg)),
     );
     for (const c of server.clients) {
-      sendStringified(c, stringifiedPayload);
+      sendStringified(c, replyPayload);
     }
   });
 
@@ -167,6 +171,7 @@ export async function UPGRADE(
 
     const { data: payload } = parseResult;
     let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
+    const rep = UserRepresentation.from(session).toCompressedString();
 
     switch (payload.code) {
       case "JoinGroup": {
@@ -174,8 +179,8 @@ export async function UPGRADE(
           code,
           hostId,
           payload.groupName,
-          session.user.id,
-          UserRepresentation.from(session).toCompressedString(),
+          userId,
+          rep,
           state.cache.groupSize,
           state.cache.frozen,
         );
@@ -187,14 +192,19 @@ export async function UPGRADE(
             action: payload.code,
             context: {
               groupName: payload.groupName,
-              userId: session.user.id,
+              userId: rep,
             },
+            asReply: 1,
           };
         } else {
           responsePayload = {
             ok: 0,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
+            context: {
+              groupName: payload.groupName,
+              userId: rep,
+            },
             error: result.error,
           };
         }
@@ -205,7 +215,7 @@ export async function UPGRADE(
         const result = await leaveGroup(
           code,
           hostId,
-          session.user.id,
+          userId,
           state.cache.frozen,
         );
 
@@ -216,14 +226,19 @@ export async function UPGRADE(
             action: payload.code,
             context: {
               groupName: result.groupName!,
-              userId: session.user.id,
+              userId: rep,
             },
+            asReply: 1,
           };
         } else {
           responsePayload = {
             ok: 0,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
+            context: {
+              groupName: result.groupName!,
+              userId: rep,
+            },
             error: result.error,
           };
         }
@@ -248,10 +263,15 @@ export async function UPGRADE(
       // and become closer to sending a new payload for synchronisation
       state.synchroniseCounter++;
 
-      // broadcast the successful update to all clients (including this one)
-      const stringifiedPayload = JSON.stringify(responsePayload);
+      const replyPayload = JSON.stringify(responsePayload);
+      // all clients other than this one will have asReply set to 0, informing them
+      // that no optimistic update was performed (and thus a proper update of the data
+      // must occur)
+      responsePayload.asReply = 0;
+      const broadcastPayload = JSON.stringify(responsePayload);
       for (const c of server.clients) {
-        if (c.readyState === c.OPEN) sendStringified(c, stringifiedPayload);
+        if (c === client) sendStringified(c, replyPayload);
+        else sendStringified(c, broadcastPayload);
       }
 
       if (
