@@ -5,6 +5,7 @@ import { BasePage } from "@/components/base-page";
 import {
   doesGroupSessionExist,
   getGroupSessionByCode,
+  getHostId,
 } from "@/db/group-session";
 import { GroupSessionViewer } from "@/group-session-viewer";
 import { UserRepresentation } from "@/lib/group-session";
@@ -34,10 +35,13 @@ export default async function GroupSessionPage({ params }: Props) {
 
   if (!(await doesGroupSessionExist(code))) notFound();
 
+  const hostId = (await getHostId(code))!;
+
   return (
     <BasePage returnTo="/">
       <GroupSessionViewer
         code={code}
+        hostId={hostId}
         userRepresentation={{
           avatarUrl: rep.avatarUrl,
           name: rep.name,
