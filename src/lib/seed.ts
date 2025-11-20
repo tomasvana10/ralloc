@@ -1,10 +1,6 @@
 /**
  * Utility functions to expand a CSV of regex-like expressions or plain text
  * into a set of values
- *
- * {@link expandRange} is particularly messy but takes care in
- * preventing the CPU from exploding by exiting as soon as the value is invalid
- * according the {@link seed}'s MAX and MIN restrictions
  */
 
 import { areSameCase } from "./utils";
