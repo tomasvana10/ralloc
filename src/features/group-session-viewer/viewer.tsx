@@ -14,11 +14,9 @@ import { HostControls } from "./host-controls";
 
 export function GroupSessionViewer({
   code,
-  hostId,
   userRepresentation,
 }: {
   code: string;
-  hostId: string;
   userRepresentation: {
     avatarUrl: string;
     name: string;
@@ -37,7 +35,7 @@ export function GroupSessionViewer({
 
   return (
     <>
-      {hostId === data.hostId && <HostControls />}
+      {userRepresentation.userId === data.hostId && <HostControls />}
       <CollapsibleGroupSessionDescription
         description={data.description || "no description"}
       />
