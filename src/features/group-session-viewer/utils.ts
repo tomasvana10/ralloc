@@ -1,3 +1,5 @@
+import type { GroupSessionData } from "@/db/group-session";
+import { UserRepresentation } from "@/lib/group-session";
 import type { GroupSessionS2C } from "@/lib/group-session/messaging";
 
 export function getFullGroupUpdateErrorMessage(
@@ -8,9 +10,9 @@ export function getFullGroupUpdateErrorMessage(
 ) {
   switch (error) {
     case "alreadyAllocated":
-      return "You are already allocated to this group";
+      return "You are already allocated a group";
     case "frozen":
-      return "This group is locked";
+      return "The group session is locked";
     case "full":
       return "This group is full";
     case "nonexistent":
@@ -22,4 +24,17 @@ export function getFullGroupUpdateErrorMessage(
 
 export function canSend(ws: WebSocket | null): ws is WebSocket {
   return !!ws && ws.readyState === ws.OPEN;
+}
+
+export function findCurrentGroup(
+  data: GroupSessionData,
+  compressedUser: string,
+) {
+  return (
+    data.groups.find((group) =>
+      group.members.some((member) =>
+        UserRepresentation.areSameCompressedUser(compressedUser, member),
+      ),
+    ) ?? null
+  );
 }

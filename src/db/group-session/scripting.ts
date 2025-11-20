@@ -3,13 +3,49 @@ import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 import redis from "../redis";
 import { paths } from ".";
 
-type GroupResultStatus = "success" | "failure";
-type BaseGroupResultError = "frozen";
+function parseScriptResult(result: string[]) {
+  const status = result[0] as "failure" | "success";
+  const message = result[1];
+  const originalGroupName = result[2] || undefined;
+  const newGroupName = result[3] || undefined;
+
+  return { status, message, originalGroupName, newGroupName };
+}
+
+type BaseGroupResultErrorMessage = "frozen";
+
+type BaseGroupResult = {
+  originalGroupName: string | null;
+  newGroupName: string | null;
+};
+
+export type GroupResult =
+  | ({
+      status: "success";
+    } & BaseGroupResult)
+  | ({
+      status: "joinFailure";
+      message:
+        | BaseGroupResultErrorMessage
+        | "full"
+        | "alreadyAllocated"
+        | "nonexistent";
+    } & BaseGroupResult)
+  | ({
+      status: "leaveFailure";
+      message: BaseGroupResultErrorMessage | "notInGroup";
+    } & BaseGroupResult);
+
+export type JoinGroupError = Extract<
+  GroupResult,
+  { status: "joinFailure" }
+>["message"];
+export type LeaveGroupError = Extract<
+  GroupResult,
+  { status: "leaveFailure" }
+>["message"];
 
 const joinGroupScript = await loadLuaScript("join-group", "group-session");
-export interface JoinGroupResult {
-  error?: BaseGroupResultError | "full" | "alreadyAllocated" | "nonexistent";
-}
 
 export async function joinGroup(
   code: string,
@@ -19,12 +55,7 @@ export async function joinGroup(
   compressedUser: string,
   groupSize: number,
   frozen: boolean,
-): Promise<JoinGroupResult> {
-  if (frozen)
-    return {
-      error: "frozen",
-    };
-
+): Promise<Extract<GroupResult, { status: "success" | "joinFailure" }>> {
   const membersKey = paths.groupMembers(hostId, code, groupName);
   const userGroupKey = paths.userGroup(hostId, code, userId);
   const groupMetadataKey = paths.groupMetadata(hostId, code, groupName);
@@ -33,35 +64,46 @@ export async function joinGroup(
 
   const result = (await redis.evalSha(sha, {
     keys: [membersKey, userGroupKey, groupMetadataKey],
-    arguments: [compressedUser, groupSize.toString(), groupName],
+    arguments: [
+      compressedUser,
+      groupSize.toString(),
+      groupName,
+      (+frozen).toString(),
+    ],
   })) as string[];
 
-  const status: GroupResultStatus = result[0] as GroupResultStatus;
-  const message: string = result[1];
+  const { status, message, newGroupName, originalGroupName } =
+    parseScriptResult(result);
+
+  const shared = {
+    newGroupName: newGroupName || null,
+    originalGroupName: originalGroupName || null,
+  };
+
+  if (status === "failure")
+    return {
+      status: "joinFailure",
+      message: message as Extract<
+        GroupResult,
+        { status: "joinFailure" }
+      >["message"],
+      ...shared,
+    };
 
   return {
-    error:
-      status === "failure" ? (message as JoinGroupResult["error"]) : undefined,
+    status: "success",
+    ...shared,
   };
 }
 
 const leaveGroupScript = await loadLuaScript("leave-group", "group-session");
-export interface LeaveGroupResult {
-  groupName?: string;
-  error?: BaseGroupResultError | "notInGroup";
-}
 
 export async function leaveGroup(
   code: string,
   hostId: string,
   userId: string,
   frozen: boolean,
-): Promise<LeaveGroupResult> {
-  if (frozen)
-    return {
-      error: "frozen",
-    };
-
+): Promise<Extract<GroupResult, { status: "success" | "leaveFailure" }>> {
   const userGroupKey = paths.userGroup(hostId, code, userId);
 
   const sha = await getLuaScriptSha(leaveGroupScript);
@@ -70,15 +112,30 @@ export async function leaveGroup(
     arguments: [
       userId + UserRepresentation.UNIT_SEPARATOR,
       paths.groupMembers(hostId, code, "<groupName>"),
+      (+frozen).toString(),
     ],
   })) as string[];
 
-  const status: GroupResultStatus = result[0] as GroupResultStatus;
-  const message: string = result[1];
+  const { status, message, newGroupName, originalGroupName } =
+    parseScriptResult(result);
+
+  const shared = {
+    newGroupName: newGroupName || null,
+    originalGroupName: originalGroupName || null,
+  };
+
+  if (status === "failure")
+    return {
+      status: "leaveFailure",
+      message: message as Extract<
+        GroupResult,
+        { status: "leaveFailure" }
+      >["message"],
+      ...shared,
+    };
 
   return {
-    groupName: status === "success" ? message : undefined,
-    error:
-      status === "failure" ? (message as LeaveGroupResult["error"]) : undefined,
+    status: "success",
+    ...shared,
   };
 }

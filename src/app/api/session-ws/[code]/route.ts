@@ -83,7 +83,7 @@ function send(ws: WebSocket, payload: GroupSessionS2C.Payload) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(payload));
 }
 
-function sendStringified(ws: WebSocket, payload: string) {
+function sendPreStringified(ws: WebSocket, payload: string) {
   if (ws.readyState === ws.OPEN) ws.send(payload);
 }
 
@@ -95,7 +95,6 @@ export async function UPGRADE(
 ) {
   const { code } = ctx.params;
 
-  console.debug("new client connection");
   const hostId = (await getHostId(code))!;
   const session = (await auth())!;
   const userId = session.user.id;
@@ -136,7 +135,7 @@ export async function UPGRADE(
       prepareSyncPayloadFromExistingData(state, JSON.parse(msg)),
     );
     for (const c of server.clients) {
-      sendStringified(c, replyPayload);
+      sendPreStringified(c, replyPayload);
     }
   });
 
@@ -171,30 +170,36 @@ export async function UPGRADE(
 
     const { data: payload } = parseResult;
     let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
-    const rep = UserRepresentation.from(session).toCompressedString();
+    const compressedUser =
+      UserRepresentation.from(session).toCompressedString();
 
     switch (payload.code) {
-      case "JoinGroup": {
+      case "J": {
         const result = await joinGroup(
           code,
           hostId,
           payload.groupName,
           userId,
-          rep,
+          compressedUser,
           state.cache.groupSize,
           state.cache.frozen,
         );
 
-        if (!result.error) {
+        const g0 = payload.groupName;
+        const { originalGroupName: g1, newGroupName: g2 } = result;
+
+        if (result.status === "success") {
           responsePayload = {
             ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
-              groupName: payload.groupName,
-              userId: rep,
+              g0,
+              g1,
+              g2,
+              compressedUser,
             },
-            isReply: 1,
+            isReply: 0,
           };
         } else {
           responsePayload = {
@@ -202,16 +207,19 @@ export async function UPGRADE(
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
-              groupName: payload.groupName,
-              userId: rep,
+              g0,
+              g1,
+              g2,
+              compressedUser,
             },
-            error: result.error,
+            willSync: false,
+            error: result.message,
           };
         }
         break;
       }
 
-      case "LeaveGroup": {
+      case "L": {
         const result = await leaveGroup(
           code,
           hostId,
@@ -219,16 +227,19 @@ export async function UPGRADE(
           state.cache.frozen,
         );
 
-        if (!result.error) {
+        const { originalGroupName: g1, newGroupName: g2 } = result;
+
+        if (result.status === "success") {
           responsePayload = {
             ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
-              groupName: result.groupName!,
-              userId: rep,
+              g1,
+              g2,
+              compressedUser,
             },
-            isReply: 1,
+            isReply: 0,
           };
         } else {
           responsePayload = {
@@ -236,10 +247,12 @@ export async function UPGRADE(
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
-              groupName: result.groupName!,
-              userId: rep,
+              g1,
+              g2,
+              compressedUser,
             },
-            error: result.error,
+            willSync: false,
+            error: result.message,
           };
         }
         break;
@@ -248,13 +261,17 @@ export async function UPGRADE(
 
     if (!responsePayload.ok) {
       // first send the error payload so the client can inform the user
-      send(client, responsePayload);
 
       const now = Date.now();
       const timeout = now - state.lastSynchroniseDueToGroupUpdateError;
+      const shouldSync =
+        timeout > GroupSessionS2C.GroupUpdateFailureSynchroniseTimeoutMS;
+
+      if (shouldSync) responsePayload.willSync = true;
+      send(client, responsePayload);
       // it has been long enough since the last synchronisation due to error
       // that we can send another synchronise payload
-      if (timeout > GroupSessionS2C.GroupUpdateFailureSynchroniseTimeoutMS) {
+      if (shouldSync) {
         state.lastSynchroniseDueToGroupUpdateError = now;
         if (!(await doSafeSync(state, code, client))) return;
       }
@@ -263,15 +280,12 @@ export async function UPGRADE(
       // and become closer to sending a new payload for synchronisation
       state.synchroniseCounter++;
 
-      const replyPayload = JSON.stringify(responsePayload);
-      // all clients other than this one will have isReply set to 0, informing them
-      // that no optimistic update was performed (and thus a proper update of the data
-      // must occur)
-      responsePayload.isReply = 0;
       const broadcastPayload = JSON.stringify(responsePayload);
+      responsePayload.isReply = 1;
+      const replyPayload = JSON.stringify(responsePayload);
       for (const c of server.clients) {
-        if (c === client) sendStringified(c, replyPayload);
-        else sendStringified(c, broadcastPayload);
+        if (c === client) sendPreStringified(c, replyPayload);
+        else sendPreStringified(c, broadcastPayload);
       }
 
       if (

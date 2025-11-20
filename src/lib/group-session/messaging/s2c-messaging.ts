@@ -1,7 +1,7 @@
 import type {
   GroupSessionData,
-  JoinGroupResult,
-  LeaveGroupResult,
+  JoinGroupError,
+  LeaveGroupError,
 } from "@/db/group-session";
 import type { GroupSessionC2S } from ".";
 
@@ -20,13 +20,13 @@ export namespace GroupSessionS2C {
    * payloads of {@link Payloads.GroupUpdateStatus}, and since they do not provide the full
    * data, this variable is useful.
    */
-  export const SuccessfulResponsesBeforeResynchronise = 7;
+  export const SuccessfulResponsesBeforeResynchronise = 10;
 
   /**
    * The minimum time in miliseconds between two unsuccessful responses for the server
    * to resend the full group session data.
    */
-  export const GroupUpdateFailureSynchroniseTimeoutMS = 3000;
+  export const GroupUpdateFailureSynchroniseTimeoutMS = 5000;
 
   /**
    * How frequently a ping frame should be sent to the client.
@@ -37,43 +37,44 @@ export namespace GroupSessionS2C {
   export const PingFrameIntervalMS = 45000;
 
   export enum Code {
-    GroupUpdateStatus = "GroupUpdateStatus",
-    Synchronise = "Synchronise",
+    GroupUpdateStatus = "GUS", // look at me hector
+    Synchronise = "S",
   }
 
   export namespace Payloads {
-    type _GroupUpdateStatusAction = Extract<
-      "JoinGroup" | "LeaveGroup",
-      GroupSessionC2S.Code
-    >;
+    type _BaseGroupUpdateStatus = {
+      code: Code.GroupUpdateStatus;
+      action: Extract<GroupSessionC2S.Code, "J" | "L">;
+      context: {
+        /**
+         * Group the user tried to join
+         */
+        g0?: string;
+        /**
+         * Group the user was in before the server processed their request
+         */
+        g1: string | null;
+        /**
+         * Group the user is now in
+         */
+        g2: string | null;
+        compressedUser: string;
+      };
+    };
 
     /**
      * Payload sent in response to a client joining/leaving a group
      */
     export type GroupUpdateStatus =
-      | {
+      | ({
           ok: 1;
-          code: Code.GroupUpdateStatus;
-          action: _GroupUpdateStatusAction;
-          context: {
-            groupName: string;
-            userId: string;
-          };
           isReply: 0 | 1;
-        }
-      | {
+        } & _BaseGroupUpdateStatus)
+      | ({
           ok: 0;
-          code: Code.GroupUpdateStatus;
-          action: _GroupUpdateStatusAction;
-          context: {
-            groupName: string;
-            userId: string;
-          };
-          error: Extract<
-            JoinGroupResult["error"] | LeaveGroupResult["error"],
-            string
-          >;
-        };
+          willSync: boolean;
+          error: JoinGroupError | LeaveGroupError;
+        } & _BaseGroupUpdateStatus);
 
     /**
      * Payload sent to the client when:

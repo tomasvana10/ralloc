@@ -1,7 +1,14 @@
 "use client";
 
-import React from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import {
+  Item,
+  ItemActions,
+  ItemDescription,
+  ItemHeader,
+  ItemTitle,
+} from "@/components/ui/item";
 import { useGroupSession } from "./hooks";
 import { HostControls } from "./host-controls";
 
@@ -19,8 +26,9 @@ export function GroupSessionViewer({
     compressedUser: string;
   };
 }) {
-  const { data, joinGroup, leaveGroup } = useGroupSession({
+  const { data, joinGroup, leaveGroup, currentGroup } = useGroupSession({
     code,
+    thisCompressedUser: userRepresentation.compressedUser,
     onClose: (reason) => reason && toast.error(`Closed: '${reason}'`),
     onError: (msg) => toast.error(msg),
   });
@@ -30,31 +38,75 @@ export function GroupSessionViewer({
   return (
     <>
       {hostId === data.hostId && <HostControls />}
-      <CollapsibleGroupSessionDescription description="" />
-      {data.groups.map(({ members, name }) => (
-        // zod validation (through GroupSeed) prevents duplicate group names,
-        // so using `name` as the key is fine
-        <Group members={members} name={name} key={name} />
-      ))}
-      <p>{JSON.stringify(data.groups)}</p>
-      <p>{data.frozen ? "Frozen" : "Not frozen"}</p>
+      <CollapsibleGroupSessionDescription
+        description={data.description || "no description"}
+      />
+      <p>Current group: {JSON.stringify(currentGroup)}</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {data.groups.map(({ members, name }) => (
+          // zod validation (through GroupSeed) prevents duplicate group names,
+          // so using `name` as the key is fine
+          <Group
+            key={name}
+            members={members}
+            name={name}
+            compressedUser={userRepresentation.compressedUser}
+            currentGroup={currentGroup?.name ?? null}
+            joinGroup={joinGroup}
+            leaveGroup={leaveGroup}
+          />
+        ))}
+      </div>
     </>
   );
 }
 
-export function CollapsibleGroupSessionDescription({
+function CollapsibleGroupSessionDescription({
   description,
 }: {
   description: string;
 }) {
-  return <p>Description</p>;
+  return <p>{description}</p>;
 }
 
-const Group = React.memo(
-  _Group,
-  (prev, next) =>
-    prev.name === next.name && prev.members.length === next.members.length,
-);
-export function _Group({ name, members }: { name: string; members: string[] }) {
-  return <p>Group</p>;
+function Group({
+  name,
+  members,
+  compressedUser,
+  currentGroup,
+  joinGroup: join,
+  leaveGroup: leave,
+}: {
+  name: string;
+  members: string[];
+  compressedUser: string;
+  currentGroup: string | null;
+} & Pick<ReturnType<typeof useGroupSession>, "joinGroup" | "leaveGroup">) {
+  const isCurrent = currentGroup === name;
+  return (
+    <Item variant="outline" size="sm">
+      <ItemHeader>
+        <ItemTitle>{name}</ItemTitle>
+      </ItemHeader>
+      <ItemDescription>{members.join(", ")}</ItemDescription>
+      <ItemActions>
+        {isCurrent ? (
+          <Button onClick={() => leave(name, compressedUser)}>Leave</Button>
+        ) : (
+          currentGroup && (
+            <Button
+              onClick={() => {
+                if (currentGroup) leave(currentGroup, compressedUser);
+                join(name, compressedUser);
+              }}>
+              Switch
+            </Button>
+          )
+        )}
+        {!currentGroup && (
+          <Button onClick={() => join(name, compressedUser)}>Join</Button>
+        )}
+      </ItemActions>
+    </Item>
+  );
 }
