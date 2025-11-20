@@ -32,7 +32,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/swr/group-session";
-import { GroupSeed } from "@/lib/seed";
+import { expand, seed } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 import {
   type SessionCreateSchemaType,
@@ -244,9 +244,9 @@ export function SessionCreateForm() {
                           <br />
                           <p>
                             The amount of expanded values must not exceed{" "}
-                            {GroupSeed.MAX_PARTS}. Any expanded values greater
-                            than {GroupSeed.MAX_PART_LENGTH} characters in
-                            length will be truncated.
+                            {seed.MAX_PARTS}. Any expanded values greater than{" "}
+                            {seed.MAX_PART_LENGTH} characters in length will be
+                            truncated.
                           </p>
                           <br />
                           <p>
@@ -279,7 +279,7 @@ export function SessionCreateForm() {
                         <InfoIcon className="size-4 min-w-4 min-h-4" />
                         <span className="pr-1.5 pl-1">Expands to: </span>
                         <p className="text-ellipsis overflow-hidden">
-                          {GroupSeed.expand(form.getValues("groupSeed"))
+                          {expand(form.getValues("groupSeed"))
                             .values.join(", ")
                             .slice(0, 150)}
                         </p>

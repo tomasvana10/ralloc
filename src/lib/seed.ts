@@ -1,6 +1,15 @@
+/**
+ * Utility functions to expand a CSV of regex-like expressions or plain text
+ * into a set of values
+ *
+ * {@link expandRange} is particularly messy but takes care in
+ * preventing the CPU from exploding by exiting as soon as the value is invalid
+ * according the {@link seed}'s MAX and MIN restrictions
+ */
+
 import { areSameCase } from "./utils";
 
-interface ExpansionResult {
+export interface ExpansionResult {
   values: string[];
   issue?:
     | "too_big"
@@ -11,114 +20,103 @@ interface ExpansionResult {
     | "duplicate_values";
 }
 
-/**
- * Utility class to expand a CSV of regex-like expressions or plain text
- * into a set of values
- *
- * {@link GroupSeed.expandRange} is particularly messy but takes care in
- * preventing the CPU from exploding by exiting as soon as the value is invalid
- * according the {@link GroupSeed}'s MAX and MIN restrictions
- */
-export class GroupSeed {
-  public static PART_SEPARATOR = ",";
-  public static MAX_PART_LENGTH = 50;
-  public static MAX_PARTS = 500;
-  public static MIN_PARTS = 2;
-  public static MAX_NUM_RANGES_PER_PART = 2;
-  public static MAX_CHAR_RANGES_PER_PART = 2;
-  private static NUM_RANGE_REGEX = /\[(-?\d+)-(-?\d+)\]/g;
-  private static CHAR_RANGE_REGEX = /\[([a-zA-Z])-([a-zA-Z])\]/g;
+export const seed = {
+  PART_SEPARATOR: ",",
+  MAX_PART_LENGTH: 50,
+  MAX_PARTS: 500,
+  MIN_PARTS: 2,
+  MAX_NUM_RANGES_PER_PART: 2,
+  MAX_CHAR_RANGES_PER_PART: 2,
+  NUM_RANGE_REGEX: /\[(-?\d+)-(-?\d+)\]/g,
+  CHAR_RANGE_REGEX: /\[([a-zA-Z])-([a-zA-Z])\]/g,
+};
 
-  private static expandRange(
-    part: string,
-  ): ExpansionResult["issue"] | string[] {
-    let results = [part];
+export function expand(input: string): ExpansionResult {
+  // this used to trim and filter out empty strings, but zod
+  // takes care of it now
+  const filtered = input.split(seed.PART_SEPARATOR);
+  const values = [];
 
-    const numRanges = [...part.matchAll(GroupSeed.NUM_RANGE_REGEX)];
-    if (numRanges.length > GroupSeed.MAX_NUM_RANGES_PER_PART)
-      return "too_many_num_ranges";
-    for (const [full, start, end] of numRanges) {
-      if (start === end) return "invalid_range";
-      const [a, b] = [Number(start), Number(end)];
-      if ((Math.abs(a - b) + 1) * results.length > GroupSeed.MAX_PARTS)
-        return "too_big";
+  let totalExpandedPartCount = 0;
 
-      const next: string[] = [];
-      for (const r of results) {
-        if (a > b) {
-          for (let i = a; i >= b; i--) {
-            next.push(
-              r.replace(full, i.toString()).slice(0, GroupSeed.MAX_PART_LENGTH),
-            );
-          }
-        } else {
-          for (let i = a; i <= b; i++) {
-            next.push(
-              r.replace(full, i.toString()).slice(0, GroupSeed.MAX_PART_LENGTH),
-            );
-          }
-        }
-      }
-      results = next;
-    }
-
-    const charRanges = [...part.matchAll(GroupSeed.CHAR_RANGE_REGEX)];
-    if (charRanges.length > GroupSeed.MAX_CHAR_RANGES_PER_PART)
-      return "too_many_char_ranges";
-    for (const [full, start, end] of charRanges) {
-      if (start === end) return "invalid_range";
-      if (!areSameCase(start, end)) return "invalid_range";
-      const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
-      if ((Math.abs(b - a) + 1) * results.length > GroupSeed.MAX_PARTS)
-        return "too_big";
-
-      const next: string[] = [];
-      for (const r of results) {
-        if (a > b) {
-          for (let i = a; i >= b; i--)
-            next.push(
-              r
-                .replace(full, String.fromCharCode(i))
-                .slice(0, GroupSeed.MAX_PART_LENGTH),
-            );
-        } else {
-          for (let i = a; i <= b; i++)
-            next.push(
-              r
-                .replace(full, String.fromCharCode(i))
-                .slice(0, GroupSeed.MAX_PART_LENGTH),
-            );
-        }
-      }
-      results = next;
-    }
-
-    if (results.length > GroupSeed.MAX_PARTS) return "too_big";
-    return results;
+  for (const part of filtered) {
+    const result = expandRange(part);
+    if (!Array.isArray(result)) return { values: [], issue: result };
+    totalExpandedPartCount += result.length;
+    if (totalExpandedPartCount > seed.MAX_PARTS)
+      return { values: [], issue: "too_big" };
+    values.push(...result);
   }
 
-  public static expand(input: string): ExpansionResult {
-    // this used to trim and filter out empty strings, but zod
-    // takes care of it now
-    const filtered = input.split(GroupSeed.PART_SEPARATOR);
-    const values = [];
+  if (values.length < seed.MIN_PARTS) return { values: [], issue: "too_short" };
+  if (new Set(values).size < values.length)
+    return { values: [], issue: "duplicate_values" };
 
-    let totalExpandedPartCount = 0;
+  return { values };
+}
 
-    for (const part of filtered) {
-      const result = GroupSeed.expandRange(part);
-      if (!Array.isArray(result)) return { values: [], issue: result };
-      totalExpandedPartCount += result.length;
-      if (totalExpandedPartCount > GroupSeed.MAX_PARTS)
-        return { values: [], issue: "too_big" };
-      values.push(...result);
+function expandRange(part: string): ExpansionResult["issue"] | string[] {
+  let results = [part];
+
+  const numRanges = [...part.matchAll(seed.NUM_RANGE_REGEX)];
+  if (numRanges.length > seed.MAX_NUM_RANGES_PER_PART)
+    return "too_many_num_ranges";
+  for (const [full, start, end] of numRanges) {
+    if (start === end) return "invalid_range";
+    const [a, b] = [Number(start), Number(end)];
+    if ((Math.abs(a - b) + 1) * results.length > seed.MAX_PARTS)
+      return "too_big";
+
+    const next: string[] = [];
+    for (const r of results) {
+      if (a > b) {
+        for (let i = a; i >= b; i--) {
+          next.push(
+            r.replace(full, i.toString()).slice(0, seed.MAX_PART_LENGTH),
+          );
+        }
+      } else {
+        for (let i = a; i <= b; i++) {
+          next.push(
+            r.replace(full, i.toString()).slice(0, seed.MAX_PART_LENGTH),
+          );
+        }
+      }
     }
-
-    if (values.length < GroupSeed.MIN_PARTS)
-      return { values: [], issue: "too_short" };
-    if (new Set(values).size < values.length)
-      return { values: [], issue: "duplicate_values" };
-
-    return { values };
+    results = next;
   }
+
+  const charRanges = [...part.matchAll(seed.CHAR_RANGE_REGEX)];
+  if (charRanges.length > seed.MAX_CHAR_RANGES_PER_PART)
+    return "too_many_char_ranges";
+  for (const [full, start, end] of charRanges) {
+    if (start === end) return "invalid_range";
+    if (!areSameCase(start, end)) return "invalid_range";
+    const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
+    if ((Math.abs(b - a) + 1) * results.length > seed.MAX_PARTS)
+      return "too_big";
+
+    const next: string[] = [];
+    for (const r of results) {
+      if (a > b) {
+        for (let i = a; i >= b; i--)
+          next.push(
+            r
+              .replace(full, String.fromCharCode(i))
+              .slice(0, seed.MAX_PART_LENGTH),
+          );
+      } else {
+        for (let i = a; i <= b; i++)
+          next.push(
+            r
+              .replace(full, String.fromCharCode(i))
+              .slice(0, seed.MAX_PART_LENGTH),
+          );
+      }
+    }
+    results = next;
+  }
+
+  if (results.length > seed.MAX_PARTS) return "too_big";
+  return results;
 }

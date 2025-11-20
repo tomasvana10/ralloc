@@ -1,5 +1,5 @@
 import z from "zod";
-import { GroupSeed } from "@/lib/seed";
+import { expand, seed } from "@/lib/seed";
 
 export const sessionCreateSchema = z.object({
   groupSeed: z
@@ -8,7 +8,7 @@ export const sessionCreateSchema = z.object({
     .min(5, "Seed must be at least 5 characters")
     .max(250, "Seed must be at most 250 characters")
     .superRefine((val, ctx) => {
-      const result = GroupSeed.expand(val);
+      const result = expand(val);
       if (result.issue === undefined) return;
 
       switch (result.issue) {
@@ -20,14 +20,14 @@ export const sessionCreateSchema = z.object({
         case "too_big":
           return ctx.addIssue({
             code: "too_big",
-            maximum: GroupSeed.MAX_PARTS,
+            maximum: seed.MAX_PARTS,
             origin: "array",
             message: "Seed expansion yields too many values",
           });
         case "too_short":
           return ctx.addIssue({
             code: "too_small",
-            minimum: GroupSeed.MIN_PARTS,
+            minimum: seed.MIN_PARTS,
             origin: "array",
             message: "Seed expansion yields too little values",
           });

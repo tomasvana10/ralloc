@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { GroupSeed } from "@/lib/seed";
+import { seed } from "@/lib/seed";
 
 /**
  * Client-to-server protocol library for a group session websockets
@@ -15,7 +15,7 @@ export namespace GroupSessionC2S {
   export namespace Payloads {
     export const joinGroup = z.object({
       code: z.literal(code.enum.JoinGroup),
-      groupName: z.string().min(1).max(GroupSeed.MAX_PART_LENGTH),
+      groupName: z.string().min(1).max(seed.MAX_PART_LENGTH),
     });
     export type JoinGroup = z.infer<typeof joinGroup>;
 

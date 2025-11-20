@@ -4,7 +4,7 @@ import type {
   sessionCreateSchema,
 } from "@/features/forms/session-create";
 import { SESSION_CODE_LENGTH } from "@/lib/group-session/constants";
-import { GroupSeed } from "@/lib/seed";
+import { expand } from "@/lib/seed";
 import { generateSessionCode } from "@/lib/utils";
 import redis, { REDIS } from "../redis";
 import { paths } from ".";
@@ -147,7 +147,7 @@ export async function createGroupSession(
   });
   tx.set(paths.sessionHost(code), hostId);
 
-  const groupNames = GroupSeed.expand(data.groupSeed).values;
+  const groupNames = expand(data.groupSeed).values;
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future
