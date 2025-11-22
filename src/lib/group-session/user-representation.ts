@@ -1,3 +1,5 @@
+/* biome-ignore-all lint/correctness/noUnusedPrivateClassMembers: biome is tweaking */
+
 import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
 import type { SupportedProvider } from "../types";
