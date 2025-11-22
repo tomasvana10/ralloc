@@ -6,14 +6,19 @@ import {
 } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
-export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {
+export function SimpleTooltip({
+  tip,
+  children,
+}: React.PropsWithChildren<{ tip: string | React.ReactNode }>) {
   return (
     <>
       {/* desktop */}
       <div className="hidden sm:block">
         <Tooltip>
           <TooltipTrigger asChild tabIndex={0}>
-            <CircleQuestionMark className="text-foreground size-4" />
+            {children ?? (
+              <CircleQuestionMark className="text-foreground size-4" />
+            )}
           </TooltipTrigger>
           <TooltipContent className="bg-secondary text-secondary-foreground border border-border text-sm">
             {tip}
@@ -24,8 +29,10 @@ export function SimpleTooltip({ tip }: { tip: React.ReactNode }) {
       {/* mobile */}
       <div className="inline-flex sm:hidden">
         <Popover>
-          <PopoverTrigger tabIndex={0}>
-            <CircleQuestionMark className="text-foreground size-4" />
+          <PopoverTrigger asChild>
+            {children || (
+              <CircleQuestionMark className="text-foreground size-4" />
+            )}
           </PopoverTrigger>
           <PopoverContent>{tip}</PopoverContent>
         </Popover>
