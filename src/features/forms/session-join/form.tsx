@@ -87,6 +87,7 @@ export function SessionJoinForm() {
                 <Field data-invalid={fieldState.invalid}>
                   <div className="flex gap-4 flex-wrap max-[400px]:justify-center">
                     <InputOTP
+                      inputMode="search"
                       maxLength={SESSION_CODE_LENGTH}
                       value={field.value}
                       onChange={(val) => {
@@ -119,7 +120,7 @@ export function SessionJoinForm() {
                     </Button>
                   </div>
                   {fieldState.invalid && (
-                    <div className="max-[400px]:flex w-full justify-center">
+                    <div className="max-[400px]:flex w-full text-center justify-center">
                       <FieldError errors={[fieldState.error]} />
                     </div>
                   )}
