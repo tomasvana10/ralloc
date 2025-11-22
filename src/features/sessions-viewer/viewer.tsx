@@ -36,8 +36,8 @@ import {
   useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
-} from "@/lib/hooks/group-session";
-import { useHasScrollbar } from "@/lib/hooks/has-scrollbar";
+} from "@/hooks/group-session";
+import { useHasScrollbar } from "@/hooks/has-scrollbar";
 import { cn } from "@/lib/utils";
 import {
   type SelectedSessionsAction,

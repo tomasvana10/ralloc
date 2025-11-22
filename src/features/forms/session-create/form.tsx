@@ -31,8 +31,8 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useCreateGroupSessionSWRMutation } from "@/hooks/group-session";
 import { expand, seed } from "@/lib/group-session";
-import { useCreateGroupSessionSWRMutation } from "@/lib/hooks/group-session";
 import { cn } from "@/lib/utils";
 import {
   type SessionCreateSchemaType,
