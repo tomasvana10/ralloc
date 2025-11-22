@@ -32,6 +32,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateGroupSessionSWRMutation } from "@/hooks/group-session";
+import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
 import { expand, seed } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import {
@@ -61,6 +62,7 @@ export function SessionCreateForm() {
   });
   const [showMarkdown, setShowMarkdown] = React.useState(false);
   const [reactMarkdown, setReactMarkdown] = useRemark();
+  const isMobile = useIsBelowBreakpoint(640);
 
   const form = useForm<
     z.input<typeof sessionCreateSchema>,
@@ -188,17 +190,11 @@ export function SessionCreateForm() {
                         </a>
                       </Badge>
                     </div>
-                    <div className="flex gap-1 w-full justify-end max-sm:justify-start">
-                      <Label
-                        htmlFor="preview-switch"
-                        className="text-card-foreground">
-                        Preview
-                      </Label>
-                      <Switch
-                        id="preview-switch"
-                        onCheckedChange={setShowMarkdown}
+                    {!isMobile && (
+                      <MarkdownPreviewSwitch
+                        setShowMarkdown={setShowMarkdown}
                       />
-                    </div>
+                    )}
                   </FieldLabel>
                   {showMarkdown ? (
                     <ScrollArea
@@ -225,6 +221,9 @@ export function SessionCreateForm() {
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
                   )}
+                  {isMobile && (
+                    <MarkdownPreviewSwitch setShowMarkdown={setShowMarkdown} />
+                  )}
                 </Field>
               )}
             />
@@ -233,7 +232,7 @@ export function SessionCreateForm() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid} className="flex-[0.7]">
-                  <FieldLabel htmlFor="form-create-session-group-seed" required>
+                  <div className="flex items-center gap-1">
                     <SimpleTooltip
                       tip={
                         <>
@@ -260,8 +259,12 @@ export function SessionCreateForm() {
                         </>
                       }
                     />
-                    Group Seed
-                  </FieldLabel>
+                    <FieldLabel
+                      htmlFor="form-create-session-group-seed"
+                      required>
+                      Group Seed
+                    </FieldLabel>
+                  </div>
                   <Input
                     {...field}
                     type="text"
@@ -301,5 +304,20 @@ export function SessionCreateForm() {
         </Button>
       </CardFooter>
     </Card>
+  );
+}
+
+function MarkdownPreviewSwitch({
+  setShowMarkdown,
+}: {
+  setShowMarkdown: React.Dispatch<React.SetStateAction<boolean>>;
+}) {
+  return (
+    <div className="flex gap-1 w-full justify-end">
+      <Label htmlFor="preview-switch" className="text-card-foreground">
+        Preview
+      </Label>
+      <Switch id="preview-switch" onCheckedChange={setShowMarkdown} />
+    </div>
   );
 }

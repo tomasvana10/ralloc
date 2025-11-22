@@ -38,6 +38,7 @@ import {
   usePatchGroupSessionSWRMutation,
 } from "@/hooks/group-session";
 import { useHasScrollbar } from "@/hooks/has-scrollbar";
+import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
 import { cn } from "@/lib/utils";
 import {
   type SelectedSessionsAction,
@@ -51,6 +52,7 @@ const PATCHES_BEFORE_GET = 25;
 export function SessionsViewer({ userId }: { userId: string }) {
   const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
   const [patchCount, setPatchCount] = React.useState(0);
+  const isMobile = useIsBelowBreakpoint(640);
 
   const getter = useGetGroupSessionsSWR(userId, {
     onError: (err) =>
@@ -117,6 +119,7 @@ export function SessionsViewer({ userId }: { userId: string }) {
                 getter={getter}
                 patcher={patcher}
                 setPatchCount={setPatchCount}
+                isMobile={isMobile}
               />
             ))}
         </div>
@@ -198,6 +201,7 @@ function ActionItem({
             variant="destructive"
             size="icon-lg"
             aria-label="Delete one or more sessions"
+            id="x"
             disabled={deleter.isMutating}>
             {deleter.isMutating ? <Spinner /> : <TrashIcon />}
           </Button>
@@ -273,7 +277,10 @@ function ActionItem({
 
 const SessionBlock = React.memo(
   _SessionBlock,
-  (prev, next) => prev.checked === next.checked && prev.data === next.data,
+  (prev, next) =>
+    prev.checked === next.checked &&
+    prev.data === next.data &&
+    prev.isMobile === next.isMobile,
 );
 function _SessionBlock({
   data,
@@ -282,6 +289,7 @@ function _SessionBlock({
   getter,
   patcher,
   setPatchCount,
+  isMobile,
 }: {
   data: GroupSessionData;
   checked: boolean;
@@ -289,6 +297,7 @@ function _SessionBlock({
   getter: ReturnType<typeof useGetGroupSessionsSWR>;
   patcher: ReturnType<typeof usePatchGroupSessionSWRMutation>;
   setPatchCount: React.Dispatch<React.SetStateAction<number>>;
+  isMobile: boolean;
 }) {
   const [isMutatingThis, setIsMutatingThis] = React.useState(false);
 
@@ -300,18 +309,13 @@ function _SessionBlock({
       <Label htmlFor={`single-session-${data.code}`}>
         <ItemContent>
           <div className="flex flex-row gap-4 items-center">
-            <Checkbox
-              className="size-6 max-sm:hidden"
-              id={`single-session-${data.code}`}
-              checked={checked}
-              aria-label="Select session"
-              onCheckedChange={(checked) =>
-                dispatch({
-                  type: checked ? "add" : "remove",
-                  payload: data.code,
-                })
-              }
-            />
+            {!isMobile && (
+              <SessionBlockCheckbox
+                checked={checked}
+                data={data}
+                dispatch={dispatch}
+              />
+            )}
             <div>
               <ItemTitle>
                 <span className="wrap-break-word hyphens-auto">
@@ -325,18 +329,13 @@ function _SessionBlock({
           </div>
         </ItemContent>
         <ItemActions className="ml-auto max-sm:flex max-sm:justify-between max-sm:w-full">
-          <Checkbox
-            className="size-6 sm:hidden"
-            id={`single-session-${data.code}`}
-            checked={checked}
-            aria-label="Select session"
-            onCheckedChange={(checked) =>
-              dispatch({
-                type: checked ? "add" : "remove",
-                payload: data.code,
-              })
-            }
-          />
+          {isMobile && (
+            <SessionBlockCheckbox
+              checked={checked}
+              data={data}
+              dispatch={dispatch}
+            />
+          )}
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -351,7 +350,10 @@ function _SessionBlock({
                   getter,
                 );
                 await patcher
-                  .trigger({ code: data.code, data: { frozen: !data.frozen } })
+                  .trigger({
+                    code: data.code,
+                    data: { frozen: !data.frozen },
+                  })
                   .catch(() => null);
                 setIsMutatingThis(false);
                 setPatchCount((c) => c + 1);
@@ -368,6 +370,7 @@ function _SessionBlock({
               <Button
                 variant="outline"
                 size="icon-lg"
+                id="x"
                 aria-label="Go to session">
                 <ChevronRightIcon className="size-4" />
               </Button>
@@ -376,6 +379,31 @@ function _SessionBlock({
         </ItemActions>
       </Label>
     </Item>
+  );
+}
+
+function SessionBlockCheckbox({
+  checked,
+  data,
+  dispatch,
+}: {
+  checked: boolean;
+  data: GroupSessionData;
+  dispatch: React.Dispatch<SelectedSessionsAction>;
+}) {
+  return (
+    <Checkbox
+      className="size-6"
+      id={`single-session-${data.code}`}
+      checked={checked}
+      aria-label="Select session"
+      onCheckedChange={(checked) =>
+        dispatch({
+          type: checked ? "add" : "remove",
+          payload: data.code,
+        })
+      }
+    />
   );
 }
 
