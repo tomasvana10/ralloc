@@ -1,7 +1,7 @@
 import redis, { k } from "@/db/redis";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 
-const tokenBucketScript = await loadLuaScript("token-bucket", "rate-limit");
+const tokenBucketScript = await loadLuaScript("token-bucket");
 
 export interface RateLimit {
   allowed: boolean;

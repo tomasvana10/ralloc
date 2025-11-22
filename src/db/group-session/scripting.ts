@@ -45,7 +45,7 @@ export type LeaveGroupError = Extract<
   { status: "leaveFailure" }
 >["message"];
 
-const joinGroupScript = await loadLuaScript("join-group", "group-session");
+const joinGroupScript = await loadLuaScript("join-group");
 
 export async function joinGroup(
   code: string,
@@ -96,7 +96,7 @@ export async function joinGroup(
   };
 }
 
-const leaveGroupScript = await loadLuaScript("leave-group", "group-session");
+const leaveGroupScript = await loadLuaScript("leave-group");
 
 export async function leaveGroup(
   code: string,
