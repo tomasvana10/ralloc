@@ -1,31 +1,10 @@
 // warning: this module is horrible
 
 import type WebSocket from "ws";
-import {
-  type GroupSessionData,
-  getGroupSessionByCode,
-  getHostId,
-  paths,
-} from "@/db/group-session";
+import { getGroupSessionByCode, getHostId, paths } from "@/db/group-session";
 import redis, { createSubClient } from "@/db/redis";
-import { GroupSessionS2C } from "./messaging";
-
-export const groupSessionRooms: Map<string, GroupSessionRoom> = new Map();
-
-interface ClientState {
-  lastSynchroniseDueToGroupUpdateError: number;
-  synchroniseCounter: number;
-  isAlive: boolean;
-}
-
-type GroupSessionRoom = {
-  ready: boolean;
-  stale: boolean;
-  hostId: string | null;
-  subClient: Awaited<ReturnType<typeof createSubClient>> | null;
-  clients: Set<WebSocket>;
-  cache: Pick<GroupSessionData, "groupSize" | "frozen">;
-};
+import { GroupSessionS2C } from "@/lib/group-session/messaging";
+import { type GroupSessionRoom, groupSessionRooms } from "./room";
 
 function updateCache(
   cache: GroupSessionRoom["cache"],
@@ -189,8 +168,6 @@ async function groupSessionRoomFactory(code: string, ws: WebSocket) {
 }
 
 export {
-  type ClientState,
-  type GroupSessionRoom,
   groupSessionRoomFactory,
   deleteGroupSessionRoom,
   waitForGroupSessionRoom,

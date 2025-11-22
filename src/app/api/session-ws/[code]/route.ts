@@ -9,19 +9,24 @@ import {
 } from "@/lib/group-session/messaging";
 import { UserRepresentation } from "@/lib/group-session/user-representation";
 import {
-  type ClientState,
   deleteGroupSessionRoom,
   doSafeSync,
   groupSessionRoomFactory,
   send,
   sendPreStringified,
-} from "@/lib/group-session/ws-handler-utils";
+} from "./utils";
 
 export function GET() {
   const headers = new Headers();
   headers.set("Connection", "Upgrade");
   headers.set("Upgrade", "websocket");
   return new Response("Upgrade Required", { status: 426, headers });
+}
+
+interface ClientState {
+  lastSynchroniseDueToGroupUpdateError: number;
+  synchroniseCounter: number;
+  isAlive: boolean;
 }
 
 export async function UPGRADE(
