@@ -231,7 +231,11 @@ export function useGroupSession({
     );
 
     ws?.addEventListener("error", (ev) => onError?.(String(ev)), ctl);
-    ws?.addEventListener("close", (ev) => onClose?.(String(ev.reason)), ctl);
+    ws?.addEventListener(
+      "close",
+      (ev) => ev.reason && onClose?.(String(ev.reason)),
+      ctl,
+    );
 
     return () => ctl.abort();
   }, [ws, onError, onClose]);

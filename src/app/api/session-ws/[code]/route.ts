@@ -2,20 +2,20 @@ import type { NextRequest } from "next/server";
 import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
-import {
-  type GroupSessionData,
-  getGroupSessionByCode,
-  getHostId,
-  joinGroup,
-  leaveGroup,
-  paths,
-} from "@/db/group-session";
-import redis, { createSubClient } from "@/db/redis";
+import { joinGroup, leaveGroup } from "@/db/group-session";
 import {
   GroupSessionC2S,
   GroupSessionS2C,
 } from "@/lib/group-session/messaging";
 import { UserRepresentation } from "@/lib/group-session/user-representation";
+import {
+  type ClientState,
+  deleteGroupSessionRoom,
+  doSafeSync,
+  groupSessionRoomFactory,
+  send,
+  sendPreStringified,
+} from "@/lib/group-session/ws-handler-utils";
 
 export function GET() {
   const headers = new Headers();
@@ -24,80 +24,24 @@ export function GET() {
   return new Response("Upgrade Required", { status: 426, headers });
 }
 
-interface State {
-  /**
-   * Store for values that are needed to join/leave groups.
-   * Updated
-   */
-  cache: Pick<GroupSessionData, "groupSize" | "frozen">;
-  lastSynchroniseDueToGroupUpdateError: number;
-  synchroniseCounter: number;
-}
-
-function updateCache(cache: State["cache"], args: State["cache"]) {
-  Object.assign(cache, args);
-}
-
-async function doSafeSync(state: State, code: string, ws: WebSocket) {
-  const syncPayload = await prepareSyncPayload(state, code);
-  if (syncPayload) {
-    send(ws, syncPayload);
-    return true;
-  } else {
-    ws.close(
-      GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
-      "The group session was deleted",
-    );
-    return false;
-  }
-}
-
-async function prepareSyncPayload(state: State, code: string) {
-  const data = await getGroupSessionByCode(code);
-  if (!data) return null;
-  updateCache(state.cache, { groupSize: data.groupSize, frozen: data.frozen });
-
-  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
-    code: GroupSessionS2C.Code.Synchronise,
-    data,
-  };
-
-  return syncPayload;
-}
-
-function prepareSyncPayloadFromExistingData(
-  state: State,
-  data: GroupSessionData,
-) {
-  updateCache(state.cache, { groupSize: data.groupSize, frozen: data.frozen });
-
-  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
-    code: GroupSessionS2C.Code.Synchronise,
-    data,
-  };
-
-  return syncPayload;
-}
-
-function send(ws: WebSocket, payload: GroupSessionS2C.Payload) {
-  if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(payload));
-}
-
-function sendPreStringified(ws: WebSocket, payload: string) {
-  if (ws.readyState === ws.OPEN) ws.send(payload);
-}
-
 export async function UPGRADE(
   client: WebSocket,
-  server: WebSocketServer,
+  _server: WebSocketServer,
   _request: NextRequest,
   ctx: RouteContext<"/api/session-ws/[code]">,
 ) {
   const { code } = ctx.params;
 
-  const hostId = (await getHostId(code))!;
+  console.log("client connected");
   const session = (await auth())!;
   const userId = session.user.id;
+  const compressedUser = UserRepresentation.from(session).toCompressedString();
+
+  const gs = await groupSessionRoomFactory(code, client);
+  if (!gs) return;
+  const { hostId, clients, cache } = gs;
+
+  clients.add(client);
 
   /*
   const { res } = await rateLimit(
@@ -111,50 +55,41 @@ export async function UPGRADE(
       GroupSessionS2C.CloseEventCodes.RateLimited,
       "rate limit exceeded",
     );
-    */
+  */
 
-  const pingInt = setInterval(() => {
-    if (client.readyState === client.OPEN) client.ping();
-  }, GroupSessionS2C.PingFrameIntervalMS);
-
-  const state: State = {
-    cache: {
-      groupSize: 0,
-      frozen: false,
-    },
+  const state: ClientState = {
     lastSynchroniseDueToGroupUpdateError: 0,
     synchroniseCounter: 0,
+    isAlive: true,
   };
 
-  if (!(await doSafeSync(state, code, client))) return;
+  const pingInt = setInterval(() => {
+    if (client.readyState !== client.OPEN) return;
 
-  const sub = await createSubClient(redis);
-
-  await sub.subscribe(paths.pubsub.patched(code), async (msg) => {
-    const replyPayload = JSON.stringify(
-      prepareSyncPayloadFromExistingData(state, JSON.parse(msg)),
-    );
-    for (const c of server.clients) {
-      sendPreStringified(c, replyPayload);
+    if (!state.isAlive) {
+      client.terminate();
+      return;
     }
+
+    state.isAlive = false;
+    client.ping();
+  }, GroupSessionS2C.PingFrameIntervalMS);
+
+  if (!(await doSafeSync(cache, code, client))) return;
+
+  client.on("pong", () => {
+    state.isAlive = true;
   });
 
-  // the JoinGroup and LeaveGroup scripts already have checks that
-  // would return a fail code if the group session was deleted as
-  // a message was being processed. since this is extremely unlikely,
-  // an error message unindicative of what actually happened is a worthy
-  // tradeoff
-  await sub.subscribe(paths.pubsub.deleted(code), () =>
-    client.close(
-      GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
-      "The group session was deleted",
-    ),
-  );
-
   client.on("close", () => {
-    sub.unsubscribe();
-    sub.quit();
+    console.log("onclose");
+    clients.delete(client);
     clearInterval(pingInt);
+    console.log(clients.size.toString());
+    if (clients.size === 0) {
+      console.log("deleting room");
+      deleteGroupSessionRoom(code);
+    }
   });
 
   client.on("message", async (rawPayload: any) => {
@@ -166,23 +101,21 @@ export async function UPGRADE(
     }
 
     const parseResult = GroupSessionC2S.payload.safeParse(serialisedPayload);
-    if (parseResult.error) return client.close(1008, "malformed payload");
+    if (parseResult.error) return client.close(1008, "malformed json payload");
 
     const { data: payload } = parseResult;
     let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
-    const compressedUser =
-      UserRepresentation.from(session).toCompressedString();
 
     switch (payload.code) {
       case "J": {
         const result = await joinGroup(
           code,
-          hostId,
+          hostId!,
           payload.groupName,
           userId,
           compressedUser,
-          state.cache.groupSize,
-          state.cache.frozen,
+          cache.groupSize,
+          cache.frozen,
         );
 
         const g0 = payload.groupName;
@@ -190,6 +123,7 @@ export async function UPGRADE(
 
         if (result.status === "success") {
           responsePayload = {
+            isReply: 0,
             ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
@@ -199,7 +133,6 @@ export async function UPGRADE(
               g2,
               compressedUser,
             },
-            isReply: 0,
           };
         } else {
           responsePayload = {
@@ -220,17 +153,13 @@ export async function UPGRADE(
       }
 
       case "L": {
-        const result = await leaveGroup(
-          code,
-          hostId,
-          userId,
-          state.cache.frozen,
-        );
+        const result = await leaveGroup(code, hostId!, userId, cache.frozen);
 
         const { originalGroupName: g1, newGroupName: g2 } = result;
 
         if (result.status === "success") {
           responsePayload = {
+            isReply: 0,
             ok: 1,
             code: GroupSessionS2C.Code.GroupUpdateStatus,
             action: payload.code,
@@ -239,7 +168,6 @@ export async function UPGRADE(
               g2,
               compressedUser,
             },
-            isReply: 0,
           };
         } else {
           responsePayload = {
@@ -273,7 +201,7 @@ export async function UPGRADE(
       // that we can send another synchronise payload
       if (shouldSync) {
         state.lastSynchroniseDueToGroupUpdateError = now;
-        if (!(await doSafeSync(state, code, client))) return;
+        if (!(await doSafeSync(cache, code, client))) return;
       }
     } else {
       // successful response will be sent, thus increment the counter
@@ -281,9 +209,12 @@ export async function UPGRADE(
       state.synchroniseCounter++;
 
       const broadcastPayload = JSON.stringify(responsePayload);
-      responsePayload.isReply = 1;
-      const replyPayload = JSON.stringify(responsePayload);
-      for (const c of server.clients) {
+      // perfectly safe since isReply is the first property in the payload
+      const replyPayload = broadcastPayload.replace(
+        '"isReply":0',
+        '"isReply":1',
+      );
+      for (const c of clients) {
         if (c === client) sendPreStringified(c, replyPayload);
         else sendPreStringified(c, broadcastPayload);
       }
@@ -296,7 +227,7 @@ export async function UPGRADE(
         // a full re-synchronisation should occur to ensure the client's data
         // is up to date
         state.synchroniseCounter = 0;
-        if (!(await doSafeSync(state, code, client))) return;
+        if (!(await doSafeSync(cache, code, client))) return;
       }
     }
   });

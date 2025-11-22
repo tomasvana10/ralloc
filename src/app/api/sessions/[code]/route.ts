@@ -10,6 +10,8 @@ import {
 import { rateLimit } from "@/db/rate-limit";
 import { redisPub } from "@/db/redis";
 import { sessionCreateSchema } from "@/features/forms/session-create";
+import { GroupSessionS2C } from "@/lib/group-session/messaging";
+import { groupSessionRooms } from "@/lib/group-session/ws-handler-utils";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
 type Params = Promise<{ code: string }>;
@@ -29,6 +31,9 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
 
   const hostId = await getHostId(code);
   if (userId !== hostId) return rheaders(new Response(null, { status: 403 }));
+
+  const gs = groupSessionRooms.get(code);
+  if (gs) gs.stale = true;
 
   await deleteGroupSession(hostId, code);
   redisPub.publish(paths.pubsub.deleted(code), "");
@@ -66,10 +71,15 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     );
 
   await updateGroupSession(parseResult.data, hostId, code);
-  redisPub.publish(
-    paths.pubsub.patched(code),
-    JSON.stringify(await getGroupSessionByCode(code)),
-  );
+
+  // publishing just the raw data is inefficient, as the websocket handler will
+  // have to parse it, assemble its own payload, then stringify it. this way, all
+  // they have to do is send it (and parse it to update their own cache)
+  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
+    code: GroupSessionS2C.Code.Synchronise,
+    data: (await getGroupSessionByCode(code))!,
+  };
+  redisPub.publish(paths.pubsub.patched(code), JSON.stringify(syncPayload));
   return rheaders(new Response());
 }
 
