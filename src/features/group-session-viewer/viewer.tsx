@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +10,8 @@ import {
   ItemHeader,
   ItemTitle,
 } from "@/components/ui/item";
+import type { GroupSessionData } from "@/db/group-session";
+import { GroupSessionS2C } from "@/lib/group-session/messaging";
 import { useGroupSession } from "./hooks";
 import { HostControls } from "./host-controls";
 
@@ -24,11 +27,41 @@ export function GroupSessionViewer({
     compressedUser: string;
   };
 }) {
+  const router = useRouter();
   const { data, joinGroup, leaveGroup, currentGroup } = useGroupSession({
     code,
     thisCompressedUser: userRepresentation.compressedUser,
-    onClose: (reason) => reason && toast.error(`Closed: '${reason}'`),
+    onOpen: () => toast.info("You are connected to the group session."),
+    onClose: (code) => {
+      if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
+      if (code === GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted) {
+        toast.error(
+          "This group session was deleted. You will be redirected in 3 seconds.",
+        );
+        return setTimeout(() => router.push("/"), 3000);
+      }
+      if (code === GroupSessionS2C.CloseEventCodes.RateLimited) {
+        toast.error(
+          "You have been rate limited - please try again later. You will be redirected in 3 seconds.",
+        );
+        return setTimeout(() => router.push("/"), 3000);
+      }
+
+      toast.error(
+        `Your connection was closed (code ${code}). Your client is attempting to reconnect...`,
+      );
+    },
     onError: (msg) => toast.error(msg),
+    onReconnectStop: (n) => {
+      setTimeout(
+        () =>
+          toast.warning(
+            `Your client has exceeded the maximum amount of reconnection attempts (${n}). You will be redirected in 3 seconds.`,
+          ),
+        100,
+      );
+      setTimeout(() => router.push("/"), 2900);
+    },
   });
 
   if (!data) return <p>loading data</p>;
@@ -52,6 +85,7 @@ export function GroupSessionViewer({
             currentGroup={currentGroup?.name ?? null}
             joinGroup={joinGroup}
             leaveGroup={leaveGroup}
+            frozen={data.frozen}
           />
         ))}
       </div>
@@ -74,12 +108,14 @@ function Group({
   currentGroup,
   joinGroup: join,
   leaveGroup: leave,
+  frozen,
 }: {
   name: string;
   members: string[];
   compressedUser: string;
   currentGroup: string | null;
-} & Pick<ReturnType<typeof useGroupSession>, "joinGroup" | "leaveGroup">) {
+} & Pick<ReturnType<typeof useGroupSession>, "joinGroup" | "leaveGroup"> &
+  Pick<GroupSessionData, "frozen">) {
   const isCurrent = currentGroup === name;
   return (
     <Item variant="outline" size="sm">
@@ -89,10 +125,13 @@ function Group({
       <ItemDescription>{members.join(", ")}</ItemDescription>
       <ItemActions>
         {isCurrent ? (
-          <Button onClick={() => leave(name, compressedUser)}>Leave</Button>
+          <Button disabled={frozen} onClick={() => leave(name, compressedUser)}>
+            Leave
+          </Button>
         ) : (
           currentGroup && (
             <Button
+              disabled={frozen}
               onClick={() => {
                 if (currentGroup) leave(currentGroup, compressedUser);
                 join(name, compressedUser);
@@ -102,7 +141,9 @@ function Group({
           )
         )}
         {!currentGroup && (
-          <Button onClick={() => join(name, compressedUser)}>Join</Button>
+          <Button disabled={frozen} onClick={() => join(name, compressedUser)}>
+            Join
+          </Button>
         )}
       </ItemActions>
     </Item>

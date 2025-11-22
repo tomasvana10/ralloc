@@ -22,10 +22,6 @@ export function getFullGroupUpdateErrorMessage(
   }
 }
 
-export function canSend(ws: WebSocket | null): ws is WebSocket {
-  return !!ws && ws.readyState === ws.OPEN;
-}
-
 export function findCurrentGroup(
   data: GroupSessionData,
   compressedUser: string,
