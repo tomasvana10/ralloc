@@ -19,7 +19,7 @@ import {
 import {
   SESSION_CODE_CHARACTERS,
   SESSION_CODE_LENGTH,
-} from "@/lib/group-session/constants";
+} from "@/lib/group-session";
 import {
   type SessionJoinSchemaType,
   sessionJoinSchema,

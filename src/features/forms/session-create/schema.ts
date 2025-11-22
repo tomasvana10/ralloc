@@ -1,5 +1,5 @@
 import z from "zod";
-import { expand, seed } from "@/lib/seed";
+import { expand, seed } from "@/lib/group-session";
 
 export const sessionCreateSchema = z.object({
   groupSeed: z

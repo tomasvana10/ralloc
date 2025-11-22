@@ -3,9 +3,11 @@ import type {
   SessionCreateSchemaType,
   sessionCreateSchema,
 } from "@/features/forms/session-create";
-import { SESSION_CODE_LENGTH } from "@/lib/group-session/constants";
-import { expand } from "@/lib/seed";
-import { generateSessionCode } from "@/lib/utils";
+import {
+  expand,
+  generateSessionCode,
+  SESSION_CODE_LENGTH,
+} from "@/lib/group-session";
 import redis, { REDIS } from "../redis";
 import { paths } from ".";
 import { getHostId } from "./helpers";

@@ -3,7 +3,7 @@
  * into a set of values
  */
 
-import { areSameCase } from "./utils";
+import { areSameCase } from "../utils";
 
 export interface ExpansionResult {
   values: string[];

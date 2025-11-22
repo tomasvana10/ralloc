@@ -1,3 +1,4 @@
+import { groupSessionRooms } from "@/app/api/session-ws/[code]/room";
 import { auth } from "@/auth";
 import {
   deleteGroupSession,
@@ -11,7 +12,6 @@ import { rateLimit } from "@/db/rate-limit";
 import { redisPub } from "@/db/redis";
 import { sessionCreateSchema } from "@/features/forms/session-create";
 import { GroupSessionS2C } from "@/lib/group-session/messaging";
-import { groupSessionRooms } from "@/lib/group-session/ws-handler-utils";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
 type Params = Promise<{ code: string }>;

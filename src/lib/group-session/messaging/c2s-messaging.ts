@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { seed } from "@/lib/seed";
+import { seed } from "@/lib/group-session";
 
 /**
  * Client-to-server protocol library for a group session websockets

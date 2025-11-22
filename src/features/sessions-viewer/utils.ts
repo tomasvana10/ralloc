@@ -1,5 +1,5 @@
 import type { GroupSessionData } from "@/db/group-session";
-import type { useGetGroupSessionsSWR } from "@/lib/hooks/swr/group-session";
+import type { useGetGroupSessionsSWR } from "@/lib/hooks/group-session";
 
 export function optimisticallyUpdateSessions(
   original: GroupSessionData,

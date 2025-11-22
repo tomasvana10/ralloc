@@ -3,11 +3,11 @@ import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
 import { joinGroup, leaveGroup } from "@/db/group-session";
+import { UserRepresentation } from "@/lib/group-session";
 import {
   GroupSessionC2S,
   GroupSessionS2C,
 } from "@/lib/group-session/messaging";
-import { UserRepresentation } from "@/lib/group-session/user-representation";
 import {
   deleteGroupSessionRoom,
   doSafeSync,

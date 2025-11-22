@@ -32,12 +32,12 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
-import { useHasScrollbar } from "@/lib/hooks/has-scrollbar";
 import {
   useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
-} from "@/lib/hooks/swr/group-session";
+} from "@/lib/hooks/group-session";
+import { useHasScrollbar } from "@/lib/hooks/has-scrollbar";
 import { cn } from "@/lib/utils";
 import {
   type SelectedSessionsAction,
