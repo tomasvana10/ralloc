@@ -12,34 +12,40 @@ type GroupSessionState = GroupSessionData | null;
 
 type GroupSessionUpdateAction =
   | {
-      type: "J";
+      type: "Join";
       payload: {
         groupName: string;
         compressedUser: string;
       };
     }
   | {
-      type: "L";
+      type: "Leave";
       payload: {
         groupName: string;
         compressedUser: string;
       };
     }
   | {
-      type: "S";
+      type: "Sync";
       payload: Pick<GroupSessionS2C.Payloads.Synchronise, "data">;
-    };
+    }
+  | { type: "Lock" };
 
 function groupSessionReducer(
   state: GroupSessionState,
   action: GroupSessionUpdateAction,
 ): GroupSessionState {
-  if (action.type === "S") {
+  if (action.type === "Sync") {
     return action.payload.data;
   }
   if (!state) return null;
 
-  if (action.type === "J" || action.type === "L") {
+  if (action.type === "Lock") {
+    state.frozen = true;
+    return { ...state };
+  }
+
+  if (action.type === "Join" || action.type === "Leave") {
     const { groupName, compressedUser } = action.payload;
     const iGroup = state.groups.findIndex((group) => group.name === groupName);
     if (iGroup === -1) return state;
@@ -48,7 +54,7 @@ function groupSessionReducer(
     const group = { ...groups[iGroup] };
 
     switch (action.type) {
-      case "J": {
+      case "Join": {
         if (
           !group.members.some((member) =>
             UserRepresentation.areSameCompressedUser(compressedUser, member),
@@ -57,7 +63,7 @@ function groupSessionReducer(
           group.members = [...group.members, compressedUser];
         break;
       }
-      case "L": {
+      case "Leave": {
         group.members = group.members.filter(
           (member) =>
             !UserRepresentation.areSameCompressedUser(compressedUser, member),
@@ -130,7 +136,7 @@ export function useGroupSession({
               dispatchGroupSession({
                 payload: {
                   groupName:
-                    payload.action === "L"
+                    payload.action === "Leave"
                       ? // if the user tried leaving a group, they will be joined back to g2 -
                         // the group the server decided they are now in (their original group)
                         payload.context.g2!
@@ -141,7 +147,7 @@ export function useGroupSession({
                 },
                 type:
                   // invert the action to undo the optimistic update
-                  payload.action === "J" ? "L" : "J",
+                  payload.action === "Join" ? "Leave" : "Join",
               });
             }
 
@@ -158,7 +164,7 @@ export function useGroupSession({
                 // since it was either a successful join or leave, g2 (new group) or g1 (old group)
                 // respectively MUST be truthy
                 groupName:
-                  payload.action === "J"
+                  payload.action === "Join"
                     ? payload.context.g2!
                     : payload.context.g1!,
                 compressedUser: context.compressedUser,
@@ -171,7 +177,7 @@ export function useGroupSession({
         case GroupSessionS2C.Code.Synchronise: {
           dispatchGroupSession({
             payload: { data: payload.data },
-            type: "S",
+            type: "Sync",
           });
           break;
         }
@@ -196,7 +202,7 @@ export function useGroupSession({
       sendMessage(JSON.stringify(payload));
       dispatchGroupSession({
         payload: { groupName, compressedUser },
-        type: "J",
+        type: "Join",
       });
     },
     [sendMessage],
@@ -211,10 +217,15 @@ export function useGroupSession({
       sendMessage(JSON.stringify(payload));
       dispatchGroupSession({
         payload: { groupName, compressedUser },
-        type: "L",
+        type: "Leave",
       });
     },
     [sendMessage],
+  );
+
+  const lock = React.useCallback(
+    () => dispatchGroupSession({ type: "Lock" }),
+    [],
   );
 
   return {
@@ -222,6 +233,7 @@ export function useGroupSession({
     currentGroup,
     joinGroup,
     leaveGroup,
+    lock,
     wsReadyState: readyState,
   } as const;
 }

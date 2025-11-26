@@ -2,8 +2,6 @@ import type WebSocket from "ws";
 import type { GroupSessionData } from "@/db/group-session";
 import type { createSubClient } from "@/db/redis";
 
-export const groupSessionRooms: Map<string, GroupSessionRoom> = new Map();
-
 export interface GroupSessionRoom {
   ready: boolean;
   stale: boolean;
@@ -12,3 +10,5 @@ export interface GroupSessionRoom {
   clients: Set<WebSocket>;
   cache: Pick<GroupSessionData, "groupSize" | "frozen">;
 }
+
+export const groupSessionRooms: Map<string, GroupSessionRoom> = new Map();

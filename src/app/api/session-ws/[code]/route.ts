@@ -16,11 +16,16 @@ import {
   sendPreStringified,
 } from "./utils";
 
+const getHeaders = new Headers();
+getHeaders.set("Connection", "Upgrade");
+getHeaders.set("Upgrade", "websocket");
+const getResponse = new Response("Upgrade Required", {
+  status: 426,
+  headers: getHeaders,
+});
+
 export function GET() {
-  const headers = new Headers();
-  headers.set("Connection", "Upgrade");
-  headers.set("Upgrade", "websocket");
-  return new Response("Upgrade Required", { status: 426, headers });
+  return getResponse;
 }
 
 interface ClientState {
@@ -37,7 +42,7 @@ export async function UPGRADE(
 ) {
   const { code } = ctx.params;
 
-  console.log("client connected");
+  //console.log("client connected");
   const session = (await auth())!;
   const userId = session.user.id;
   const compressedUser = UserRepresentation.from(session).toCompressedString();
@@ -69,6 +74,7 @@ export async function UPGRADE(
   };
 
   const pingInt = setInterval(() => {
+    //console.log("ping");
     if (client.readyState !== client.OPEN) return;
 
     if (!state.isAlive) {
@@ -83,17 +89,20 @@ export async function UPGRADE(
   if (!(await doSafeSync(cache, code, client))) return;
 
   client.on("pong", () => {
+    //console.log("pong");
     state.isAlive = true;
   });
 
   client.on("close", () => {
-    console.log("onclose");
+    //console.log("onclose");
     clients.delete(client);
     clearInterval(pingInt);
-    console.log(clients.size.toString());
+    //console.log(`client amount: ${clients.size.toString()}`);
     if (clients.size === 0) {
-      console.log("deleting room");
       deleteGroupSessionRoom(code);
+      //console.log(
+      //  `deleting room, total rooms are now: ${groupSessionRooms.size}`,
+      //);
     }
   });
 
@@ -112,7 +121,7 @@ export async function UPGRADE(
     let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
 
     switch (payload.code) {
-      case "J": {
+      case "Join": {
         const result = await joinGroup(
           code,
           hostId!,
@@ -157,7 +166,7 @@ export async function UPGRADE(
         break;
       }
 
-      case "L": {
+      case "Leave": {
         const result = await leaveGroup(code, hostId!, userId, cache.frozen);
 
         const { originalGroupName: g1, newGroupName: g2 } = result;

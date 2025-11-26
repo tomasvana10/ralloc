@@ -28,7 +28,7 @@ export function GroupSessionViewer({
   };
 }) {
   const router = useRouter();
-  const { data, joinGroup, leaveGroup, currentGroup } = useGroupSession({
+  const { data, joinGroup, leaveGroup, currentGroup, lock } = useGroupSession({
     code,
     thisCompressedUser: userRepresentation.compressedUser,
     onOpen: () => toast.info("You are connected to the group session."),
@@ -38,12 +38,14 @@ export function GroupSessionViewer({
         toast.error(
           "This group session was deleted. You will be redirected in 3 seconds.",
         );
+        lock();
         return setTimeout(() => router.push("/"), 3000);
       }
       if (code === GroupSessionS2C.CloseEventCodes.RateLimited) {
         toast.error(
           "You have been rate limited - please try again later. You will be redirected in 3 seconds.",
         );
+        lock();
         return setTimeout(() => router.push("/"), 3000);
       }
 
@@ -53,13 +55,12 @@ export function GroupSessionViewer({
     },
     onError: (msg) => toast.error(msg),
     onReconnectStop: (n) => {
-      setTimeout(
-        () =>
-          toast.warning(
-            `Your client has exceeded the maximum amount of reconnection attempts (${n}). You will be redirected in 3 seconds.`,
-          ),
-        100,
-      );
+      setTimeout(() => {
+        lock();
+        toast.warning(
+          `Your client has exceeded the maximum amount of reconnection attempts (${n}). You will be redirected in 3 seconds.`,
+        );
+      }, 100);
       setTimeout(() => router.push("/"), 2900);
     },
   });

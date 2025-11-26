@@ -14,12 +14,16 @@ function updateCache(
 }
 
 function deleteGroupSessionRoom(code: string) {
+  //console.log("deleting via func");
   const gs = groupSessionRooms.get(code);
   if (!gs) return;
 
   gs.subClient?.unsubscribe();
   gs.subClient?.quit();
   groupSessionRooms.delete(code);
+  //console.log(
+  //  `deleting via func - room total is now ${groupSessionRooms.size}`,
+  //);
 }
 
 async function doSafeSync(
@@ -52,12 +56,12 @@ async function prepareSyncPayload(
   if (!data) return null;
   updateCache(cache, { groupSize: data.groupSize, frozen: data.frozen });
 
-  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
+  const payload: GroupSessionS2C.Payloads.Synchronise = {
     code: GroupSessionS2C.Code.Synchronise,
     data,
   };
 
-  return syncPayload;
+  return payload;
 }
 
 function send(ws: WebSocket, payload: GroupSessionS2C.Payload) {
@@ -69,8 +73,7 @@ function sendPreStringified(ws: WebSocket, payload: string) {
 }
 
 async function createSubscriptions(gs: GroupSessionRoom, code: string) {
-  console.log("creating subscriptions");
-  await gs.subClient!.subscribe(paths.pubsub.patched(code), async (msg) => {
+  await gs.subClient?.subscribe(paths.pubsub.patched(code), async (msg) => {
     if (!groupSessionRooms.has(code)) return;
 
     const payload: GroupSessionS2C.Payloads.Synchronise = JSON.parse(msg);
@@ -82,7 +85,7 @@ async function createSubscriptions(gs: GroupSessionRoom, code: string) {
     for (const c of gs.clients) sendPreStringified(c, msg);
   });
 
-  await gs.subClient!.subscribe(paths.pubsub.deleted(code), () => {
+  await gs.subClient?.subscribe(paths.pubsub.deleted(code), () => {
     if (!groupSessionRooms.has(code)) return;
 
     for (const c of gs.clients) closeDeleted(c);
@@ -90,22 +93,22 @@ async function createSubscriptions(gs: GroupSessionRoom, code: string) {
 }
 
 async function waitForGroupSessionRoom(code: string) {
-  console.log("client waiting for room");
+  //console.log("client waiting for room");
   await new Promise<void>((resolve, reject) => {
     const start = Date.now();
 
-    const check = () => {
+    function check() {
       const current = groupSessionRooms.get(code);
 
-      if (!current || current.stale) return reject(new Error());
+      if (!current || current.stale) return reject();
       if (current.ready) return resolve();
 
       if (Date.now() - start > 1000) {
-        return reject(new Error());
+        return reject();
       }
 
       setTimeout(check, 2);
-    };
+    }
 
     check();
   });
@@ -114,6 +117,7 @@ async function waitForGroupSessionRoom(code: string) {
 async function groupSessionRoomFactory(code: string, ws: WebSocket) {
   let gs = groupSessionRooms.get(code);
   if (gs?.ready && !gs.stale) return gs;
+  if (gs?.stale) return null;
 
   if (!gs) {
     gs = {
@@ -128,7 +132,8 @@ async function groupSessionRoomFactory(code: string, ws: WebSocket) {
       stale: false,
     };
     groupSessionRooms.set(code, gs);
-    console.log("creating room");
+    //console.log("creating room");
+    //console.log(`total rooms: ${groupSessionRooms.size}`);
 
     try {
       const hostId = await getHostId(code);
@@ -151,7 +156,7 @@ async function groupSessionRoomFactory(code: string, ws: WebSocket) {
   }
 
   try {
-    console.log("waiting for room");
+    //console.log("waiting for room");
     await waitForGroupSessionRoom(code);
   } catch {
     closeDeleted(ws);

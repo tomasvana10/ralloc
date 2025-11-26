@@ -37,14 +37,14 @@ export namespace GroupSessionS2C {
   export const PingFrameIntervalMS = 45000;
 
   export enum Code {
-    GroupUpdateStatus = "GUS", // look at me hector
-    Synchronise = "S",
+    GroupUpdateStatus = "GUpdate",
+    Synchronise = "Sync",
   }
 
   export namespace Payloads {
     type _BaseGroupUpdateStatus = {
       code: Code.GroupUpdateStatus;
-      action: Extract<GroupSessionC2S.Code, "J" | "L">;
+      action: Extract<GroupSessionC2S.Code, "Join" | "Leave">;
       context: {
         /**
          * Group the user tried to join

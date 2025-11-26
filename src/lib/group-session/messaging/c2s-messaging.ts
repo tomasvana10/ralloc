@@ -6,8 +6,8 @@ import { seed } from "@/lib/group-session";
  */
 export namespace GroupSessionC2S {
   const _codes = {
-    JoinGroup: "J",
-    LeaveGroup: "L",
+    JoinGroup: "Join",
+    LeaveGroup: "Leave",
   } as const;
   export const code = z.enum(_codes);
   export type Code = z.infer<typeof code>;
