@@ -1,4 +1,4 @@
-import redis, { k } from "@/db/redis";
+import redis, { redisKey } from "@/db/redis";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 
 const tokenBucketScript = await loadLuaScript("token-bucket");
@@ -40,11 +40,10 @@ async function applyRateLimit(
 /**
  * Process a rate limit
  *
- * @param id Identifier for the rate limit key
- * @param namespace A namespace to group the identifier under
- * (generally the route which is being rate limited)
- * @param requestsPerMinute How many requests can be made per minute
- * @param burst How much instantaneous traffic can be processed at a time
+ * @param id Identifier for the rate limit key.
+ * @param categories A set of labels to create the rate limit under.
+ * @param requestsPerMinute How many requests can be made per minute.
+ * @param burst How much instantaneous traffic can be processed at a time.
  *
  * @returns The `{ rheaders }` callback if a rate limit wasn't applied,
  * allowing the handler to apply rate-limit related information their
@@ -54,12 +53,15 @@ async function applyRateLimit(
  */
 export async function rateLimit(
   id: string,
-  namespace: string,
+  categories: string[],
   requestsPerMinute: number,
   burst: number,
 ) {
-  const key = k("rl", namespace, id);
-  const result = await applyRateLimit(key, requestsPerMinute / 60, burst);
+  const result = await applyRateLimit(
+    redisKey("rl", ...categories, id),
+    requestsPerMinute / 60,
+    burst,
+  );
 
   function rheaders(res: Response) {
     res.headers.set("X-Rate-Limit-Limit", result.limit.toString());

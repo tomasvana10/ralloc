@@ -56,7 +56,7 @@ export async function UPGRADE(
   /*
   const { res } = await rateLimit(
     userId,
-    "UPGRADE@sessions-ws/[code]",
+    ["sessions-ws/[code]", "UPGRADE"],
     12,
     5,
   );

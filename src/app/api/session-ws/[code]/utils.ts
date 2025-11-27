@@ -73,7 +73,7 @@ function sendPreStringified(ws: WebSocket, payload: string) {
 }
 
 async function createSubscriptions(gs: GroupSessionRoom, code: string) {
-  await gs.subClient?.subscribe(paths.pubsub.patched(code), async (msg) => {
+  await gs.subClient?.subscribe(paths.pubsub.newData(code), async (msg) => {
     if (!groupSessionRooms.has(code)) return;
 
     const payload: GroupSessionS2C.Payloads.Synchronise = JSON.parse(msg);

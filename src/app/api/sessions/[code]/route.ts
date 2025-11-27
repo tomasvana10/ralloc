@@ -23,7 +23,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
 
   const { rheaders, res } = await rateLimit(
     userId,
-    "SHARED@sessions/[code]",
+    ["sessions/[code]", "POST"],
     115,
     17,
   );
@@ -47,7 +47,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
 
   const { rheaders, res } = await rateLimit(
     session.user.id,
-    "SHARED@sessions/[code]",
+    ["sessions/[code]", "SHARED"],
     115,
     17,
   );
@@ -79,7 +79,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     code: GroupSessionS2C.Code.Synchronise,
     data: (await getGroupSessionByCode(code))!,
   };
-  redisPub.publish(paths.pubsub.patched(code), JSON.stringify(syncPayload));
+  redisPub.publish(paths.pubsub.newData(code), JSON.stringify(syncPayload));
   return rheaders(new Response());
 }
 

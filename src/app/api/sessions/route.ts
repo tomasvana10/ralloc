@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
   const { rheaders, res } = await rateLimit(
     session.user.id,
-    "POST@sessions/",
+    ["sessions", "POST"],
     15,
     3,
   );

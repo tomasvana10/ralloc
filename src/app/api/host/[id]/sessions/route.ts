@@ -10,7 +10,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
 
   const { rheaders, res } = await rateLimit(
     session.user.id,
-    "GET@host/[id]/sessions",
+    ["host/[id]/sessions", "GET"],
     30,
     5,
   );

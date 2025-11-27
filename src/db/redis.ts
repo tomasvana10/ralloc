@@ -39,7 +39,7 @@ export const REDIS = {
   PREFIX_PARTS: 2,
 };
 
-export const k = (...parts: (string | number)[]) =>
+export const redisKey = (...parts: (string | number)[]) =>
   [REDIS.NAMESPACE, REDIS.VERSION, ...parts].join(REDIS.SEP);
 
 export default redis;
