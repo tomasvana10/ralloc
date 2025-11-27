@@ -70,7 +70,7 @@ export function SessionJoinForm() {
   return (
     <Card className="border-primary">
       <CardHeader>
-        <CardTitle>Join a Group Session</CardTitle>
+        <CardTitle>Join</CardTitle>
         <CardDescription>
           Join a group session using a{" "}
           <strong>lowercase, alphanumeric code</strong>. You can paste the code

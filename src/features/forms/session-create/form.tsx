@@ -1,7 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BadgeCheckIcon, InfoIcon } from "lucide-react";
+import { BadgeCheckIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -45,22 +46,16 @@ export function SessionCreateForm() {
   const state = useSessionCreateStore();
   const creator = useCreateGroupSessionSWRMutation({
     onSuccess: (data) => {
-      toast.success(() => (
-        <span>
-          Created a{" "}
-          <Link
-            href={`/s/${data.code}`}
-            className="text-primary underline-offset-4 hover:underline">
-            new group session
-          </Link>
-          !
-        </span>
-      ));
+      setShowGoToSessionButton(true);
+      setSessionCode(data.code);
       reset();
     },
     onError: (err) => toast.error(err.message, { id: err.message }),
   });
   const [showMarkdown, setShowMarkdown] = React.useState(false);
+  const [showGoToSessionButton, setShowGoToSessionButton] =
+    React.useState(false);
+  const [sessionCode, setSessionCode] = React.useState<string | null>(null);
   const [reactMarkdown, setReactMarkdown] = useRemark();
   const isMobile = useIsBelowBreakpoint(640);
 
@@ -75,9 +70,17 @@ export function SessionCreateForm() {
   });
 
   function reset() {
+    (document.activeElement as HTMLElement | null)?.blur();
     state.reset();
     form.reset(state.defaultData);
   }
+
+  React.useEffect(() => {
+    if (form.formState.isDirty) {
+      setShowGoToSessionButton(false);
+      setSessionCode(null);
+    }
+  }, [form.formState.isDirty]);
 
   // sync form to zustand store
   // biome-ignore lint/correctness/useExhaustiveDependencies: intended usage
@@ -106,7 +109,7 @@ export function SessionCreateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a Group Session</CardTitle>
+        <CardTitle>Create</CardTitle>
         <CardDescription>Create and open a group session.</CardDescription>
       </CardHeader>
       <CardContent>
@@ -180,13 +183,13 @@ export function SessionCreateForm() {
                     htmlFor="form-create-session-description"
                     className="has-data-[state=checked]:bg-card! max-sm:flex-col max-sm:items-start max-sm:gap-2 flex-row">
                     <div className="flex gap-1">
-                      <span>Description </span>
+                      <span>Description</span>
                       <Badge variant="outline" asChild>
                         <a
                           href="https://commonmark.org/help/"
                           target="_blank"
                           rel="noopener">
-                          <BadgeCheckIcon /> Markdown supported
+                          <BadgeCheckIcon /> Markdown
                         </a>
                       </Badge>
                     </div>
@@ -210,9 +213,7 @@ export function SessionCreateForm() {
                       {...field}
                       className="h-25"
                       placeholder={
-                        "## Juniper router allocation for this week's lab. " +
-                        "\n" +
-                        "Visit [this link](https://example.com) for more information."
+                        "## Juniper router allocation for [this week's lab](https://canvas.uts.edu.au). "
                       }
                       id="form-create-session-description"
                       aria-invalid={fieldState.invalid}
@@ -269,7 +270,7 @@ export function SessionCreateForm() {
                     {...field}
                     type="text"
                     autoComplete="off"
-                    placeholder="Group [1-10], Group [a-c], Group [z-t]"
+                    placeholder="Group [1-10], Group [a-c], Group [z-a]"
                     id="form-create-session-group-seed"
                     aria-invalid={fieldState.invalid}
                   />
@@ -294,7 +295,7 @@ export function SessionCreateForm() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="gap-2">
         <Button
           type="submit"
           form="form-create-session"
@@ -302,6 +303,21 @@ export function SessionCreateForm() {
           disabled={creator.isMutating}>
           {creator.isMutating ? <Spinner /> : null}Create
         </Button>
+        <AnimatePresence initial={false}>
+          {showGoToSessionButton && (
+            <motion.div
+              initial={{ x: -10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -10, opacity: 0 }}
+              transition={{ duration: 0.15, ease: "easeOut" }}>
+              <Button type="button" variant="outline" size="icon-sm" asChild>
+                <Link href={`/s/${sessionCode}`}>
+                  <ChevronRightIcon />
+                </Link>
+              </Button>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </CardFooter>
     </Card>
   );
