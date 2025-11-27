@@ -120,7 +120,7 @@ export function SessionJoinForm() {
                     </Button>
                   </div>
                   {fieldState.invalid && (
-                    <div className="max-[400px]:flex w-full text-center justify-center">
+                    <div className="max-[400px]:flex w-full min-[400px]:text-center min-[400px]:justify-center">
                       <FieldError errors={[fieldState.error]} />
                     </div>
                   )}
