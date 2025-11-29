@@ -3,6 +3,48 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    letter-spacing: var(--tracking-normal);
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .animate-scrollbar[data-state="visible"] {
+    animation: scrollbar-fade-in 150ms ease-out;
+  }
+
+  .animate-scrollbar[data-state="hidden"] {
+    animation: scrollbar-fade-out 150ms ease-in;
+  }
+
+  @keyframes scrollbar-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes scrollbar-fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -288,51 +330,10 @@
   font-size: 0.98em;
 }
 
-.markdown pre {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  font-size: 12px;
-  background: var(--muted);
-  color: var(--muted-foreground);
-  padding: 1rem;
-  border-radius: var(--radius);
-}
-
 .markdown b,
 .markdown strong {
   font-weight: bold;
   color: var(--foreground);
-}
-
-.markdown dfn {
-  font-style: italic;
-}
-
-.markdown ins {
-  background: var(--accent);
-  text-decoration: none;
-  color: var(--accent-foreground);
-}
-
-.markdown mark {
-  background: var(--accent);
-  font-style: italic;
-  font-weight: bold;
-  color: var(--accent-foreground);
-}
-
-.markdown sub,
-.markdown sup {
-  font-size: 75%;
-  line-height: 0;
-  position: relative;
-  vertical-align: baseline;
-}
-.markdown sup {
-  top: -0.5em;
-}
-.markdown sub {
-  bottom: -0.25em;
 }
 
 .markdown ul,
@@ -361,20 +362,6 @@
   margin: 0;
 }
 
-.markdown dd {
-  margin-left: 2rem;
-}
-
-.markdown table {
-  border-collapse: collapse;
-  width: 100%;
-  color: var(--foreground);
-}
-
-.markdown td {
-  vertical-align: top;
-}
-
 @media (min-width: 0px) {
   .markdown {
     font-size: 14px;
@@ -386,19 +373,5 @@
   .markdown {
     font-size: 16px;
     color: var(--foreground);
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-  body {
-    @apply bg-background text-foreground;
-    letter-spacing: var(--tracking-normal);
-  }
-  button:not(:disabled),
-  [role="button"]:not(:disabled) {
-    cursor: pointer;
   }
 }
