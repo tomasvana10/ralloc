@@ -4,13 +4,17 @@ import {
   deleteGroupSession,
   doesGroupSessionExist,
   getGroupSessionByCode,
+  getGroupSessionGroupSize,
   getHostId,
   paths,
   updateGroupSession,
 } from "@/db/group-session";
 import { rateLimit } from "@/db/rate-limit";
 import { redisPub } from "@/db/redis";
-import { sessionCreateSchema } from "@/features/forms/session-create";
+import {
+  baseSessionEditSchema,
+  sessionEditSchemaFactory,
+} from "@/features/forms/session-edit/schema";
 import { GroupSessionS2C } from "@/lib/group-session/messaging";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
@@ -30,6 +34,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   if (res) return res;
 
   const hostId = await getHostId(code);
+  if (!hostId) return rheaders(new Response(null, { status: 404 }));
   if (userId !== hostId) return rheaders(new Response(null, { status: 403 }));
 
   const gs = groupSessionRooms.get(code);
@@ -54,13 +59,11 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   if (res) return res;
 
   const hostId = await getHostId(code);
+  if (!hostId) return rheaders(new Response(null, { status: 404 }));
   if (userId !== hostId) return rheaders(new Response(null, { status: 403 }));
 
-  const body = await req.json();
-  const parseResult = sessionCreateSchema.partial().strict().safeParse(body);
-
-  if (!parseResult.success)
-    return rheaders(getZodSafeParseErrorResponse(parseResult));
+  const body = await req.json().catch(() => null);
+  if (!body) return new Response(null, { status: 400 });
 
   if (!Object.keys(body).length)
     return rheaders(
@@ -69,6 +72,18 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
         { status: 400 },
       ),
     );
+
+  const hasGroupSizeProperty = "groupSize" in body;
+  const sessionEditSchema = hasGroupSizeProperty
+    ? sessionEditSchemaFactory(
+        +((await getGroupSessionGroupSize(hostId, code)) || 0),
+        true,
+      )
+    : baseSessionEditSchema.partial().strict();
+  const parseResult = sessionEditSchema.safeParse(body);
+
+  if (!parseResult.success)
+    return rheaders(getZodSafeParseErrorResponse(parseResult));
 
   await updateGroupSession(parseResult.data, hostId, code);
 

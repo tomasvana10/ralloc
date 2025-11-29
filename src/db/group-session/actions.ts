@@ -1,3 +1,4 @@
+import type { Session } from "next-auth";
 import type z from "zod";
 import type {
   SessionCreateSchemaType,
@@ -7,6 +8,7 @@ import {
   expand,
   generateSessionCode,
   SESSION_CODE_LENGTH,
+  UserRepresentation,
 } from "@/lib/group-session";
 import redis, { REDIS } from "../redis";
 import { paths } from ".";
@@ -15,6 +17,7 @@ import { getHostId } from "./helpers";
 export type GroupSessionMetadata = SessionCreateSchemaType & {
   createdOn: number;
   frozen: boolean;
+  hostRepresentation: string;
 };
 export type GroupSessionData = GroupSessionMetadata & {
   code: string;
@@ -78,6 +81,7 @@ export async function assembleGroupSession(
     description: metadata.description,
     code,
     hostId,
+    hostRepresentation: metadata.hostRepresentation,
     groups: await getGroups(hostId, code),
   };
   return session;
@@ -137,9 +141,14 @@ export async function getGroupSessionsOfHost(hostId: string) {
 export async function createGroupSession(
   data: z.output<typeof sessionCreateSchema>,
   hostId: string,
+  session: Session,
 ) {
   const code = generateSessionCode(SESSION_CODE_LENGTH);
-  const metadata: GroupSessionMetadata = { createdOn: Date.now(), ...data };
+  const metadata: GroupSessionMetadata = {
+    createdOn: Date.now(),
+    hostRepresentation: UserRepresentation.from(session).toCompressedString(),
+    ...data,
+  };
 
   const tx = redis.multi();
 

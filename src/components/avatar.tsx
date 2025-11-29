@@ -7,11 +7,13 @@ export function ClientAvatar({
   image,
   name,
   imageProps,
+  className,
+  ...props
 }: {
   image?: string;
   name?: string | null;
   imageProps?: React.ComponentProps<typeof AvatarPrimitive.Image>;
-}) {
+} & React.ComponentProps<typeof AvatarPrimitive.Root>) {
   const initials =
     name
       ?.split(" ")
@@ -20,7 +22,7 @@ export function ClientAvatar({
       .toUpperCase() ?? "?";
 
   return (
-    <Avatar>
+    <Avatar className={className} {...props}>
       <AvatarImage
         src={image}
         referrerPolicy="no-referrer"
