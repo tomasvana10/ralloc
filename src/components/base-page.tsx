@@ -32,7 +32,7 @@ export async function BasePage({
   return (
     <div className="flex justify-center sm:p-10 p-1 min-h-screen">
       <Card className="max-w-[700px] w-full">
-        <CardHeader className="flex justify-between max-[350px]:flex-col-reverse max-[450px]:gap-4">
+        <CardHeader className="flex justify-between max-[450px]:gap-4">
           <div>
             <CardTitle className="text-3xl">
               <div className="flex items-center gap-4">
@@ -51,7 +51,7 @@ export async function BasePage({
               The go-to tool for simple, ephemeral group allocation sessions.
             </CardDescription>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 max-[350px]:flex-col-reverse">
             <ThemeCycler />
             {session ? <Profile /> : null}
           </div>
