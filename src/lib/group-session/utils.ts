@@ -1,6 +1,11 @@
-import { SESSION_CODE_CHARACTERS } from "@/lib/group-session";
+import {
+  SESSION_CODE_CHARACTERS,
+  SESSION_CODE_LENGTH,
+} from "@/lib/group-session";
 
-export function generateSessionCode(n: number): string {
+export function generateSessionCode(): string {
+  const n = SESSION_CODE_LENGTH;
+
   let result = "";
   for (let i = 0; i < n; i++) {
     result +=

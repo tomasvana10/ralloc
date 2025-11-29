@@ -1,4 +1,25 @@
+import type { SessionCreateSchemaType } from "@/features/forms/session-create";
 import { redisKey } from "../redis";
+
+export type GroupSessionMetadata = SessionCreateSchemaType & {
+  createdOn: number;
+  frozen: boolean;
+  compressedHost: string;
+};
+
+export type GroupSessionData = GroupSessionMetadata & {
+  code: string;
+  hostId: string;
+  groups: GroupSessionGroupData[];
+};
+
+export type GroupSessionGroupMetadata = {
+  name: string;
+};
+
+export type GroupSessionGroupData = GroupSessionGroupMetadata & {
+  members: string[];
+};
 
 export const paths = {
   sessionHost: (code: string) => redisKey("session", code, "host"),
@@ -24,6 +45,6 @@ export const paths = {
   },
 };
 
-export * from "./actions";
+export * from "./crud";
 export * from "./helpers";
 export * from "./scripting";

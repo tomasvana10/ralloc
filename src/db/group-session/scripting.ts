@@ -19,7 +19,7 @@ type BaseGroupResult = {
   newGroupName: string | null;
 };
 
-export type GroupResult =
+export type GroupJoinLeaveResult =
   | ({
       status: "success";
     } & BaseGroupResult)
@@ -36,26 +36,35 @@ export type GroupResult =
       message: BaseGroupResultErrorMessage | "notInGroup";
     } & BaseGroupResult);
 
-export type JoinGroupError = Extract<
-  GroupResult,
+export type JoinGroupErrorMessage = Extract<
+  GroupJoinLeaveResult,
   { status: "joinFailure" }
 >["message"];
-export type LeaveGroupError = Extract<
-  GroupResult,
+export type LeaveGroupErrorMessage = Extract<
+  GroupJoinLeaveResult,
   { status: "leaveFailure" }
 >["message"];
 
 const joinGroupScript = await loadLuaScript("join-group");
-
-export async function joinGroup(
-  code: string,
-  hostId: string,
-  groupName: string,
-  userId: string,
-  compressedUser: string,
-  groupSize: number,
-  frozen: boolean,
-): Promise<Extract<GroupResult, { status: "success" | "joinFailure" }>> {
+export async function joinGroup({
+  code,
+  hostId,
+  groupName,
+  userId,
+  compressedUser,
+  groupSize,
+  frozen,
+}: {
+  code: string;
+  hostId: string;
+  groupName: string;
+  userId: string;
+  compressedUser: string;
+  groupSize: number;
+  frozen: boolean;
+}): Promise<
+  Extract<GroupJoinLeaveResult, { status: "success" | "joinFailure" }>
+> {
   const membersKey = paths.groupMembers(hostId, code, groupName);
   const userGroupKey = paths.userGroup(hostId, code, userId);
   const groupMetadataKey = paths.groupMetadata(hostId, code, groupName);
@@ -83,10 +92,7 @@ export async function joinGroup(
   if (status === "failure")
     return {
       status: "joinFailure",
-      message: message as Extract<
-        GroupResult,
-        { status: "joinFailure" }
-      >["message"],
+      message: message as JoinGroupErrorMessage,
       ...shared,
     };
 
@@ -97,13 +103,19 @@ export async function joinGroup(
 }
 
 const leaveGroupScript = await loadLuaScript("leave-group");
-
-export async function leaveGroup(
-  code: string,
-  hostId: string,
-  userId: string,
-  frozen: boolean,
-): Promise<Extract<GroupResult, { status: "success" | "leaveFailure" }>> {
+export async function leaveGroup({
+  code,
+  hostId,
+  userId,
+  frozen,
+}: {
+  code: string;
+  hostId: string;
+  userId: string;
+  frozen: boolean;
+}): Promise<
+  Extract<GroupJoinLeaveResult, { status: "success" | "leaveFailure" }>
+> {
   const userGroupKey = paths.userGroup(hostId, code, userId);
 
   const sha = await getLuaScriptSha(leaveGroupScript);
@@ -127,10 +139,7 @@ export async function leaveGroup(
   if (status === "failure")
     return {
       status: "leaveFailure",
-      message: message as Extract<
-        GroupResult,
-        { status: "leaveFailure" }
-      >["message"],
+      message: message as LeaveGroupErrorMessage,
       ...shared,
     };
 

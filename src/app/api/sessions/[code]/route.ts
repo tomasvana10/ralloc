@@ -25,24 +25,25 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const { rheaders, res } = await rateLimit(
-    userId,
-    ["sessions/[code]", "POST"],
-    115,
-    17,
-  );
+  const { infoHeaders, res } = await rateLimit({
+    id: userId,
+    categories: ["sessions/[code]", "POST"],
+    requestsPerMinute: 115,
+    burst: 17,
+  });
   if (res) return res;
 
   const hostId = await getHostId(code);
-  if (!hostId) return rheaders(new Response(null, { status: 404 }));
-  if (userId !== hostId) return rheaders(new Response(null, { status: 403 }));
+  if (!hostId) return infoHeaders(new Response(null, { status: 404 }));
+  if (userId !== hostId)
+    return infoHeaders(new Response(null, { status: 403 }));
 
   const gs = groupSessionRooms.get(code);
   if (gs) gs.stale = true;
 
   await deleteGroupSession(hostId, code);
   redisPub.publish(paths.pubsub.deleted(code), "");
-  return rheaders(new Response(null, { status: 204 }));
+  return infoHeaders(new Response(null, { status: 204 }));
 }
 
 export async function PATCH(req: Request, { params }: { params: Params }) {
@@ -50,23 +51,24 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const { rheaders, res } = await rateLimit(
-    session.user.id,
-    ["sessions/[code]", "SHARED"],
-    115,
-    17,
-  );
+  const { infoHeaders, res } = await rateLimit({
+    id: session.user.id,
+    categories: ["sessions/[code]", "SHARED"],
+    requestsPerMinute: 115,
+    burst: 17,
+  });
   if (res) return res;
 
   const hostId = await getHostId(code);
-  if (!hostId) return rheaders(new Response(null, { status: 404 }));
-  if (userId !== hostId) return rheaders(new Response(null, { status: 403 }));
+  if (!hostId) return infoHeaders(new Response(null, { status: 404 }));
+  if (userId !== hostId)
+    return infoHeaders(new Response(null, { status: 403 }));
 
   const body = await req.json().catch(() => null);
   if (!body) return new Response(null, { status: 400 });
 
   if (!Object.keys(body).length)
-    return rheaders(
+    return infoHeaders(
       Response.json(
         { error: { message: "No data provided" } },
         { status: 400 },
@@ -83,7 +85,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const parseResult = sessionEditSchema.safeParse(body);
 
   if (!parseResult.success)
-    return rheaders(getZodSafeParseErrorResponse(parseResult));
+    return infoHeaders(getZodSafeParseErrorResponse(parseResult));
 
   await updateGroupSession(parseResult.data, hostId, code);
 
@@ -95,7 +97,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     data: (await getGroupSessionByCode(code))!,
   };
   redisPub.publish(paths.pubsub.newData(code), JSON.stringify(syncPayload));
-  return rheaders(new Response());
+  return infoHeaders(new Response());
 }
 
 export async function HEAD(_: Request, { params }: { params: Params }) {

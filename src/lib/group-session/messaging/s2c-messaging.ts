@@ -1,7 +1,7 @@
 import type {
   GroupSessionData,
-  JoinGroupError,
-  LeaveGroupError,
+  JoinGroupErrorMessage,
+  LeaveGroupErrorMessage,
 } from "@/db/group-session";
 import type { GroupSessionC2S } from ".";
 
@@ -73,7 +73,7 @@ export namespace GroupSessionS2C {
       | ({
           ok: 0;
           willSync: boolean;
-          error: JoinGroupError | LeaveGroupError;
+          error: JoinGroupErrorMessage | LeaveGroupErrorMessage;
         } & _BaseGroupUpdateStatus);
 
     /**

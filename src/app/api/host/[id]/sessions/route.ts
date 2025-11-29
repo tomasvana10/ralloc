@@ -8,18 +8,18 @@ export async function GET(_: Request, { params }: { params: Params }) {
   const { id: hostId } = await params;
   const session = (await auth())!;
 
-  const { rheaders, res } = await rateLimit(
-    session.user.id,
-    ["host/[id]/sessions", "GET"],
-    30,
-    5,
-  );
+  const { infoHeaders, res } = await rateLimit({
+    id: session.user.id,
+    categories: ["host/[id]/sessions", "GET"],
+    requestsPerMinute: 30,
+    burst: 5,
+  });
 
   if (res) return res;
 
   if (session.user.id !== hostId) new Response(null, { status: 403 });
 
-  return rheaders(
+  return infoHeaders(
     Response.json({ data: await getGroupSessionsOfHost(hostId) }),
   );
 }

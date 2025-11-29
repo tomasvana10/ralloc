@@ -3,7 +3,7 @@ import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 
 const tokenBucketScript = await loadLuaScript("token-bucket");
 
-export interface RateLimit {
+export interface RateLimitResult {
   allowed: boolean;
   remaining: number;
   limit: number;
@@ -29,7 +29,7 @@ async function applyRateLimit(
     ],
   })) as [number, number, number];
 
-  const result: RateLimit = {
+  const result: RateLimitResult = {
     allowed: allowed === 1,
     remaining: tokens,
     limit,
@@ -45,25 +45,30 @@ async function applyRateLimit(
  * @param requestsPerMinute How many requests can be made per minute.
  * @param burst How much instantaneous traffic can be processed at a time.
  *
- * @returns The `{ rheaders }` callback if a rate limit wasn't applied,
+ * @returns The `{ infoHeaders }` callback if a rate limit wasn't applied,
  * allowing the handler to apply rate-limit related information their
  * existing response. Otherwise, {@link rateLimit} returns `{ res }`
  * for the caller to immediately return due to a rate-limit being applied.
  *
  */
-export async function rateLimit(
-  id: string,
-  categories: string[],
-  requestsPerMinute: number,
-  burst: number,
-) {
+export async function rateLimit({
+  id,
+  categories,
+  requestsPerMinute,
+  burst,
+}: {
+  id: string;
+  categories: string[];
+  requestsPerMinute: number;
+  burst: number;
+}) {
   const result = await applyRateLimit(
     redisKey("rl", ...categories, id),
     requestsPerMinute / 60,
     burst,
   );
 
-  function rheaders(res: Response) {
+  function infoHeaders(res: Response) {
     res.headers.set("X-Rate-Limit-Limit", result.limit.toString());
     res.headers.set("X-Rate-Limit-Remaining", result.remaining.toString());
     return res;
@@ -71,7 +76,7 @@ export async function rateLimit(
 
   if (!result.allowed) {
     return {
-      res: rheaders(
+      res: infoHeaders(
         Response.json(
           {
             error: { message: "Too many requests" },
@@ -84,5 +89,5 @@ export async function rateLimit(
     };
   }
 
-  return { rheaders };
+  return { infoHeaders };
 }

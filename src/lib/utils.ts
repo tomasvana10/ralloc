@@ -32,13 +32,7 @@ export function getZodSafeParseErrorResponse<T>(
   );
 }
 
-export async function checkResponse(
-  res: Response,
-  settings: {
-    errCtx: string;
-  },
-) {
-  const { errCtx } = settings;
+export async function checkResponse(res: Response, context: string) {
   const json = await res.json().catch(() => null);
 
   if (res.url.includes("/signin"))
@@ -57,7 +51,7 @@ export async function checkResponse(
   // unsuccessful
   if (res.status === 403) throw new Error("You don't own this session.");
   if (json) {
-    const sharedErrMsg = `An error occurred while processing '${errCtx}'`;
+    const sharedErrMsg = `An error occurred while processing '${context}'`;
 
     // the reasoning behind not returning a combination of both the API error and the
     // shared message is ralloc's APIs only return error messages directly if the error
@@ -66,5 +60,5 @@ export async function checkResponse(
     throw new Error(json?.error.message ?? sharedErrMsg);
   }
 
-  throw new Error(`Failed to process '${errCtx}' (code ${res.status})`);
+  throw new Error(`Failed to process '${context}' (code ${res.status})`);
 }

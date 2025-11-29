@@ -122,15 +122,15 @@ export async function UPGRADE(
 
     switch (payload.code) {
       case "Join": {
-        const result = await joinGroup(
+        const result = await joinGroup({
           code,
-          hostId!,
-          payload.groupName,
+          hostId: hostId!,
+          groupName: payload.groupName,
           userId,
           compressedUser,
-          cache.groupSize,
-          cache.frozen,
-        );
+          groupSize: cache.groupSize,
+          frozen: cache.frozen,
+        });
 
         const g0 = payload.groupName;
         const { originalGroupName: g1, newGroupName: g2 } = result;
@@ -167,7 +167,12 @@ export async function UPGRADE(
       }
 
       case "Leave": {
-        const result = await leaveGroup(code, hostId!, userId, cache.frozen);
+        const result = await leaveGroup({
+          code,
+          hostId: hostId!,
+          userId,
+          frozen: cache.frozen,
+        });
 
         const { originalGroupName: g1, newGroupName: g2 } = result;
 
