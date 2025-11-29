@@ -25,7 +25,7 @@ if originalGroupName ~= "" then
   return {"failure", "alreadyAllocated", originalGroupName, originalGroupName}
 end
 
--- check43. is group full?
+-- check 4. is group full?
 local current = redis.call("SCARD", groupMembersKey)
 if current >= groupSize then
   return {"failure", "full", originalGroupName, originalGroupName}
