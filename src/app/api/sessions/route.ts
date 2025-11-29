@@ -27,12 +27,13 @@ export async function POST(req: Request) {
       { status: 400 },
     );
 
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (!body) return new Response(null, { status: 400 });
   const parseResult = sessionCreateSchema.safeParse(body);
 
   if (!parseResult.success)
     return rheaders(getZodSafeParseErrorResponse(parseResult));
 
-  const code = await createGroupSession(parseResult.data, userId);
+  const code = await createGroupSession(parseResult.data, userId, session);
   return rheaders(Response.json({ code }, { status: 201 }));
 }
