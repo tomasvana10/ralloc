@@ -102,7 +102,7 @@ export function SessionCreateForm() {
     return () => window.removeEventListener("beforeunload", handler);
   }, [form.formState.isDirty]);
 
-  async function onSubmit(data: z.output<SessionCreateSchemaType>) {
+  async function onSubmit(data: z.output<typeof sessionCreateSchema>) {
     await creator.trigger(data).catch(() => null);
   }
 
