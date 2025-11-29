@@ -37,7 +37,6 @@ import {
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
 } from "@/hooks/group-session";
-import { useHasScrollbar } from "@/hooks/has-scrollbar";
 import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
 import { cn } from "@/lib/utils";
 import {
@@ -50,7 +49,6 @@ import { optimisticallyUpdateSessions } from "./utils";
 const PATCHES_BEFORE_GET = 25;
 
 export function SessionsViewer({ userId }: { userId: string }) {
-  const { ref, hasScrollbar } = useHasScrollbar<HTMLDivElement>();
   const [patchCount, setPatchCount] = React.useState(0);
   const isMobile = useIsBelowBreakpoint(640);
 
@@ -101,12 +99,11 @@ export function SessionsViewer({ userId }: { userId: string }) {
           />
         ) : null}
       </AnimatePresence>
-      <ScrollArea>
+      <ScrollArea className="rounded-sm border border-border">
         <div
-          ref={ref}
           className={cn(
-            "flex flex-col max-h-[calc(100vh-19.5rem)] min-h-[100px]",
-            hasScrollbar ? "pr-2" : "pr-0",
+            "flex flex-col max-h-[calc(100vh-19.5rem)]",
+            getter.data.length > 1 && "min-h-[100px]",
           )}>
           {getter.data
             .sort((a, b) => b.createdOn - a.createdOn)
@@ -305,7 +302,9 @@ function _SessionBlock({
     <Item
       asChild
       variant="outline"
-      className="rounded-none first:rounded-t-sm last:rounded-b-sm not-last:border-b-0 hover:bg-accent/20 has-aria-checked:bg-accent/20 max-sm:flex-col max-sm:items-start">
+      className={cn(
+        "rounded-none border-0 border-b last:border-b-0 hover:bg-accent/20 has-aria-checked:bg-accent/20 max-sm:flex-col max-sm:items-start",
+      )}>
       <Label htmlFor={`single-session-${data.code}`}>
         <ItemContent>
           <div className="flex flex-row gap-4 items-center">

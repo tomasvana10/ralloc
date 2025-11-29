@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 import type { Metadata } from "next";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export const metadata: Metadata = {
   title: {
@@ -25,7 +26,10 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          {children}
+          <ScrollArea type="scroll" className="h-screen w-full">
+            {children}
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
         </ThemeProvider>
       </body>
     </html>
