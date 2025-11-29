@@ -17,7 +17,7 @@ import { getHostId } from "./helpers";
 export type GroupSessionMetadata = SessionCreateSchemaType & {
   createdOn: number;
   frozen: boolean;
-  hostRepresentation: string;
+  compressedHost: string;
 };
 export type GroupSessionData = GroupSessionMetadata & {
   code: string;
@@ -81,7 +81,7 @@ export async function assembleGroupSession(
     description: metadata.description,
     code,
     hostId,
-    hostRepresentation: metadata.hostRepresentation,
+    compressedHost: metadata.compressedHost,
     groups: await getGroups(hostId, code),
   };
   return session;
@@ -146,7 +146,7 @@ export async function createGroupSession(
   const code = generateSessionCode(SESSION_CODE_LENGTH);
   const metadata: GroupSessionMetadata = {
     createdOn: Date.now(),
-    hostRepresentation: UserRepresentation.from(session).toCompressedString(),
+    compressedHost: UserRepresentation.from(session).toCompressedString(),
     ...data,
   };
 

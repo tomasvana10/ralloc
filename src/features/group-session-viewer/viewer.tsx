@@ -226,7 +226,7 @@ function GroupSessionInfo({
   data: GroupSessionData;
   isHost: boolean;
 }) {
-  const repr = UserRepresentation.fromCompressedString(data.hostRepresentation);
+  const repr = UserRepresentation.fromCompressedString(data.compressedHost);
   const [reactMarkdown, setReactMarkdown] = useRemark();
 
   React.useEffect(() => {
