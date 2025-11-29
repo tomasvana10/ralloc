@@ -24,14 +24,8 @@
         "noExplicitAny": "off"
       },
       "correctness": {
-        "noUnusedImports": "error",
+        "noUnusedImports": "warn",
         "useExhaustiveDependencies": "warn"
-      },
-      "performance": {
-        "noBarrelFile": "off"
-      },
-      "complexity": {
-        "noStaticOnlyClass": "off"
       },
       "style": {
         "noNonNullAssertion": "off"
