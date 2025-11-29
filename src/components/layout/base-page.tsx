@@ -1,10 +1,9 @@
 import { ChevronLeftIcon, HomeIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
-import { Footer } from "./footer";
-import { Profile } from "./profile";
-import { ThemeCycler } from "./theme-cycler";
-import { Button } from "./ui/button";
+import { Profile } from "../auth/profile";
+import { ThemeCycler } from "../theme-cycler";
+import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
@@ -12,8 +11,9 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Toaster } from "./ui/sonner";
+} from "../ui/card";
+import { Toaster } from "../ui/sonner";
+import { Footer } from "./footer";
 
 const returnToIcons: Record<string, LucideIcon> = {
   "/": HomeIcon,

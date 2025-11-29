@@ -4,7 +4,7 @@ import type * as TabsPrimitive from "@radix-ui/react-tabs";
 import { HomeIcon, ListIcon, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Tabs, TabsList, TabsTrigger } from "./ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export type RoutedTabData = {
   value: string;

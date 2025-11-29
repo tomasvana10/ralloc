@@ -1,7 +1,7 @@
 "use client";
 
 import type * as AvatarPrimitive from "@radix-ui/react-avatar";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function ClientAvatar({
   image,

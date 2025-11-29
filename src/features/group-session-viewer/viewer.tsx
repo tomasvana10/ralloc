@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import React from "react";
 import { useRemark } from "react-remark";
 import { toast } from "sonner";
-import { ClientAvatar } from "@/components/avatar";
+import { ClientAvatar } from "@/components/auth/avatar";
 import {
   Accordion,
   AccordionContent,

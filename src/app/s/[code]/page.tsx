@@ -1,7 +1,7 @@
 import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
-import { BasePage } from "@/components/base-page";
+import { BasePage } from "@/components/layout/base-page";
 import {
   doesGroupSessionExist,
   getGroupSessionByCode,

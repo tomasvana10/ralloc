@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { auth } from "@/auth";
-import { BasePage } from "@/components/base-page";
-import { RoutedMainTabs } from "@/components/routed-tabs";
+import { BasePage } from "@/components/layout/base-page";
+import { RoutedMainTabs } from "@/components/layout/routed-tabs";
 import { SessionsViewer } from "@/features/sessions-viewer";
 
 export const metadata: Metadata = {

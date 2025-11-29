@@ -4,7 +4,7 @@ import {
   GitHubLogo,
   GoogleLogo,
   type ProviderSVG,
-} from "@/components/provider-svgs";
+} from "@/components/auth/provider-svgs";
 import { cn } from "./utils";
 
 export const PROVIDER_DATA = {

@@ -1,15 +1,15 @@
 import { signIn } from "@/auth";
-import { PROVIDER_DATA } from "@/lib/constants";
-import type { SupportedProvider } from "@/lib/types";
-import { ProviderIcon } from "./provider-svgs";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
+} from "@/components/ui/card";
+import { PROVIDER_DATA } from "@/lib/constants";
+import type { SupportedProvider } from "@/lib/types";
+import { ProviderIcon } from "./provider-svgs";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (

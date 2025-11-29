@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { BasePage } from "@/components/base-page";
-import { HomeCards } from "@/components/home-cards";
-import { RoutedMainTabs } from "@/components/routed-tabs";
+import { BasePage } from "@/components/layout/base-page";
+import { HomeCards } from "@/components/layout/home-cards";
+import { RoutedMainTabs } from "@/components/layout/routed-tabs";
 
 export const metadata: Metadata = {
   title: "Home · Ralloc",

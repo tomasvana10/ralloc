@@ -1,6 +1,6 @@
 import { AlertCircleIcon } from "lucide-react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { BasePage } from "./base-page";
-import { Alert, AlertTitle } from "./ui/alert";
 
 export function BaseNotFound({
   title,
