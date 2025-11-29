@@ -1,4 +1,4 @@
-import redis, { redisKey } from "@/db/redis";
+import redis, { redisKey } from "@/db";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 
 const tokenBucketScript = await loadLuaScript("token-bucket");

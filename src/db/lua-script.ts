@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import redis from "./redis";
+import redis from ".";
 
 export interface LuaScript {
   sha: string | null;

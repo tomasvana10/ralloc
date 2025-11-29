@@ -1,4 +1,4 @@
-import redis from "../redis";
+import redis from "..";
 import { paths } from ".";
 
 export async function getHostId(code: string) {

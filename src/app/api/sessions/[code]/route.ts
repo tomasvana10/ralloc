@@ -1,5 +1,6 @@
 import { groupSessionRooms } from "@/app/api/session-ws/[code]/room";
 import { auth } from "@/auth";
+import { redisPub } from "@/db";
 import {
   deleteGroupSession,
   doesGroupSessionExist,
@@ -10,7 +11,6 @@ import {
   updateGroupSession,
 } from "@/db/group-session";
 import { rateLimit } from "@/db/rate-limit";
-import { redisPub } from "@/db/redis";
 import {
   baseSessionEditSchema,
   sessionEditSchemaFactory,

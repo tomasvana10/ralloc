@@ -1,5 +1,5 @@
 import type { SessionCreateSchemaType } from "@/features/forms/session-create";
-import { redisKey } from "../redis";
+import { redisKey } from "..";
 
 export type GroupSessionMetadata = SessionCreateSchemaType & {
   createdOn: number;

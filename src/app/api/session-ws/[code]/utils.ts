@@ -1,8 +1,8 @@
 // warning: this module is horrible
 
 import type WebSocket from "ws";
+import redis, { createSubClient } from "@/db";
 import { getGroupSessionByCode, getHostId, paths } from "@/db/group-session";
-import redis, { createSubClient } from "@/db/redis";
 import { GroupSessionS2C } from "@/lib/group-session/messaging";
 import { type GroupSessionRoom, groupSessionRooms } from "./room";
 

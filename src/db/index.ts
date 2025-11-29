@@ -1,7 +1,12 @@
 import { createClient } from "redis";
 
 const redisClientSingleton = () => {
-  const client = createClient({ url: "redis://redis:6379" });
+  const url = process.env.REDIS_URL;
+  if (!url) throw new Error("REDIS_URL not set in environment");
+
+  const client = createClient({
+    url: process.env.REDIS_URL,
+  });
   client.on("error", console.error);
   client.connect().catch(console.error);
   return client;

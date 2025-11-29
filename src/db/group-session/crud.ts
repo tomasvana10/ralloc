@@ -6,7 +6,7 @@ import {
   generateSessionCode,
   UserRepresentation,
 } from "@/lib/group-session";
-import redis, { REDIS } from "../redis";
+import redis, { REDIS } from "..";
 import {
   type GroupSessionData,
   type GroupSessionGroupData,

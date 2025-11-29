@@ -1,6 +1,6 @@
 import type WebSocket from "ws";
+import type { createSubClient } from "@/db";
 import type { GroupSessionData } from "@/db/group-session";
-import type { createSubClient } from "@/db/redis";
 
 export interface GroupSessionRoom {
   ready: boolean;

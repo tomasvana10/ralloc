@@ -1,6 +1,6 @@
 import { UserRepresentation } from "@/lib/group-session";
+import redis from "..";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
-import redis from "../redis";
 import { paths } from ".";
 
 function parseScriptResult(result: string[]) {

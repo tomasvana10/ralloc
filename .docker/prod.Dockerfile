@@ -24,6 +24,9 @@ COPY postcss.config.mjs .
 # build-time environment variables
 ARG NEXT_PUBLIC_URL
 ENV NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
+# prevents error during building
+ARG REDIS_URL=redis://dummy_url:6379
+ENV REDIS_URL=${REDIS_URL}
 
 RUN pnpm run build
 
