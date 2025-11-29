@@ -35,11 +35,11 @@ export function getZodSafeParseErrorResponse<T>(
 export async function checkResponse(
   res: Response,
   settings: {
-    hasJSONBody: boolean;
     errCtx: string;
   },
 ) {
-  const { errCtx, hasJSONBody } = settings;
+  const { errCtx } = settings;
+  const json = await res.json().catch(() => null);
 
   if (res.url.includes("/signin"))
     throw new Error("You are unauthenticated. Please reload the page.");
@@ -50,27 +50,14 @@ export async function checkResponse(
 
   // successful
   if (res.ok) {
-    if (!hasJSONBody) return null;
-
-    try {
-      return await res.json();
-    } catch {
-      throw new Error(
-        `Invalid response body received from server when processing '${errCtx}'`,
-      );
-    }
+    if (!json) return null;
+    return json;
   }
 
   // unsuccessful
   if (res.status === 403) throw new Error("You don't own this session.");
-  if (hasJSONBody) {
+  if (json) {
     const sharedErrMsg = `An error occurred while processing '${errCtx}'`;
-    let json: any;
-    try {
-      json = await res.json();
-    } catch {
-      throw new Error(sharedErrMsg);
-    }
 
     // the reasoning behind not returning a combination of both the API error and the
     // shared message is ralloc's APIs only return error messages directly if the error

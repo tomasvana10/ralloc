@@ -36,7 +36,7 @@ export function expand(input: string): ExpansionResult {
   let totalExpandedPartCount = 0;
 
   for (const part of filtered) {
-    const result = expandRange(part);
+    const result = expandPart(part);
     if (!Array.isArray(result)) return { values: [], issue: result };
     totalExpandedPartCount += result.length;
     if (totalExpandedPartCount > seed.MAX_PARTS)
@@ -51,68 +51,114 @@ export function expand(input: string): ExpansionResult {
   return { values };
 }
 
-function expandRange(part: string): ExpansionResult["issue"] | string[] {
+function expandPart(part: string): ExpansionResult["issue"] | string[] {
   let results = [part];
 
+  const numericExpansion = expandNumericRanges(part, results);
+  if (!Array.isArray(numericExpansion)) return numericExpansion;
+  results = numericExpansion;
+
+  const characterExpansion = expandCharacterRanges(part, results);
+  if (!Array.isArray(characterExpansion)) return characterExpansion;
+  results = characterExpansion;
+
+  if (results.length > seed.MAX_PARTS) return "too_big";
+  return results;
+}
+
+function padNumeric(n: number, width: number) {
+  return n.toString().padStart(width, "0");
+}
+
+function expandNumericRanges(
+  part: string,
+  results: string[],
+): ExpansionResult["issue"] | string[] {
   const numRanges = [...part.matchAll(seed.NUM_RANGE_REGEX)];
   if (numRanges.length > seed.MAX_NUM_RANGES_PER_PART)
     return "too_many_num_ranges";
+
+  let current = results;
+
   for (const [full, start, end] of numRanges) {
     if (start === end) return "invalid_range";
+
     const [a, b] = [Number(start), Number(end)];
-    if ((Math.abs(a - b) + 1) * results.length > seed.MAX_PARTS)
+
+    const width =
+      (start.length > 1 && start.startsWith("0")) ||
+      (end.length > 1 && end.startsWith("0"))
+        ? Math.max(start.length, end.length)
+        : 0;
+
+    if ((Math.abs(a - b) + 1) * current.length > seed.MAX_PARTS)
       return "too_big";
 
     const next: string[] = [];
-    for (const r of results) {
+
+    for (const r of current) {
+      if (a > b) {
+        for (let i = a; i >= b; i--) {
+          const padded = width > 0 ? padNumeric(i, width) : i.toString();
+          next.push(r.replace(full, padded).slice(0, seed.MAX_PART_LENGTH));
+        }
+      } else {
+        for (let i = a; i <= b; i++) {
+          const padded = width > 0 ? padNumeric(i, width) : i.toString();
+          next.push(r.replace(full, padded).slice(0, seed.MAX_PART_LENGTH));
+        }
+      }
+    }
+
+    current = next;
+  }
+
+  return current;
+}
+
+function expandCharacterRanges(
+  part: string,
+  results: string[],
+): ExpansionResult["issue"] | string[] {
+  const charRanges = [...part.matchAll(seed.CHAR_RANGE_REGEX)];
+  if (charRanges.length > seed.MAX_CHAR_RANGES_PER_PART)
+    return "too_many_char_ranges";
+
+  let current = results;
+
+  for (const [full, start, end] of charRanges) {
+    if (start === end) return "invalid_range";
+    if (!areSameCase(start, end)) return "invalid_range";
+
+    const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
+
+    if ((Math.abs(b - a) + 1) * current.length > seed.MAX_PARTS)
+      return "too_big";
+
+    const next: string[] = [];
+
+    for (const r of current) {
       if (a > b) {
         for (let i = a; i >= b; i--) {
           next.push(
-            r.replace(full, i.toString()).slice(0, seed.MAX_PART_LENGTH),
+            r
+              .replace(full, String.fromCharCode(i))
+              .slice(0, seed.MAX_PART_LENGTH),
           );
         }
       } else {
         for (let i = a; i <= b; i++) {
           next.push(
-            r.replace(full, i.toString()).slice(0, seed.MAX_PART_LENGTH),
+            r
+              .replace(full, String.fromCharCode(i))
+              .slice(0, seed.MAX_PART_LENGTH),
           );
         }
       }
     }
-    results = next;
+
+    current = next;
   }
 
-  const charRanges = [...part.matchAll(seed.CHAR_RANGE_REGEX)];
-  if (charRanges.length > seed.MAX_CHAR_RANGES_PER_PART)
-    return "too_many_char_ranges";
-  for (const [full, start, end] of charRanges) {
-    if (start === end) return "invalid_range";
-    if (!areSameCase(start, end)) return "invalid_range";
-    const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
-    if ((Math.abs(b - a) + 1) * results.length > seed.MAX_PARTS)
-      return "too_big";
-
-    const next: string[] = [];
-    for (const r of results) {
-      if (a > b) {
-        for (let i = a; i >= b; i--)
-          next.push(
-            r
-              .replace(full, String.fromCharCode(i))
-              .slice(0, seed.MAX_PART_LENGTH),
-          );
-      } else {
-        for (let i = a; i <= b; i++)
-          next.push(
-            r
-              .replace(full, String.fromCharCode(i))
-              .slice(0, seed.MAX_PART_LENGTH),
-          );
-      }
-    }
-    results = next;
-  }
-
-  if (results.length > seed.MAX_PARTS) return "too_big";
-  return results;
+  return current;
 }

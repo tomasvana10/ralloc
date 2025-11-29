@@ -78,7 +78,7 @@ export class UserRepresentation {
 
     const { url: avatarUrl, id: avatarId } = avatar;
 
-    if (avatarUrl === UserRepresentation.UNIT_EMPTY || !avatarUrl) {
+    if (avatarUrl === UserRepresentation.UNIT_EMPTY) {
       this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + this.name;
       this.avatarId = UserRepresentation.UNIT_EMPTY;
       return;

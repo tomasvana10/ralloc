@@ -14,7 +14,6 @@ export function useGetGroupSessionsSWR(
     async (url) => {
       const res = await fetch(url);
       const json = await checkResponse(res, {
-        hasJSONBody: true,
         errCtx: "Fetch group session",
       });
       return json.data;
@@ -46,7 +45,6 @@ export function useCreateGroupSessionSWRMutation(
         body: JSON.stringify(arg),
       });
       return await checkResponse(res, {
-        hasJSONBody: true,
         errCtx: "Create group session",
       });
     },
@@ -64,7 +62,6 @@ export function useDeleteGroupSessionSWRMutation(
         method: "DELETE",
       });
       await checkResponse(res, {
-        hasJSONBody: false,
         errCtx: "Delete group session",
       });
       return arg.code;
@@ -92,7 +89,6 @@ export function usePatchGroupSessionSWRMutation(
         body: JSON.stringify(arg.data),
       });
       await checkResponse(res, {
-        hasJSONBody: false,
         errCtx: "Update group session",
       });
     },
