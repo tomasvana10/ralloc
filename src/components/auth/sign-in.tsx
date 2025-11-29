@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PROVIDER_DATA } from "@/lib/constants";
-import type { SupportedProvider } from "@/lib/types";
+import type { SupportedProvider } from "@/types/main";
 import { ProviderIcon } from "./provider-svgs";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {

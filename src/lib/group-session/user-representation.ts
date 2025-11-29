@@ -2,7 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
-import type { SupportedProvider } from "../types";
+import type { SupportedProvider } from "@/types/main";
 
 /**
  * Utility class that supports the storage of users in the Redis
