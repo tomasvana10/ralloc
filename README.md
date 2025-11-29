@@ -79,6 +79,7 @@ AUTH_<provider>_SECRET=...
 - [ ] Create privacy and usage related markdown documents
 - [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
 - [ ] Write tests
+- [ ] Use renovate for dependency management (after writing tests)
 - [ ] Improve page metadata in general and possibly add sitemap
 - [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
 - [ ] Create a logo
