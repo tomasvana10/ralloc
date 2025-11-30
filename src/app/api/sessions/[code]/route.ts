@@ -28,8 +28,8 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   const { infoHeaders, res } = await rateLimit({
     id: userId,
     categories: ["sessions/[code]", "POST"],
-    requestsPerMinute: 115,
-    burst: 17,
+    requestsPerMinute: 80,
+    burst: 15,
   });
   if (res) return res;
 
@@ -54,8 +54,8 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const { infoHeaders, res } = await rateLimit({
     id: session.user.id,
     categories: ["sessions/[code]", "SHARED"],
-    requestsPerMinute: 115,
-    burst: 17,
+    requestsPerMinute: 80,
+    burst: 15,
   });
   if (res) return res;
 
