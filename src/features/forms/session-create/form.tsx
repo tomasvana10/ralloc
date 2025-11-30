@@ -34,7 +34,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateGroupSessionSWRMutation } from "@/hooks/group-session";
 import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
-import { expand, seed } from "@/lib/group-session";
+import { expand } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import {
   type SessionCreateSchemaType,
@@ -238,24 +238,26 @@ export function SessionCreateForm() {
                       tip={
                         <>
                           <p>
-                            A comma-separated list of regex-like expressions or
-                            plain text to generate a set of group names.
+                            A comma-separated list of values to generate a set
+                            of group names.
                           </p>
                           <br />
                           <p>
-                            The amount of expanded values must not exceed{" "}
-                            {seed.MAX_PARTS}. Any expanded values greater than{" "}
-                            {seed.MAX_PART_LENGTH} characters in length will be
-                            truncated.
+                            You can use character ranges like <code>[a-z]</code>{" "}
+                            and numerical ranges like <code>[1-500]</code>.
                           </p>
                           <br />
                           <p>
-                            <b>Example 1:</b> <code>table [b-a]</code> yields{" "}
-                            <code>table b</code>, <code>table a</code>
+                            <b>Example 1:</b> <code>table [a-b]</code> yields{" "}
+                            <code>table a</code>, <code>table b</code>
                             <br />
                             <b>Example 2:</b> <code>a,b,[1-2]</code> yields{" "}
                             <code>a</code>, <code>b</code>, <code>1</code>,{" "}
                             <code>2</code>
+                            <br />
+                            <b>Example 3:</b> <code>[001-100]</code> yields{" "}
+                            <code>001</code>, <code>002</code>, ...{" "}
+                            <code>099</code>, <code>100</code>
                           </p>
                         </>
                       }
@@ -270,7 +272,7 @@ export function SessionCreateForm() {
                     {...field}
                     type="text"
                     autoComplete="off"
-                    placeholder="Group [1-10], Group [a-c], Group [z-a]"
+                    placeholder="Group [1-10], Group [001-100], Group [a-c]"
                     id="form-create-session-group-seed"
                     aria-invalid={fieldState.invalid}
                   />
