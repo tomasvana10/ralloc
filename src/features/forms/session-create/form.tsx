@@ -50,7 +50,7 @@ export function SessionCreateForm() {
       setSessionCode(data.code);
       reset();
     },
-    onError: (err) => toast.error(err.message, { id: err.message }),
+    onError: (err) => toast.error(err.message),
   });
   const [showMarkdown, setShowMarkdown] = React.useState(false);
   const [showGoToSessionButton, setShowGoToSessionButton] =
@@ -159,7 +159,7 @@ export function SessionCreateForm() {
                       inputMode="numeric"
                       min={1}
                       value={String(field.value)}
-                      onChange={field.onChange}
+                      onChange={(e) => field.onChange(+e.target.value)}
                       onKeyDown={(e) => {
                         if (!/[0-9]|Backspace|Arrow|Tab/.test(e.key))
                           e.preventDefault();

@@ -9,6 +9,7 @@ export interface ExpansionResult {
   values: string[];
   issue?:
     | "too_big"
+    | "too_big_part"
     | "too_short"
     | "invalid_range"
     | "too_many_num_ranges"
@@ -52,6 +53,7 @@ export function expand(input: string): ExpansionResult {
 }
 
 function expandPart(part: string): ExpansionResult["issue"] | string[] {
+  if (part.length > seed.MAX_PART_LENGTH) return "too_big_part";
   let results = [part];
 
   const numericExpansion = expandNumericRanges(part, results);

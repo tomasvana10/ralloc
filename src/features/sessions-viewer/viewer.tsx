@@ -53,20 +53,17 @@ export function SessionsViewer({ userId }: { userId: string }) {
   const isMobile = useIsBelowBreakpoint(640);
 
   const getter = useGetGroupSessionsSWR(userId, {
-    onError: (err) =>
-      toast.error(err.message, {
-        id: err.message,
-      }),
+    onError: (err) => toast.error(err.message),
   });
   const deleter = useDeleteGroupSessionSWRMutation({
     onSuccess: (code) => {
       dispatchSelectedSessions({ type: "remove", payload: code });
     },
-    onError: (err) => toast.error(err.message, { id: err.message }),
+    onError: (err) => toast.error(err.message),
   });
   const patcher = usePatchGroupSessionSWRMutation({
     // used specifically to lock/unlock a session rn
-    onError: (err) => toast.error(err.message, { id: err.message }),
+    onError: (err) => toast.error(err.message),
   });
 
   const [selectedSessions, dispatchSelectedSessions] = React.useReducer(

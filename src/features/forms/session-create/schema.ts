@@ -24,6 +24,13 @@ export const sessionCreateSchema = z.object({
             origin: "array",
             message: "Seed expansion yields too many values",
           });
+        case "too_big_part":
+          return ctx.addIssue({
+            code: "too_big",
+            maximum: seed.MAX_PARTS,
+            origin: "array",
+            message: "One or more parts are too long",
+          });
         case "too_short":
           return ctx.addIssue({
             code: "too_small",

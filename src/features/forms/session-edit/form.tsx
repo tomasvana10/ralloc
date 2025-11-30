@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { SettingsIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -72,7 +72,7 @@ export function SessionEditForm({
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon-lg">
-          <SettingsIcon />
+          <PencilIcon />
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -182,7 +182,7 @@ export function SessionEditForm({
             />
           </FieldGroup>
 
-          <DialogFooter className="mt-4 max-sm:mt-8">
+          <DialogFooter className="mt-4 max-sm:mt-8 flex flex-col">
             <Button
               type="submit"
               className="sm:min-w-[80px]"
@@ -202,7 +202,7 @@ export function SessionEditForm({
 
             <DialogClose asChild>
               <Button variant="outline" className="sm:min-w-[80px]">
-                Cancel
+                Close
               </Button>
             </DialogClose>
           </DialogFooter>
