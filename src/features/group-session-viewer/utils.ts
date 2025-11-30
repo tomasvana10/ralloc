@@ -10,7 +10,7 @@ export function getFullGroupUpdateErrorMessage(
 ) {
   switch (error) {
     case "alreadyAllocated":
-      return "You are already allocated a group";
+      return "You're already allocated a group";
     case "frozen":
       return "The group session is locked";
     case "full":
@@ -18,7 +18,7 @@ export function getFullGroupUpdateErrorMessage(
     case "nonexistent":
       return "This group doesn't exist";
     case "notInGroup":
-      return "You are not in this group";
+      return "You aren't in this group";
   }
 }
 

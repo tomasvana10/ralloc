@@ -36,11 +36,9 @@ export async function checkResponse(res: Response, context: string) {
   const json = await res.json().catch(() => null);
 
   if (res.url.includes("/signin"))
-    throw new Error("You are unauthenticated. Please reload the page.");
+    throw new Error("You aren't authenticated. Please reload the page.");
   if (res.status === 429)
-    throw new Error(
-      "You are sending too many requests. Please try again soon.",
-    );
+    throw new Error("You're sending too many requests. Please try again soon.");
 
   // successful
   if (res.ok) {
