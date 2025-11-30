@@ -1,1 +1,1 @@
-export { GroupSessionViewer } from "./viewer";
+export { GroupSessionViewer } from "./tsx/viewer";
