@@ -4,10 +4,7 @@ import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
 import { joinGroup, leaveGroup } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
-import {
-  GroupSessionC2S,
-  GroupSessionS2C,
-} from "@/lib/group-session/messaging";
+import { GSClient, GSServer } from "@/lib/group-session/proto";
 import {
   deleteGroupSessionRoom,
   doSafeSync,
@@ -61,7 +58,7 @@ export async function UPGRADE(
   });
   if (res)
     client.close(
-      GroupSessionS2C.CloseEventCodes.RateLimited,
+      GSServer.CloseEventCodes.RateLimited,
       "rate limit exceeded",
     );
   */
@@ -83,7 +80,7 @@ export async function UPGRADE(
 
     state.isAlive = false;
     client.ping();
-  }, GroupSessionS2C.PING_INTERVAL_MS);
+  }, GSServer.PING_INTERVAL_MS);
 
   if (!(await doSafeSync(cache, code, client))) return;
 
@@ -114,15 +111,15 @@ export async function UPGRADE(
       burst: 5,
     });
     if (res) {
-      const rateLimitPayload: GroupSessionS2C.Payloads.MessageRateLimit = {
-        code: GroupSessionS2C.Code.MessageRateLimit,
+      const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
+        code: GSServer.Code.MessageRateLimit,
       };
       return send(client, rateLimitPayload);
     }
     */
 
     //@ts-expect-error intended usage according to https://websocket.org/guides/security/
-    if (rawData.length > GroupSessionS2C.MSG_SIZE_LIMIT)
+    if (rawData.length > GSServer.MSG_SIZE_LIMIT)
       return client.close(1009, "message too large");
 
     let serialisedData: Record<string, any>;
@@ -132,7 +129,7 @@ export async function UPGRADE(
       return client.close(1007, "unparsable json payload");
     }
 
-    const parseResult = GroupSessionC2S.payload.safeParse(serialisedData);
+    const parseResult = GSClient.payload.safeParse(serialisedData);
     if (parseResult.error) return client.close(1008, "malformed json payload");
 
     const { data: payload } = parseResult;
@@ -148,11 +145,8 @@ export async function UPGRADE(
 
     // ensure that non-hosts can only perform join/leave actions for themselves
     if (userRepresentation.userId !== userId && userId !== hostId)
-      return client.close(
-        GroupSessionS2C.CloseEventCodes.Forbidden,
-        "forbidden",
-      );
-    let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
+      return client.close(GSServer.CloseEventCodes.Forbidden, "forbidden");
+    let responsePayload: GSServer.Payloads.GroupUpdateStatus;
 
     switch (payload.code) {
       case "Join": {
@@ -173,7 +167,7 @@ export async function UPGRADE(
           responsePayload = {
             isReply: 0,
             ok: 1,
-            code: GroupSessionS2C.Code.GroupUpdateStatus,
+            code: GSServer.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
               g0,
@@ -185,7 +179,7 @@ export async function UPGRADE(
         } else {
           responsePayload = {
             ok: 0,
-            code: GroupSessionS2C.Code.GroupUpdateStatus,
+            code: GSServer.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
               g0,
@@ -214,7 +208,7 @@ export async function UPGRADE(
           responsePayload = {
             isReply: 0,
             ok: 1,
-            code: GroupSessionS2C.Code.GroupUpdateStatus,
+            code: GSServer.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
               g1,
@@ -225,7 +219,7 @@ export async function UPGRADE(
         } else {
           responsePayload = {
             ok: 0,
-            code: GroupSessionS2C.Code.GroupUpdateStatus,
+            code: GSServer.Code.GroupUpdateStatus,
             action: payload.code,
             context: {
               g1,
@@ -245,7 +239,7 @@ export async function UPGRADE(
 
       const now = Date.now();
       const timeout = now - state.lastSynchroniseDueToGroupUpdateError;
-      const shouldSync = timeout > GroupSessionS2C.GUPDATE_FAILURE_SYNC_TIMEOUT;
+      const shouldSync = timeout > GSServer.GUPDATE_FAILURE_SYNC_TIMEOUT;
 
       if (shouldSync) responsePayload.willSync = true;
       send(client, responsePayload);
@@ -272,8 +266,7 @@ export async function UPGRADE(
       }
 
       if (
-        state.synchroniseCounter ===
-        GroupSessionS2C.SUCCESSFUL_RESPONSES_BEFORE_RESYNC
+        state.synchroniseCounter === GSServer.SUCCESSFUL_RESPONSES_BEFORE_RESYNC
       ) {
         // the client has received enough group update responses that
         // a full re-synchronisation should occur to ensure the client's data

@@ -1,12 +1,9 @@
 import type { GroupSessionData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
-import type { GroupSessionS2C } from "@/lib/group-session/messaging";
+import type { GSServer } from "@/lib/group-session/proto";
 
 export function getFullGroupUpdateErrorMessage(
-  error: Extract<
-    GroupSessionS2C.Payloads.GroupUpdateStatus,
-    { ok: 0 }
-  >["error"],
+  error: Extract<GSServer.Payloads.GroupUpdateStatus, { ok: 0 }>["error"],
 ) {
   switch (error) {
     case "alreadyAllocated":

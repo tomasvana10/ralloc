@@ -37,7 +37,7 @@ import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
 import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
 import { UserRepresentation } from "@/lib/group-session";
-import { GroupSessionS2C } from "@/lib/group-session/messaging";
+import { GSServer } from "@/lib/group-session/proto";
 import { cn } from "@/lib/utils";
 import { SessionEditForm } from "../../forms/session-edit/form";
 import { useGroupSession } from "../use-group-session";
@@ -100,14 +100,14 @@ export function GroupSessionViewer({
         // custom close event code
         let customErrMsgBase = "";
         switch (code) {
-          case GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted:
+          case GSServer.CloseEventCodes.GroupSessionWasDeleted:
             customErrMsgBase = "This group session was deleted";
             break;
-          case GroupSessionS2C.CloseEventCodes.RateLimited:
+          case GSServer.CloseEventCodes.RateLimited:
             customErrMsgBase =
               "You're sending too many requests. Please try again soon";
             break;
-          case GroupSessionS2C.CloseEventCodes.Forbidden:
+          case GSServer.CloseEventCodes.Forbidden:
             customErrMsgBase =
               "You're not allowed to perform this action since you aren't the host";
             break;

@@ -15,7 +15,7 @@ import {
   baseSessionEditSchema,
   sessionEditSchemaFactory,
 } from "@/features/forms/session-edit/schema";
-import { GroupSessionS2C } from "@/lib/group-session/messaging";
+import { GSServer } from "@/lib/group-session/proto";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 
 type Params = Promise<{ code: string }>;
@@ -92,8 +92,8 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   // publishing just the raw data is inefficient, as the websocket handler will
   // have to parse it, assemble its own payload, then stringify it. this way, all
   // they have to do is send it (and parse it to update their own cache)
-  const syncPayload: GroupSessionS2C.Payloads.Synchronise = {
-    code: GroupSessionS2C.Code.Synchronise,
+  const syncPayload: GSServer.Payloads.Synchronise = {
+    code: GSServer.Code.Synchronise,
     data: (await getGroupSessionByCode(code))!,
   };
   redisPub.publish(paths.pubsub.newData(code), JSON.stringify(syncPayload));

@@ -3,7 +3,7 @@
 import type WebSocket from "ws";
 import redis, { createSubClient } from "@/db";
 import { getGroupSessionByCode, getHostId, paths } from "@/db/group-session";
-import { GroupSessionS2C } from "@/lib/group-session/messaging";
+import { GSServer } from "@/lib/group-session/proto";
 import { type GroupSessionRoom, groupSessionRooms } from "./room";
 
 function updateCache(
@@ -43,7 +43,7 @@ async function doSafeSync(
 
 function closeDeleted(ws: WebSocket) {
   ws.close(
-    GroupSessionS2C.CloseEventCodes.GroupSessionWasDeleted,
+    GSServer.CloseEventCodes.GroupSessionWasDeleted,
     "The group session was deleted",
   );
 }
@@ -56,15 +56,15 @@ async function prepareSyncPayload(
   if (!data) return null;
   updateCache(cache, { groupSize: data.groupSize, frozen: data.frozen });
 
-  const payload: GroupSessionS2C.Payloads.Synchronise = {
-    code: GroupSessionS2C.Code.Synchronise,
+  const payload: GSServer.Payloads.Synchronise = {
+    code: GSServer.Code.Synchronise,
     data,
   };
 
   return payload;
 }
 
-function send(ws: WebSocket, payload: GroupSessionS2C.Payload) {
+function send(ws: WebSocket, payload: GSServer.Payload) {
   if (ws.readyState === ws.OPEN) ws.send(JSON.stringify(payload));
 }
 
@@ -76,7 +76,7 @@ async function createSubscriptions(gs: GroupSessionRoom, code: string) {
   await gs.subClient?.subscribe(paths.pubsub.newData(code), async (msg) => {
     if (!groupSessionRooms.has(code)) return;
 
-    const payload: GroupSessionS2C.Payloads.Synchronise = JSON.parse(msg);
+    const payload: GSServer.Payloads.Synchronise = JSON.parse(msg);
     updateCache(gs.cache, {
       groupSize: payload.data.groupSize,
       frozen: payload.data.frozen,

@@ -2,9 +2,9 @@ import { z } from "zod";
 import { seed } from "@/lib/group-session";
 
 /**
- * Client-to-server protocol library for a group session websockets
+ * Client library for a group session websockets
  */
-export namespace GroupSessionC2S {
+export namespace GSClient {
   const _codes = {
     JoinGroup: "Join",
     LeaveGroup: "Leave",

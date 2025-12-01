@@ -3,12 +3,12 @@ import type {
   JoinGroupErrorMessage,
   LeaveGroupErrorMessage,
 } from "@/db/group-session";
-import type { GroupSessionC2S } from ".";
+import type { GSClient } from ".";
 
 /**
- * Server-to-client protocol library for group session websockets
+ * Server library for group session websockets
  */
-export namespace GroupSessionS2C {
+export namespace GSServer {
   export namespace CloseEventCodes {
     export const GroupSessionWasDeleted = 4410;
     export const RateLimited = 4429;
@@ -48,7 +48,7 @@ export namespace GroupSessionS2C {
   export namespace Payloads {
     type _BaseGroupUpdateStatus = {
       code: Code.GroupUpdateStatus;
-      action: Extract<GroupSessionC2S.Code, "Join" | "Leave">;
+      action: Extract<GSClient.Code, "Join" | "Leave">;
       context: {
         /**
          * Group the user tried to join

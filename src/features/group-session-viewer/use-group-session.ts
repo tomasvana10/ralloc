@@ -2,10 +2,7 @@ import React from "react";
 import useWebSocket from "react-use-websocket-lite";
 import type { GroupSessionData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
-import {
-  GroupSessionC2S,
-  GroupSessionS2C,
-} from "@/lib/group-session/messaging";
+import { GSClient, GSServer } from "@/lib/group-session/proto";
 import { findCurrentGroup, getFullGroupUpdateErrorMessage } from "./utils";
 
 type GroupSessionState = GroupSessionData | null;
@@ -27,7 +24,7 @@ type GroupSessionUpdateAction =
     }
   | {
       type: "Sync";
-      payload: Pick<GroupSessionS2C.Payloads.Synchronise, "data">;
+      payload: Pick<GSServer.Payloads.Synchronise, "data">;
     }
   | { type: "Freeze" };
 
@@ -114,7 +111,7 @@ export function useGroupSession({
     onReconnectStop: (n: number) => onReconnectStop?.(n),
     onClose: (ev) => onClose?.(ev.code, ev.reason),
     onMessage: (ev) => {
-      let payload: GroupSessionS2C.Payload;
+      let payload: GSServer.Payload;
       try {
         payload = JSON.parse(ev.data);
       } catch {
@@ -122,7 +119,7 @@ export function useGroupSession({
       }
 
       switch (payload.code) {
-        case GroupSessionS2C.Code.GroupUpdateStatus: {
+        case GSServer.Code.GroupUpdateStatus: {
           const { context } = payload;
 
           // ! failure !
@@ -174,14 +171,14 @@ export function useGroupSession({
 
           break;
         }
-        case GroupSessionS2C.Code.Synchronise: {
+        case GSServer.Code.Synchronise: {
           dispatchGroupSession({
             payload: { data: payload.data },
             type: "Sync",
           });
           break;
         }
-        case GroupSessionS2C.Code.MessageRateLimit: {
+        case GSServer.Code.MessageRateLimit: {
           onError?.(
             "You are sending too many requests. Please try again soon.",
           );
@@ -202,8 +199,8 @@ export function useGroupSession({
 
   const joinGroup = React.useCallback(
     (groupName: string, compressedUser: string) => {
-      const payload: GroupSessionC2S.Payloads.JoinGroup = {
-        code: GroupSessionC2S.code.enum.JoinGroup,
+      const payload: GSClient.Payloads.JoinGroup = {
+        code: GSClient.code.enum.JoinGroup,
         compressedUser,
         groupName,
       };
@@ -219,8 +216,8 @@ export function useGroupSession({
   const leaveGroup = React.useCallback(
     // compressedUser is only required for optimistic client-sided updates
     (groupName: string, compressedUser: string) => {
-      const payload: GroupSessionC2S.Payloads.LeaveGroup = {
-        code: GroupSessionC2S.code.enum.LeaveGroup,
+      const payload: GSClient.Payloads.LeaveGroup = {
+        code: GSClient.code.enum.LeaveGroup,
         compressedUser,
       };
       sendMessage(JSON.stringify(payload));
