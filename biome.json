@@ -24,7 +24,7 @@
         "noExplicitAny": "off"
       },
       "correctness": {
-        "noUnusedImports": "warn",
+        "noUnusedImports": "error",
         "useExhaustiveDependencies": "warn"
       },
       "style": {
