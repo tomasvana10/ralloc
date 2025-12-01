@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { GroupSessionData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
-import type { useGroupSession } from "../hooks";
+import type { useGroupSession } from "../use-group-session";
 
 const _groupAnimationVariants: Variants = {
   hidden: { width: 0, opacity: 0, scale: 0.8 },

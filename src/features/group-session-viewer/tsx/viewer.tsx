@@ -40,7 +40,7 @@ import { UserRepresentation } from "@/lib/group-session";
 import { GroupSessionS2C } from "@/lib/group-session/messaging";
 import { cn } from "@/lib/utils";
 import { SessionEditForm } from "../../forms/session-edit/form";
-import { useGroupSession } from "../hooks";
+import { useGroupSession } from "../use-group-session";
 import { Group } from "./group";
 
 function getGroupBorderClasses(
