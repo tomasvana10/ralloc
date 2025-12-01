@@ -3,6 +3,7 @@ import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
 import { joinGroup, leaveGroup } from "@/db/group-session";
+import { rateLimit } from "@/db/rate-limit";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSClient, GSServer } from "@/lib/group-session/proto";
 import {
@@ -103,21 +104,6 @@ export async function UPGRADE(
   });
 
   client.on("message", async (rawData) => {
-    /*
-    const { res } = await rateLimit({
-      id: userId,
-      categories: ["sessions-ws/[code]", "MESSAGE"],
-      requestsPerMinute: 12,
-      burst: 5,
-    });
-    if (res) {
-      const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
-        code: GSServer.Code.MessageRateLimit,
-      };
-      return send(client, rateLimitPayload);
-    }
-    */
-
     //@ts-expect-error intended usage according to https://websocket.org/guides/security/
     if (rawData.length > GSServer.MSG_SIZE_LIMIT)
       return client.close(1009, "message too large");
@@ -131,6 +117,20 @@ export async function UPGRADE(
 
     const parseResult = GSClient.payload.safeParse(serialisedData);
     if (parseResult.error) return client.close(1008, "malformed json payload");
+
+    const { res } = await rateLimit({
+      id: userId,
+      categories: ["sessions-ws/[code]", "MESSAGE"],
+      requestsPerMinute: 20,
+      burst: 15,
+    });
+    if (res) {
+      const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
+        code: GSServer.Code.MessageRateLimit,
+        acknum: parseResult.data.seqnum,
+      };
+      return send(client, rateLimitPayload);
+    }
 
     const { data: payload } = parseResult;
 
@@ -160,33 +160,24 @@ export async function UPGRADE(
           frozen: cache.frozen,
         });
 
-        const g0 = payload.groupName;
-        const { originalGroupName: g1, newGroupName: g2 } = result;
-
         if (result.status === "success") {
           responsePayload = {
             isReply: 0,
             ok: 1,
             code: GSServer.Code.GroupUpdateStatus,
+            acknum: payload.seqnum,
             action: payload.code,
             context: {
-              g0,
-              g1,
-              g2,
               compressedUser: payload.compressedUser,
+              groupName: result.newGroupName!,
             },
           };
         } else {
           responsePayload = {
             ok: 0,
             code: GSServer.Code.GroupUpdateStatus,
+            acknum: payload.seqnum,
             action: payload.code,
-            context: {
-              g0,
-              g1,
-              g2,
-              compressedUser: payload.compressedUser,
-            },
             willSync: false,
             error: result.message,
           };
@@ -202,30 +193,24 @@ export async function UPGRADE(
           frozen: cache.frozen,
         });
 
-        const { originalGroupName: g1, newGroupName: g2 } = result;
-
         if (result.status === "success") {
           responsePayload = {
             isReply: 0,
             ok: 1,
             code: GSServer.Code.GroupUpdateStatus,
+            acknum: payload.seqnum,
             action: payload.code,
             context: {
-              g1,
-              g2,
               compressedUser: payload.compressedUser,
+              groupName: result.originalGroupName!,
             },
           };
         } else {
           responsePayload = {
             ok: 0,
             code: GSServer.Code.GroupUpdateStatus,
+            acknum: payload.seqnum,
             action: payload.code,
-            context: {
-              g1,
-              g2,
-              compressedUser: payload.compressedUser,
-            },
             willSync: false,
             error: result.message,
           };

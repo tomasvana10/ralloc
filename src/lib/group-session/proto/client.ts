@@ -15,13 +15,15 @@ export namespace GSClient {
   export namespace Payloads {
     export const joinGroup = z.object({
       code: z.literal(code.enum.JoinGroup),
-      groupName: z.string().min(1).max(seed.MAX_PART_LENGTH),
+      seqnum: z.number().int().nonnegative(),
       compressedUser: z.string().min(1),
+      groupName: z.string().min(1).max(seed.MAX_PART_LENGTH),
     });
     export type JoinGroup = z.infer<typeof joinGroup>;
 
     export const leaveGroup = z.object({
       code: z.literal(code.enum.LeaveGroup),
+      seqnum: z.number().int().nonnegative(),
       compressedUser: z.string().min(1),
     });
     export type LeaveGroup = z.infer<typeof leaveGroup>;

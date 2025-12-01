@@ -48,22 +48,8 @@ export namespace GSServer {
   export namespace Payloads {
     type _BaseGroupUpdateStatus = {
       code: Code.GroupUpdateStatus;
+      acknum: number;
       action: Extract<GSClient.Code, "Join" | "Leave">;
-      context: {
-        /**
-         * Group the user tried to join
-         */
-        g0?: string;
-        /**
-         * Group the user was in before the server processed their request
-         */
-        g1: string | null;
-        /**
-         * Group the user is now in
-         */
-        g2: string | null;
-        compressedUser: string;
-      };
     };
 
     /**
@@ -73,6 +59,10 @@ export namespace GSServer {
       | ({
           ok: 1;
           isReply: 0 | 1;
+          context: {
+            compressedUser: string;
+            groupName: string;
+          };
         } & _BaseGroupUpdateStatus)
       | ({
           ok: 0;
@@ -101,6 +91,7 @@ export namespace GSServer {
      */
     export type MessageRateLimit = {
       code: Code.MessageRateLimit;
+      acknum: number;
     };
   }
 

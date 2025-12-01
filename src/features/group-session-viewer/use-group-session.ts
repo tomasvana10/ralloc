@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import useWebSocket from "react-use-websocket-lite";
 import type { GroupSessionData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
@@ -24,9 +24,10 @@ type GroupSessionUpdateAction =
     }
   | {
       type: "Sync";
-      payload: Pick<GSServer.Payloads.Synchronise, "data">;
+      payload: { data: GroupSessionData };
     }
-  | { type: "Freeze" };
+  | { type: "Freeze" }
+  | { type: "Rollback"; payload: { data: GroupSessionData } };
 
 function groupSessionReducer(
   state: GroupSessionState,
@@ -34,6 +35,9 @@ function groupSessionReducer(
 ): GroupSessionState {
   if (action.type === "Sync") {
     return action.payload.data;
+  }
+  if (action.type === "Rollback") {
+    return { ...action.payload.data };
   }
   if (!state) return null;
 
@@ -101,6 +105,8 @@ export function useGroupSession({
     groupSessionReducer,
     null,
   );
+  const seqnumRef = useRef(0);
+  const rollbacksRef = useRef(new Map<number, GroupSessionData>());
 
   const { sendMessage, readyState } = useWebSocket({
     url: `/api/session-ws/${code}`,
@@ -109,7 +115,10 @@ export function useGroupSession({
     maxReconnectAttempts: 5,
     onOpen: () => onOpen?.(),
     onReconnectStop: (n: number) => onReconnectStop?.(n),
-    onClose: (ev) => onClose?.(ev.code, ev.reason),
+    onClose: (ev) => {
+      rollbacksRef.current.clear();
+      onClose?.(ev.code, ev.reason);
+    },
     onMessage: (ev) => {
       let payload: GSServer.Payload;
       try {
@@ -120,51 +129,30 @@ export function useGroupSession({
 
       switch (payload.code) {
         case GSServer.Code.GroupUpdateStatus: {
-          const { context } = payload;
-
-          // ! failure !
+          // failure
           if (!payload.ok) {
             onError?.(getFullGroupUpdateErrorMessage(payload.error));
-            // sync payload from server will not be sent due to timeout, so we
-            // must manually revert its optimistic update
             if (!payload.willSync) {
-              if (context.g0 === context.g2) return;
-
               dispatchGroupSession({
-                payload: {
-                  groupName:
-                    payload.action === "Leave"
-                      ? // if the user tried leaving a group, they will be joined back to g2 -
-                        // the group the server decided they are now in (their original group)
-                        payload.context.g2!
-                      : // if the user tried joining a group, they will be removed from g0 -
-                        // the group they originally tried to join
-                        payload.context.g0!,
-                  compressedUser: context.compressedUser,
-                },
-                type:
-                  // invert the action to undo the optimistic update
-                  payload.action === "Join" ? "Leave" : "Join",
+                type: "Rollback",
+                payload: { data: rollbacksRef.current.get(payload.acknum)! },
               });
+              rollbacksRef.current.delete(payload.acknum);
             }
 
             break;
           }
 
-          // ! success !
+          // success
+          rollbacksRef.current.delete(payload.acknum);
           // this checks if the payload is a direct reply to the original client that joined
           // or left the group. if not, no optimistic state update was performed, and a proper
           // update must be performed
           if (!payload.isReply)
             dispatchGroupSession({
               payload: {
-                // since it was either a successful join or leave, g2 (new group) or g1 (old group)
-                // respectively MUST be truthy
-                groupName:
-                  payload.action === "Join"
-                    ? payload.context.g2!
-                    : payload.context.g1!,
-                compressedUser: context.compressedUser,
+                groupName: payload.context.groupName,
+                compressedUser: payload.context.compressedUser,
               },
               type: payload.action,
             });
@@ -179,6 +167,11 @@ export function useGroupSession({
           break;
         }
         case GSServer.Code.MessageRateLimit: {
+          dispatchGroupSession({
+            type: "Rollback",
+            payload: { data: rollbacksRef.current.get(payload.acknum)! },
+          });
+          rollbacksRef.current.delete(payload.acknum);
           onError?.(
             "You are sending too many requests. Please try again soon.",
           );
@@ -199,34 +192,42 @@ export function useGroupSession({
 
   const joinGroup = React.useCallback(
     (groupName: string, compressedUser: string) => {
+      const seqnum = ++seqnumRef.current; // seqnum starts at 1
       const payload: GSClient.Payloads.JoinGroup = {
         code: GSClient.code.enum.JoinGroup,
+        seqnum,
         compressedUser,
         groupName,
       };
+      if (data) rollbacksRef.current.set(seqnum, data);
+
       sendMessage(JSON.stringify(payload));
       dispatchGroupSession({
         payload: { groupName, compressedUser },
         type: "Join",
       });
     },
-    [sendMessage],
+    [sendMessage, data],
   );
 
   const leaveGroup = React.useCallback(
     // compressedUser is only required for optimistic client-sided updates
     (groupName: string, compressedUser: string) => {
+      const seqnum = ++seqnumRef.current; // seqnum starts at 1
       const payload: GSClient.Payloads.LeaveGroup = {
         code: GSClient.code.enum.LeaveGroup,
+        seqnum,
         compressedUser,
       };
+      if (data) rollbacksRef.current.set(seqnum, data);
+
       sendMessage(JSON.stringify(payload));
       dispatchGroupSession({
         payload: { groupName, compressedUser },
         type: "Leave",
       });
     },
-    [sendMessage],
+    [sendMessage, data],
   );
 
   const freezeThisClient = React.useCallback(
