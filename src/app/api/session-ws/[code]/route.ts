@@ -53,12 +53,12 @@ export async function UPGRADE(
   clients.add(client);
 
   /*
-  const { res } = await rateLimit(
-    userId,
-    ["sessions-ws/[code]", "UPGRADE"],
-    12,
-    5,
-  );
+  const { res } = await rateLimit({
+    id: userId,
+    categories: ["sessions-ws/[code]", "UPGRADE"],
+    requestsPerMinute: 12,
+    burst: 5,
+  });
   if (res)
     client.close(
       GroupSessionS2C.CloseEventCodes.RateLimited,
@@ -83,7 +83,7 @@ export async function UPGRADE(
 
     state.isAlive = false;
     client.ping();
-  }, GroupSessionS2C.PingFrameIntervalMS);
+  }, GroupSessionS2C.PING_INTERVAL_MS);
 
   if (!(await doSafeSync(cache, code, client))) return;
 
@@ -105,15 +105,34 @@ export async function UPGRADE(
     }
   });
 
-  client.on("message", async (rawPayload: any) => {
-    let serialisedPayload: Record<string, any>;
+  client.on("message", async (rawData) => {
+    /*
+    const { res } = await rateLimit({
+      id: userId,
+      categories: ["sessions-ws/[code]", "MESSAGE"],
+      requestsPerMinute: 12,
+      burst: 5,
+    });
+    if (res) {
+      const rateLimitPayload: GroupSessionS2C.Payloads.MessageRateLimit = {
+        code: GroupSessionS2C.Code.MessageRateLimit,
+      };
+      return send(client, rateLimitPayload);
+    }
+    */
+
+    //@ts-expect-error intended usage according to https://websocket.org/guides/security/
+    if (rawData.length > GroupSessionS2C.MSG_SIZE_LIMIT)
+      return client.close(1009, "message too large");
+
+    let serialisedData: Record<string, any>;
     try {
-      serialisedPayload = JSON.parse(rawPayload);
+      serialisedData = JSON.parse(rawData.toString());
     } catch {
-      return client.close(1007, "invalid json payload");
+      return client.close(1007, "unparsable json payload");
     }
 
-    const parseResult = GroupSessionC2S.payload.safeParse(serialisedPayload);
+    const parseResult = GroupSessionC2S.payload.safeParse(serialisedData);
     if (parseResult.error) return client.close(1008, "malformed json payload");
 
     const { data: payload } = parseResult;
@@ -124,7 +143,7 @@ export async function UPGRADE(
         payload.compressedUser,
       );
     } catch {
-      return client.close(1007, "malformed json payload");
+      return client.close(1007, "invalid json field value");
     }
 
     // ensure that non-hosts can only perform join/leave actions for themselves
@@ -226,8 +245,7 @@ export async function UPGRADE(
 
       const now = Date.now();
       const timeout = now - state.lastSynchroniseDueToGroupUpdateError;
-      const shouldSync =
-        timeout > GroupSessionS2C.GroupUpdateFailureSynchroniseTimeoutMS;
+      const shouldSync = timeout > GroupSessionS2C.GUPDATE_FAILURE_SYNC_TIMEOUT;
 
       if (shouldSync) responsePayload.willSync = true;
       send(client, responsePayload);
@@ -255,7 +273,7 @@ export async function UPGRADE(
 
       if (
         state.synchroniseCounter ===
-        GroupSessionS2C.SuccessfulResponsesBeforeResynchronise
+        GroupSessionS2C.SUCCESSFUL_RESPONSES_BEFORE_RESYNC
       ) {
         // the client has received enough group update responses that
         // a full re-synchronisation should occur to ensure the client's data

@@ -21,13 +21,13 @@ export namespace GroupSessionS2C {
    * payloads of {@link Payloads.GroupUpdateStatus}, and since they do not provide the full
    * data, this variable is useful.
    */
-  export const SuccessfulResponsesBeforeResynchronise = 10;
+  export const SUCCESSFUL_RESPONSES_BEFORE_RESYNC = 10;
 
   /**
    * The minimum time in miliseconds between two unsuccessful responses for the server
    * to resend the full group session data.
    */
-  export const GroupUpdateFailureSynchroniseTimeoutMS = 5000;
+  export const GUPDATE_FAILURE_SYNC_TIMEOUT = 5000;
 
   /**
    * How frequently a ping frame should be sent to the client.
@@ -35,11 +35,14 @@ export namespace GroupSessionS2C {
    * Recommended by Cloudflare on [this page](https://developers.cloudflare.com/network/websockets/)
    * to keep sockets alive.
    */
-  export const PingFrameIntervalMS = 45000;
+  export const PING_INTERVAL_MS = 45000;
+
+  export const MSG_SIZE_LIMIT = 1024;
 
   export enum Code {
     GroupUpdateStatus = "GUpdate",
     Synchronise = "Sync",
+    MessageRateLimit = "RateLimit",
   }
 
   export namespace Payloads {
@@ -84,14 +87,25 @@ export namespace GroupSessionS2C {
      *     in a {@link GroupUpdateStatusPayload} of `ok: 1` being sent
      *     in return at least {@link SuccessfulResponsesBeforeResynchronise} times.
      *  3. A {@link GroupUpdateStatusPayload} of `ok: 0` was sent to
-     *     the client and it has been at least {@link GroupUpdateFailureSynchroniseTimeoutMS}
+     *     the client and it has been at least {@link GUPTED_FAILURE_SYNC_TIMEOUT}
      *     miliseconds since the last such payload.
      */
     export type Synchronise = {
       code: Code.Synchronise;
       data: GroupSessionData;
     };
+
+    /**
+     * Payload to indicate to a client that they are sending too many messages to
+     * the server.
+     */
+    export type MessageRateLimit = {
+      code: Code.MessageRateLimit;
+    };
   }
 
-  export type Payload = Payloads.GroupUpdateStatus | Payloads.Synchronise;
+  export type Payload =
+    | Payloads.GroupUpdateStatus
+    | Payloads.Synchronise
+    | Payloads.MessageRateLimit;
 }

@@ -181,8 +181,16 @@ export function useGroupSession({
           });
           break;
         }
+        case GroupSessionS2C.Code.MessageRateLimit: {
+          onError?.(
+            "You are sending too many requests. Please try again soon.",
+          );
+          break;
+        }
         default:
-          return onError?.("Invalid payload received from server");
+          return onError?.(
+            "Invalid/unsupported payload received from server. Try reloading your page.",
+          );
       }
     },
   });
