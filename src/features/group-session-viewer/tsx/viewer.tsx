@@ -272,16 +272,10 @@ function GroupSessionInfo({
         />
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center">
-            <h1 className="text-lg font-semibold leading-none wrap-break-word hyphens-auto">
-              {data.name}
+            <h1 className="text-lg font-semibold leading-none wrap-break-word hyphens-auto flex items-center gap-1">
+              {data.frozen && <LockIcon className="size-4" />} {data.name}
             </h1>
             <WebSocketStatus readyState={wsReadyState} />
-            {data.frozen && (
-              <Badge variant="outline">
-                <LockIcon />
-                Locked
-              </Badge>
-            )}
           </div>
           <p className="text-sm text-muted-foreground">
             Created by {repr.name} on{" "}
