@@ -121,7 +121,7 @@ export async function UPGRADE(
     const { res } = await rateLimit({
       id: userId,
       categories: ["sessions-ws/[code]", "MESSAGE"],
-      requestsPerMinute: 20,
+      requestsPerMinute: 35,
       burst: 15,
     });
     if (res) {
