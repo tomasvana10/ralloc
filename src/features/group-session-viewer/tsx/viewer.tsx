@@ -5,12 +5,11 @@ import {
   CheckIcon,
   CircleXIcon,
   LockIcon,
-  type LucideIcon,
   SearchIcon,
   XIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { type JSX } from "react";
+import React from "react";
 import { useRemark } from "react-remark";
 import { ReadyState } from "react-use-websocket-lite";
 import { toast } from "sonner";
@@ -119,9 +118,10 @@ export function GroupSessionViewer({
         return setTimeout(() => router.push("/"), 3000);
       }
 
-      const defaultErrMsgBase = `Your connection was closed (code ${code})`;
       if ([1003, 1007, 1008, 1012, 1013, 1014, 1015].includes(code)) {
-        toast.error(`${defaultErrMsgBase}. You'll be redirected in 3 seconds.`);
+        toast.error(
+          `Your connection was closed (code ${code}). You'll be redirected in 3 seconds.`,
+        );
         freezeThisClient();
         return setTimeout(() => router.push("/"), 3000);
       }
