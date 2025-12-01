@@ -45,7 +45,6 @@ export async function UPGRADE(
   //console.log("client connected");
   const session = (await auth())!;
   const userId = session.user.id;
-  const compressedUser = UserRepresentation.from(session).toCompressedString();
 
   const gs = await groupSessionRoomFactory(code, client);
   if (!gs) return;
@@ -118,6 +117,22 @@ export async function UPGRADE(
     if (parseResult.error) return client.close(1008, "malformed json payload");
 
     const { data: payload } = parseResult;
+
+    let userRepresentation: UserRepresentation;
+    try {
+      userRepresentation = UserRepresentation.fromCompressedString(
+        payload.compressedUser,
+      );
+    } catch {
+      return client.close(1007, "malformed json payload");
+    }
+
+    // ensure that non-hosts can only perform join/leave actions for themselves
+    if (userRepresentation.userId !== userId && userId !== hostId)
+      return client.close(
+        GroupSessionS2C.CloseEventCodes.Forbidden,
+        "forbidden",
+      );
     let responsePayload: GroupSessionS2C.Payloads.GroupUpdateStatus;
 
     switch (payload.code) {
@@ -126,8 +141,8 @@ export async function UPGRADE(
           code,
           hostId: hostId!,
           groupName: payload.groupName,
-          userId,
-          compressedUser,
+          userId: userRepresentation.userId,
+          compressedUser: payload.compressedUser,
           groupSize: cache.groupSize,
           frozen: cache.frozen,
         });
@@ -145,7 +160,7 @@ export async function UPGRADE(
               g0,
               g1,
               g2,
-              compressedUser,
+              compressedUser: payload.compressedUser,
             },
           };
         } else {
@@ -157,7 +172,7 @@ export async function UPGRADE(
               g0,
               g1,
               g2,
-              compressedUser,
+              compressedUser: payload.compressedUser,
             },
             willSync: false,
             error: result.message,
@@ -170,7 +185,7 @@ export async function UPGRADE(
         const result = await leaveGroup({
           code,
           hostId: hostId!,
-          userId,
+          userId: userRepresentation.userId,
           frozen: cache.frozen,
         });
 
@@ -185,7 +200,7 @@ export async function UPGRADE(
             context: {
               g1,
               g2,
-              compressedUser,
+              compressedUser: payload.compressedUser,
             },
           };
         } else {
@@ -196,7 +211,7 @@ export async function UPGRADE(
             context: {
               g1,
               g2,
-              compressedUser,
+              compressedUser: payload.compressedUser,
             },
             willSync: false,
             error: result.message,

@@ -16,11 +16,13 @@ export namespace GroupSessionC2S {
     export const joinGroup = z.object({
       code: z.literal(code.enum.JoinGroup),
       groupName: z.string().min(1).max(seed.MAX_PART_LENGTH),
+      compressedUser: z.string().min(1),
     });
     export type JoinGroup = z.infer<typeof joinGroup>;
 
     export const leaveGroup = z.object({
       code: z.literal(code.enum.LeaveGroup),
+      compressedUser: z.string().min(1),
     });
     export type LeaveGroup = z.infer<typeof leaveGroup>;
   }

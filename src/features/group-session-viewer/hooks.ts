@@ -29,7 +29,7 @@ type GroupSessionUpdateAction =
       type: "Sync";
       payload: Pick<GroupSessionS2C.Payloads.Synchronise, "data">;
     }
-  | { type: "Lock" };
+  | { type: "Freeze" };
 
 function groupSessionReducer(
   state: GroupSessionState,
@@ -40,7 +40,7 @@ function groupSessionReducer(
   }
   if (!state) return null;
 
-  if (action.type === "Lock") {
+  if (action.type === "Freeze") {
     state.frozen = true;
     return { ...state };
   }
@@ -193,10 +193,10 @@ export function useGroupSession({
   }, [data, thisCompressedUser]);
 
   const joinGroup = React.useCallback(
-    // compressedUser is only required for optimistic client-sided updates
     (groupName: string, compressedUser: string) => {
       const payload: GroupSessionC2S.Payloads.JoinGroup = {
         code: GroupSessionC2S.code.enum.JoinGroup,
+        compressedUser,
         groupName,
       };
       sendMessage(JSON.stringify(payload));
@@ -209,10 +209,11 @@ export function useGroupSession({
   );
 
   const leaveGroup = React.useCallback(
-    // both groupName and compressedUser are only required for optimistic client-sided updates
+    // compressedUser is only required for optimistic client-sided updates
     (groupName: string, compressedUser: string) => {
       const payload: GroupSessionC2S.Payloads.LeaveGroup = {
         code: GroupSessionC2S.code.enum.LeaveGroup,
+        compressedUser,
       };
       sendMessage(JSON.stringify(payload));
       dispatchGroupSession({
@@ -223,8 +224,8 @@ export function useGroupSession({
     [sendMessage],
   );
 
-  const lock = React.useCallback(
-    () => dispatchGroupSession({ type: "Lock" }),
+  const freezeThisClient = React.useCallback(
+    () => dispatchGroupSession({ type: "Freeze" }),
     [],
   );
 
@@ -233,7 +234,7 @@ export function useGroupSession({
     currentGroup,
     joinGroup,
     leaveGroup,
-    lock,
+    freezeThisClient,
     wsReadyState: readyState,
   } as const;
 }
