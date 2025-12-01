@@ -57,6 +57,7 @@ export const sessionCreateSchema = z.object({
     }),
   groupSize: z.coerce
     .number()
+    .int()
     .min(1, "Groups must have at least 1 member")
     .max(100, "Groups must have at most 100 members"),
   name: z
