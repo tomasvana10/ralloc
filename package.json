@@ -1,6 +1,6 @@
 {
   "name": "ralloc",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -10,7 +10,6 @@
     "format": "biome format --write",
     "prepare": "next-ws patch && [ -d .git ] && lefthook install || echo \"no lefthook in container\"",
     "deploy": "pnpm run build && pnpm run start",
-
     "d:dev": "docker compose -f .docker/compose.dev.yaml up --build",
     "d:prod-local": "docker compose -f .docker/compose.prod-local.yaml up --build",
     "d:prod-ci": "docker compose -f .docker/compose.prod-ci.yaml up --build"
