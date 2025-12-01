@@ -175,7 +175,7 @@ export function Group({
         </ItemTitle>
         {!isCurrentGroupAndWithinCollection && (
           <div className="flex flex-col justify-end">
-            {!members.length && <ItemDescription>No members</ItemDescription>}
+            {!members.length && <ItemDescription>Empty</ItemDescription>}
 
             <div className="flex flex-row items-center gap-2">
               <GroupMembersModal
