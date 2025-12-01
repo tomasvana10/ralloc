@@ -22,9 +22,11 @@ const returnToIcons: Record<string, LucideIcon> = {
 export async function BasePage({
   children,
   returnTo,
+  minimal = false,
 }: Readonly<{
   children: React.ReactNode;
   returnTo?: string;
+  minimal?: boolean;
 }>) {
   const session = await auth();
   const ReturnToIcon = !returnTo ? null : (returnToIcons[returnTo] ?? null);
@@ -47,9 +49,11 @@ export async function BasePage({
                 <span>Ralloc</span>
               </div>
             </CardTitle>
-            <CardDescription className="mt-2">
-              The go-to tool for simple, ephemeral group allocation sessions.
-            </CardDescription>
+            {!minimal && (
+              <CardDescription className="mt-2">
+                The go-to tool for simple, ephemeral group allocation sessions.
+              </CardDescription>
+            )}
           </div>
           <div className="flex gap-2 max-[350px]:flex-col-reverse">
             <ThemeCycler />
