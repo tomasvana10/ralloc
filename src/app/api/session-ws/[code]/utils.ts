@@ -8,9 +8,13 @@ import { type GroupSessionRoom, groupSessionRooms } from "./room";
 
 function updateCache(
   cache: GroupSessionRoom["cache"],
-  args: GroupSessionRoom["cache"],
+  args: Partial<GroupSessionRoom["cache"]>,
 ) {
-  Object.assign(cache, args);
+  for (const [key, value] of Object.entries(args)) {
+    if (value !== undefined) {
+      (cache as any)[key] = value;
+    }
+  }
 }
 
 function deleteGroupSessionRoom(code: string) {
@@ -73,13 +77,13 @@ function sendPreStringified(ws: WebSocket, payload: string) {
 }
 
 async function createSubscriptions(gs: GroupSessionRoom, code: string) {
-  await gs.subClient?.subscribe(paths.pubsub.newData(code), async (msg) => {
+  await gs.subClient?.subscribe(paths.pubsub.partialData(code), async (msg) => {
     if (!groupSessionRooms.has(code)) return;
 
-    const payload: GSServer.Payloads.Synchronise = JSON.parse(msg);
+    const payload: GSServer.Payloads.PartialSynchronise = JSON.parse(msg);
     updateCache(gs.cache, {
-      groupSize: payload.data.groupSize,
-      frozen: payload.data.frozen,
+      frozen: payload.data?.frozen,
+      groupSize: payload.data?.groupSize,
     });
 
     for (const c of gs.clients) sendPreStringified(c, msg);

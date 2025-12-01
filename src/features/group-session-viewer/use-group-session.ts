@@ -26,6 +26,10 @@ type GroupSessionUpdateAction =
       type: "Sync";
       payload: { data: GroupSessionData };
     }
+  | {
+      type: "PSync";
+      payload: { data: Partial<GroupSessionData> };
+    }
   | { type: "Freeze" }
   | { type: "Rollback"; payload: { data: GroupSessionData } };
 
@@ -40,6 +44,11 @@ function groupSessionReducer(
     return { ...action.payload.data };
   }
   if (!state) return null;
+
+  if (action.type === "PSync") {
+    Object.assign(state, action.payload.data);
+    return { ...state };
+  }
 
   if (action.type === "Freeze") {
     state.frozen = true;
@@ -163,6 +172,13 @@ export function useGroupSession({
           dispatchGroupSession({
             payload: { data: payload.data },
             type: "Sync",
+          });
+          break;
+        }
+        case GSServer.Code.PartialSynchronise: {
+          dispatchGroupSession({
+            payload: { data: payload.data },
+            type: "PSync",
           });
           break;
         }

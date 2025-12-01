@@ -42,6 +42,7 @@ export namespace GSServer {
   export enum Code {
     GroupUpdateStatus = "GUpdate",
     Synchronise = "Sync",
+    PartialSynchronise = "PSync",
     MessageRateLimit = "RateLimit",
   }
 
@@ -86,6 +87,14 @@ export namespace GSServer {
     };
 
     /**
+     * Payload sent to the client when a PATCH of a session has been processed.
+     */
+    export type PartialSynchronise = {
+      code: Code.PartialSynchronise;
+      data: Partial<GroupSessionData>;
+    };
+
+    /**
      * Payload to indicate to a client that they are sending too many messages to
      * the server.
      */
@@ -98,5 +107,6 @@ export namespace GSServer {
   export type Payload =
     | Payloads.GroupUpdateStatus
     | Payloads.Synchronise
+    | Payloads.PartialSynchronise
     | Payloads.MessageRateLimit;
 }

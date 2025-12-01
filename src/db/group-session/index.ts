@@ -40,7 +40,8 @@ export const paths = {
       redisKey("host", hostId, "session", code, "group", "*", "gmetadata"),
   },
   pubsub: {
-    newData: (code: string) => redisKey("gnewdata", code),
+    //newData: (code: string) => redisKey("gnewdata", code),
+    partialData: (code: string) => redisKey("gpartialdata", code),
     deleted: (code: string) => redisKey("gdeleted", code),
   },
 };

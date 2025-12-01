@@ -4,7 +4,6 @@ import { redisPub } from "@/db";
 import {
   deleteGroupSession,
   doesGroupSessionExist,
-  getGroupSessionByCode,
   getGroupSessionGroupSize,
   getHostId,
   paths,
@@ -92,11 +91,14 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   // publishing just the raw data is inefficient, as the websocket handler will
   // have to parse it, assemble its own payload, then stringify it. this way, all
   // they have to do is send it (and parse it to update their own cache)
-  const syncPayload: GSServer.Payloads.Synchronise = {
-    code: GSServer.Code.Synchronise,
-    data: (await getGroupSessionByCode(code))!,
+  const partialSyncPayload: GSServer.Payloads.PartialSynchronise = {
+    code: GSServer.Code.PartialSynchronise,
+    data: parseResult.data,
   };
-  redisPub.publish(paths.pubsub.newData(code), JSON.stringify(syncPayload));
+  redisPub.publish(
+    paths.pubsub.partialData(code),
+    JSON.stringify(partialSyncPayload),
+  );
   return infoHeaders(new Response());
 }
 
