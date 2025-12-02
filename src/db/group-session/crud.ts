@@ -4,6 +4,8 @@ import type { sessionCreateSchema } from "@/features/forms/session-create";
 import {
   expand,
   generateSessionCode,
+  MAX_USER_SESSIONS,
+  seed,
   UserRepresentation,
 } from "@/lib/group-session";
 import redis, { REDIS } from "..";
@@ -14,6 +16,9 @@ import {
   getHostId,
   paths,
 } from ".";
+
+const GROUP_SCAN_COUNT = Math.floor(seed.MAX_PARTS * 0.7);
+const ALL_SESSION_KEYS_SCAN_COUNT = GROUP_SCAN_COUNT * 1.1;
 
 //#region create
 export async function createGroupSession(
@@ -52,6 +57,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
   const metadataKeys = new Set<string>();
   for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allHostMetadataKeys(hostId),
+    COUNT: MAX_USER_SESSIONS,
   })) {
     batch.forEach((key) => {
       metadataKeys.add(key);
@@ -130,10 +136,9 @@ export async function updateGroupSession(
 //#region delete
 export async function deleteGroupSession(hostId: string, code: string) {
   const sessionKeys = new Set<string>();
-
   for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allHostSessionKeys(hostId, code),
-    COUNT: 1,
+    COUNT: ALL_SESSION_KEYS_SCAN_COUNT,
   })) {
     batch.forEach((key) => {
       sessionKeys.add(key);
@@ -154,7 +159,7 @@ async function getGroups(hostId: string, code: string) {
   const groupKeys = new Set<string>();
   for await (const batch of redis.scanIterator({
     MATCH: paths.patterns.allGroupNames(hostId, code),
-    COUNT: 1,
+    COUNT: GROUP_SCAN_COUNT,
   })) {
     batch.forEach((key) => {
       groupKeys.add(key);

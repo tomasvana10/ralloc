@@ -38,6 +38,8 @@ export const paths = {
       redisKey("host", hostId, "session", code, "*"),
     allGroupNames: (hostId: string, code: string) =>
       redisKey("host", hostId, "session", code, "group", "*", "gmetadata"),
+    allGroupMembers: (hostId: string, code: string) =>
+      redisKey("host", hostId, "session", code, "group", "*", "members"),
   },
   pubsub: {
     //newData: (code: string) => redisKey("gnewdata", code),
