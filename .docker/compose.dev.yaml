@@ -24,12 +24,13 @@ services:
   redis:
     image: redis:8-alpine
     container_name: ralloc-dev-redis
+    command: redis-server /usr/local/etc/redis/redis.conf
     # restart: unless-stopped
     ports:
       - "6378:6379"
     volumes:
       - ./ralloc_redis_data_dev:/data
-      - ../redis.conf:/usr/local/etc/redis/redis.conf
+      - ../redis.dev.conf:/usr/local/etc/redis/redis.conf
     networks:
       - ralloc_net
 

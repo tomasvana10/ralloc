@@ -19,12 +19,13 @@ services:
   redis:
     image: redis:8-alpine
     container_name: ralloc-redis
+    command: redis-server /usr/local/etc/redis/redis.conf
     restart: always
     ports:
       - "6379:6379"
     volumes:
       - ./ralloc_redis_data:/data
-      - ../redis.conf:/usr/local/etc/redis/redis.conf
+      - ../redis.prod.conf:/usr/local/etc/redis/redis.conf
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
