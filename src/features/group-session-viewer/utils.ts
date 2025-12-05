@@ -1,21 +1,21 @@
 import type { GroupSessionData } from "@/db/group-session";
+import { ActionErrorMessage } from "@/db/group-session/actions/types";
 import { UserRepresentation } from "@/lib/group-session";
-import type { GSServer } from "@/lib/group-session/proto";
 
-export function getFullGroupUpdateErrorMessage(
-  error: Extract<GSServer.Payloads.GroupUpdateStatus, { ok: 0 }>["error"],
-) {
+export function getErrorMessage(error: ActionErrorMessage) {
   switch (error) {
-    case "alreadyAllocated":
-      return "You're already allocated a group.";
-    case "frozen":
+    case ActionErrorMessage.AlreadyAllocated:
+      return "You're already allocated to a group.";
+    case ActionErrorMessage.Frozen:
       return "The group session is locked.";
-    case "full":
+    case ActionErrorMessage.Full:
       return "This group is full.";
-    case "nonexistent":
+    case ActionErrorMessage.Nonexistent:
       return "This group doesn't exist.";
-    case "notInGroup":
+    case ActionErrorMessage.NotInGroup:
       return "You aren't in this group.";
+    case ActionErrorMessage.Existent:
+      return "This group already exists. ";
   }
 }
 

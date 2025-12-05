@@ -13,11 +13,10 @@ export type GroupSessionData = GroupSessionMetadata & {
   groups: GroupSessionGroupData[];
 };
 
-export type GroupSessionGroupMetadata = {
-  name: string;
-};
+export type GroupSessionGroupMetadata = {};
 
 export type GroupSessionGroupData = GroupSessionGroupMetadata & {
+  name: string;
   members: string[];
 };
 
@@ -31,6 +30,8 @@ export const paths = {
     redisKey("host", hostId, "session", code, "group", groupName, "members"),
   userGroup: (hostId: string, code: string, userId: string) =>
     redisKey("host", hostId, "session", code, "userGroup", userId),
+  userGroupTemplate: (hostId: string, code: string) =>
+    redisKey("host", hostId, "session", code, "userGroup"),
   patterns: {
     allHostMetadataKeys: (hostId: string) =>
       redisKey("host", hostId, "session", "*", "metadata"),
@@ -40,6 +41,8 @@ export const paths = {
       redisKey("host", hostId, "session", code, "group", "*", "gmetadata"),
     allGroupMembers: (hostId: string, code: string) =>
       redisKey("host", hostId, "session", code, "group", "*", "members"),
+    allUserGroups: (hostId: string, code: string) =>
+      redisKey("host", hostId, "session", code, "userGroup", "*"),
   },
   pubsub: {
     //newData: (code: string) => redisKey("gnewdata", code),
@@ -50,4 +53,3 @@ export const paths = {
 
 export * from "./crud";
 export * from "./helpers";
-export * from "./scripting";

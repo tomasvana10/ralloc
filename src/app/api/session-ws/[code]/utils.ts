@@ -52,6 +52,13 @@ function closeDeleted(ws: WebSocket) {
   );
 }
 
+function closeForbidden(ws: WebSocket) {
+  ws.close(
+    GSServer.CloseEventCodes.Forbidden,
+    "You are not allowed to perform this action",
+  );
+}
+
 async function prepareSyncPayload(
   cache: GroupSessionRoom["cache"],
   code: string,
@@ -183,4 +190,5 @@ export {
   doSafeSync,
   send,
   sendPreStringified,
+  closeForbidden,
 };

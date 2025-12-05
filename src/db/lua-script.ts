@@ -3,7 +3,7 @@ import path from "node:path";
 import redis from ".";
 
 export interface LuaScript {
-  sha: string | null;
+  sha: Promise<string> | null;
   source: string;
 }
 
@@ -18,6 +18,6 @@ export async function loadLuaScript(name: string): Promise<LuaScript> {
 }
 
 export async function getLuaScriptSha(script: LuaScript) {
-  if (!script.sha) script.sha = await redis.scriptLoad(script.source);
+  if (!script.sha) script.sha = redis.scriptLoad(script.source);
   return script.sha;
 }

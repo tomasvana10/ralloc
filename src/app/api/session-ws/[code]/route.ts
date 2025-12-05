@@ -2,11 +2,19 @@ import type { NextRequest } from "next/server";
 import type { RouteContext } from "next-ws/server";
 import type { WebSocket, WebSocketServer } from "ws";
 import { auth } from "@/auth";
-import { joinGroup, leaveGroup } from "@/db/group-session";
+import {
+  addGroup,
+  clearAllGroupMembers,
+  clearGroupMembers,
+  removeGroup,
+} from "@/db/group-session/actions/admin";
+import { joinGroup, leaveGroup } from "@/db/group-session/actions/membership";
+import { ActionStatus } from "@/db/group-session/actions/types";
 import { rateLimit } from "@/db/rate-limit";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSClient, GSServer } from "@/lib/group-session/proto";
 import {
+  closeForbidden,
   deleteGroupSessionRoom,
   doSafeSync,
   groupSessionRoomFactory,
@@ -27,9 +35,10 @@ export function GET() {
 }
 
 interface ClientState {
-  lastSynchroniseDueToGroupUpdateError: number;
-  synchroniseCounter: number;
-  isAlive: boolean;
+  lastSync: number;
+  successfulResponses: number;
+  isPonging: boolean;
+  rateLimits: number;
 }
 
 export async function UPGRADE(
@@ -47,7 +56,10 @@ export async function UPGRADE(
   const gs = await groupSessionRoomFactory(code, client);
   if (!gs) return;
   const { hostId, clients, cache } = gs;
+  if (!hostId) return;
+  const isHost = userId === hostId;
 
+  if (!(await doSafeSync(cache, code, client))) return;
   clients.add(client);
 
   /*
@@ -65,29 +77,26 @@ export async function UPGRADE(
   */
 
   const state: ClientState = {
-    lastSynchroniseDueToGroupUpdateError: 0,
-    synchroniseCounter: 0,
-    isAlive: true,
+    lastSync: 0,
+    successfulResponses: 0,
+    isPonging: true,
+    rateLimits: 0,
   };
 
   const pingInt = setInterval(() => {
-    //console.log("ping");
     if (client.readyState !== client.OPEN) return;
 
-    if (!state.isAlive) {
+    if (!state.isPonging) {
       client.terminate();
       return;
     }
 
-    state.isAlive = false;
+    state.isPonging = false;
     client.ping();
   }, GSServer.PING_INTERVAL_MS);
 
-  if (!(await doSafeSync(cache, code, client))) return;
-
   client.on("pong", () => {
-    //console.log("pong");
-    state.isAlive = true;
+    state.isPonging = true;
   });
 
   client.on("close", () => {
@@ -127,137 +136,244 @@ export async function UPGRADE(
     if (res) {
       const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
         code: GSServer.Code.MessageRateLimit,
-        acknum: parseResult.data.seqnum,
+        id: parseResult.data.id,
       };
+      state.rateLimits++;
+      if (state.rateLimits >= GSServer.MIN_RATELIMITS_CONSIDERED_SUSPICIOUS)
+        return client.close(
+          GSServer.CloseEventCodes.PotentialAbuse,
+          "potential abuse detected",
+        );
       return send(client, rateLimitPayload);
     }
 
-    const { data: payload } = parseResult;
+    const { data: received } = parseResult;
+    if (!GSServer.canProcessPayload(isHost, received.code))
+      return closeForbidden(client);
+    let reply: GSServer.Payload;
 
-    let userRepresentation: UserRepresentation;
-    try {
-      userRepresentation = UserRepresentation.fromCompressedString(
-        payload.compressedUser,
-      );
-    } catch {
-      return client.close(1007, "invalid json field value");
-    }
+    switch (received.code) {
+      //#region join/leave
+      case GSClient.Code.JoinGroup:
+      case GSClient.Code.LeaveGroup: {
+        let userRepresentation: UserRepresentation;
+        try {
+          userRepresentation = UserRepresentation.fromCompressedString(
+            received.compressedUser,
+          );
+        } catch {
+          return client.close(1007, "invalid json field value");
+        }
 
-    // ensure that non-hosts can only perform join/leave actions for themselves
-    if (userRepresentation.userId !== userId && userId !== hostId)
-      return client.close(GSServer.CloseEventCodes.Forbidden, "forbidden");
-    let responsePayload: GSServer.Payloads.GroupUpdateStatus;
+        if (userRepresentation.userId !== userId && !isHost)
+          return closeForbidden(client);
 
-    switch (payload.code) {
-      case "Join": {
-        const result = await joinGroup({
+        // join group
+        if (received.code === GSClient.Code.JoinGroup) {
+          const result = await joinGroup({
+            code,
+            hostId,
+            groupName: received.groupName,
+            userId: userRepresentation.userId,
+            compressedUser: received.compressedUser,
+            groupSize: cache.groupSize,
+            frozen: cache.frozen,
+          });
+
+          if (result.status === ActionStatus.Success) {
+            reply = {
+              code: GSServer.Code.GroupMembership,
+              ok: 1,
+              id: received.id,
+              context: {
+                action: received.code,
+                compressedUser: received.compressedUser,
+                groupName: result.newGroupName,
+              },
+            };
+          } else {
+            reply = {
+              code: GSServer.Code.GroupMembership,
+              ok: 0,
+              id: received.id,
+              error: result.message,
+              willSync: false,
+            };
+          }
+          // leave group
+        } else {
+          const result = await leaveGroup({
+            code,
+            hostId,
+            userId: userRepresentation.userId,
+            frozen: cache.frozen,
+          });
+
+          if (result.status === ActionStatus.Success) {
+            reply = {
+              code: GSServer.Code.GroupMembership,
+              ok: 1,
+              id: received.id,
+              context: {
+                action: received.code,
+                compressedUser: received.compressedUser,
+                groupName: result.originalGroupName,
+              },
+            };
+          } else {
+            reply = {
+              code: GSServer.Code.GroupMembership,
+              ok: 0,
+              id: received.id,
+              error: result.message,
+              willSync: false,
+            };
+          }
+        }
+        break;
+      }
+      //#region add group
+      case GSClient.Code.AddGroup: {
+        const result = await addGroup({
           code,
-          hostId: hostId!,
-          groupName: payload.groupName,
-          userId: userRepresentation.userId,
-          compressedUser: payload.compressedUser,
-          groupSize: cache.groupSize,
-          frozen: cache.frozen,
+          hostId,
+          groupName: received.groupName,
         });
 
-        if (result.status === "success") {
-          responsePayload = {
-            isReply: 0,
+        if (result.status === ActionStatus.Success) {
+          reply = {
+            code: GSServer.Code.GroupMutation,
             ok: 1,
-            code: GSServer.Code.GroupUpdateStatus,
-            acknum: payload.seqnum,
-            action: payload.code,
+            id: received.id,
             context: {
-              compressedUser: payload.compressedUser,
-              groupName: result.newGroupName!,
+              action: received.code,
+              group: { name: received.groupName },
             },
           };
         } else {
-          responsePayload = {
+          reply = {
+            code: GSServer.Code.GroupMutation,
             ok: 0,
-            code: GSServer.Code.GroupUpdateStatus,
-            acknum: payload.seqnum,
-            action: payload.code,
-            willSync: false,
+            id: received.id,
             error: result.message,
+            willSync: false,
           };
         }
         break;
       }
-
-      case "Leave": {
-        const result = await leaveGroup({
+      //#region remove group
+      case GSClient.Code.RemoveGroup: {
+        const result = await removeGroup({
           code,
-          hostId: hostId!,
-          userId: userRepresentation.userId,
-          frozen: cache.frozen,
+          hostId,
+          groupName: received.groupName,
         });
 
-        if (result.status === "success") {
-          responsePayload = {
-            isReply: 0,
+        if (result.status === ActionStatus.Success) {
+          reply = {
+            code: GSServer.Code.GroupMutation,
             ok: 1,
-            code: GSServer.Code.GroupUpdateStatus,
-            acknum: payload.seqnum,
-            action: payload.code,
+            id: received.id,
             context: {
-              compressedUser: payload.compressedUser,
-              groupName: result.originalGroupName!,
+              action: received.code,
+              groupName: received.groupName,
             },
           };
         } else {
-          responsePayload = {
+          reply = {
+            code: GSServer.Code.GroupMutation,
             ok: 0,
-            code: GSServer.Code.GroupUpdateStatus,
-            acknum: payload.seqnum,
-            action: payload.code,
-            willSync: false,
+            id: received.id,
             error: result.message,
+            willSync: false,
           };
         }
         break;
       }
+      //#region clear mem
+      case GSClient.Code.ClearGroupMembers: {
+        const result = await clearGroupMembers({
+          code,
+          hostId,
+          groupName: received.groupName,
+        });
+
+        if (result.status === ActionStatus.Success) {
+          reply = {
+            code: GSServer.Code.GroupMembersClear,
+            ok: 1,
+            id: received.id,
+            context: {
+              action: received.code,
+              groupName: received.groupName,
+            },
+          };
+        } else {
+          reply = {
+            code: GSServer.Code.GroupMembersClear,
+            ok: 0,
+            id: received.id,
+            error: result.message,
+            willSync: false,
+          };
+        }
+
+        break;
+      }
+      //#region clear all mem
+      case GSClient.Code.ClearAllGroupMembers: {
+        await clearAllGroupMembers({
+          code,
+          hostId,
+        });
+
+        reply = {
+          code: GSServer.Code.GroupMembersClear,
+          ok: 1,
+          id: received.id,
+          context: {
+            action: received.code,
+          },
+        };
+        break;
+      }
     }
 
-    if (!responsePayload.ok) {
-      // first send the error payload so the client can inform the user
-
+    if (!reply.ok) {
       const now = Date.now();
-      const timeout = now - state.lastSynchroniseDueToGroupUpdateError;
-      const shouldSync = timeout > GSServer.GUPDATE_FAILURE_SYNC_TIMEOUT;
+      const timeout = now - state.lastSync;
+      const shouldSync = timeout > GSServer.FAILURE_RESYNC_TIMEOUT;
+      send(client, reply);
 
-      if (shouldSync) responsePayload.willSync = true;
-      send(client, responsePayload);
-      // it has been long enough since the last synchronisation due to error
-      // that we can send another synchronise payload
       if (shouldSync) {
-        state.lastSynchroniseDueToGroupUpdateError = now;
+        // it has been long enough since the last synchronisation due to error
+        // that we can send another synchronise payload
+        reply.willSync = true;
+        state.lastSync = now;
         if (!(await doSafeSync(cache, code, client))) return;
       }
     } else {
       // successful response will be sent, thus increment the counter
       // and become closer to sending a new payload for synchronisation
-      state.synchroniseCounter++;
-
-      const broadcastPayload = JSON.stringify(responsePayload);
-      // perfectly safe since isReply is the first property in the payload
-      const replyPayload = broadcastPayload.replace(
-        '"isReply":0',
-        '"isReply":1',
-      );
-      for (const c of clients) {
-        if (c === client) sendPreStringified(c, replyPayload);
-        else sendPreStringified(c, broadcastPayload);
-      }
+      state.successfulResponses++;
+      let resynced = false;
 
       if (
-        state.synchroniseCounter === GSServer.SUCCESSFUL_RESPONSES_BEFORE_RESYNC
+        state.successfulResponses >= GSServer.SUCCESSFUL_RESPONSES_BEFORE_RESYNC
       ) {
         // the client has received enough group update responses that
         // a full re-synchronisation should occur to ensure the client's data
         // is up to date
-        state.synchroniseCounter = 0;
         if (!(await doSafeSync(cache, code, client))) return;
+        state.successfulResponses = 0;
+        resynced = true;
+      }
+
+      const replyPayload = JSON.stringify(reply);
+      for (const c of clients) {
+        // the original client already got a sync payload so they don't need the reply payload
+        if (c === client && resynced) continue;
+        sendPreStringified(c, replyPayload);
       }
     }
   });

@@ -9,6 +9,7 @@ import {
   UserRepresentation,
 } from "@/lib/group-session";
 import redis, { REDIS } from "..";
+import { getKeys } from "../utils";
 import {
   type GroupSessionData,
   type GroupSessionGroupData,
@@ -54,17 +55,10 @@ export async function createGroupSession(
 
 //#region read
 export async function getGroupSessionsOfHost(hostId: string) {
-  const metadataKeys = new Set<string>();
-  for await (const batch of redis.scanIterator({
-    MATCH: paths.patterns.allHostMetadataKeys(hostId),
-    COUNT: MAX_USER_SESSIONS,
-  })) {
-    batch.forEach((key) => {
-      metadataKeys.add(key);
-      return;
-    });
-  }
-
+  const metadataKeys = await getKeys(
+    paths.patterns.allHostMetadataKeys(hostId),
+    MAX_USER_SESSIONS,
+  );
   if (metadataKeys.size === 0) return [];
 
   // record the codes during the pipeline for later assembly into a full group session
@@ -135,17 +129,10 @@ export async function updateGroupSession(
 
 //#region delete
 export async function deleteGroupSession(hostId: string, code: string) {
-  const sessionKeys = new Set<string>();
-  for await (const batch of redis.scanIterator({
-    MATCH: paths.patterns.allHostSessionKeys(hostId, code),
-    COUNT: ALL_SESSION_KEYS_SCAN_COUNT,
-  })) {
-    batch.forEach((key) => {
-      sessionKeys.add(key);
-      return;
-    });
-  }
-
+  const sessionKeys = await getKeys(
+    paths.patterns.allHostSessionKeys(hostId, code),
+    ALL_SESSION_KEYS_SCAN_COUNT,
+  );
   if (!sessionKeys.size) return;
 
   await Promise.all([
@@ -156,16 +143,10 @@ export async function deleteGroupSession(hostId: string, code: string) {
 
 //#region helpers
 async function getGroups(hostId: string, code: string) {
-  const groupKeys = new Set<string>();
-  for await (const batch of redis.scanIterator({
-    MATCH: paths.patterns.allGroupNames(hostId, code),
-    COUNT: GROUP_SCAN_COUNT,
-  })) {
-    batch.forEach((key) => {
-      groupKeys.add(key);
-      return;
-    });
-  }
+  const groupKeys = await getKeys(
+    paths.patterns.allGroupNames(hostId, code),
+    GROUP_SCAN_COUNT,
+  );
 
   const tx = redis.multi();
   const groupNames: string[] = [];

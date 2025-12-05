@@ -111,9 +111,15 @@ export function GroupSessionViewer({
             customErrMsgBase =
               "You're not allowed to perform this action since you aren't the host";
             break;
+          case GSServer.CloseEventCodes.PotentialAbuse:
+            customErrMsgBase =
+              "Your activity has been flagged as potential abuse";
+            break;
         }
 
-        toast.error(`${customErrMsgBase}. You'll be redirected in 3 seconds.`);
+        toast.warning(
+          `${customErrMsgBase}. You'll be redirected in 3 seconds.`,
+        );
         freezeThisClient();
         return setTimeout(() => router.push("/"), 3000);
       }
