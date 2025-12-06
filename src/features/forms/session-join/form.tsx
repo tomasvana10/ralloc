@@ -72,9 +72,8 @@ export function SessionJoinForm() {
       <CardHeader>
         <CardTitle>Join</CardTitle>
         <CardDescription>
-          Join a group session using a{" "}
-          <strong>lowercase, alphanumeric code</strong>. You can paste the code
-          or type it manually.
+          Join a group session using a code like <strong>abc123</strong>. You
+          can paste the code or type it manually.
         </CardDescription>
       </CardHeader>
       <CardContent>
