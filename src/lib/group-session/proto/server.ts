@@ -182,7 +182,10 @@ export namespace GSServer {
     | Payloads.PartialSynchronise
     | Payloads.MessageRateLimit;
 
-  export function canProcessPayload(isHost: boolean, payload: GSClient.Code) {
+  export function isAuthorisedToUsePayload(
+    isHost: boolean,
+    payload: GSClient.Code,
+  ) {
     return UNRESTRICTED_C2S_PAYLOADS[payload] || isHost;
   }
 }

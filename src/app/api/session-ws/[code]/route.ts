@@ -151,7 +151,7 @@ export async function UPGRADE(
     }
 
     const { data: received } = parseResult;
-    if (!GSServer.canProcessPayload(isHost, received.code))
+    if (!GSServer.isAuthorisedToUsePayload(isHost, received.code))
       return closeForbidden(client);
     let reply: GSServer.Payload;
 
