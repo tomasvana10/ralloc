@@ -1,3 +1,5 @@
+import type { GroupSessionData } from "@/db/group-session";
+import type { useGetGroupSessionsSWR } from "@/hooks/group-session";
 export type SelectedSessionsState = Set<string>;
 
 export type SelectedSessionsAction =
@@ -25,4 +27,18 @@ export function selectedSessionsReducer(
     default:
       return state;
   }
+}
+
+export function optimisticallyUpdateSessions(
+  original: GroupSessionData,
+  changed: Partial<GroupSessionData>,
+  getter: ReturnType<typeof useGetGroupSessionsSWR>,
+) {
+  getter.mutate(
+    (prev) =>
+      prev?.map((session) =>
+        session.code === original.code ? { ...session, ...changed } : session,
+      ) ?? [],
+    { revalidate: false },
+  );
 }

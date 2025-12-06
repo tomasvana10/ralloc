@@ -40,11 +40,11 @@ import {
 import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
 import { cn } from "@/lib/utils";
 import {
+  optimisticallyUpdateSessions,
   type SelectedSessionsAction,
   type SelectedSessionsState,
   selectedSessionsReducer,
-} from "./hooks";
-import { optimisticallyUpdateSessions } from "./utils";
+} from "./state";
 
 const PATCHES_BEFORE_GET = 25;
 
