@@ -15,7 +15,7 @@ import { Toaster } from "../ui/sonner";
 import { Footer } from "./footer";
 
 const returnToIcons: Record<string, LucideIcon> = {
-  "/": HomeIcon,
+  "/home": HomeIcon,
 };
 
 export async function BasePage({

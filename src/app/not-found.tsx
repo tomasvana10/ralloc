@@ -6,5 +6,5 @@ export const metadata: Metadata = {
 };
 
 export default function NotFound() {
-  return <BaseNotFound returnTo="/" />;
+  return <BaseNotFound returnTo="/home" />;
 }

@@ -4,7 +4,7 @@ export { auth as proxy } from "@/auth";
 
 export const config: ProxyConfig = {
   matcher: [
-    "/",
+    "/home",
     "/sessions",
     // allow everything except /auth i don't think negative
     // expressions work but regardless the more verbose method is better

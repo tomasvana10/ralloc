@@ -413,7 +413,7 @@ function MySessionsEmpty() {
         <EmptyTitle>No Group Sessions</EmptyTitle>
         <EmptyDescription>
           No group sessions found. Create one in{" "}
-          <Link href="/">the home menu</Link>.
+          <Link href="/home">the home menu</Link>.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

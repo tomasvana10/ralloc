@@ -14,7 +14,7 @@ export default async function Page({
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }) {
   const session = await auth();
-  if (session) return redirect("/");
+  if (session) return redirect("/home");
 
   return (
     <BasePage>

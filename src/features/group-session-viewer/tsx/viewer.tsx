@@ -121,7 +121,7 @@ export function GroupSessionViewer({
           `${customErrMsgBase}. You'll be redirected in 3 seconds.`,
         );
         freezeThisClient();
-        return setTimeout(() => router.push("/"), 3000);
+        return setTimeout(() => router.push("/home"), 3000);
       }
 
       if ([1003, 1007, 1008, 1012, 1013, 1014, 1015].includes(code)) {
@@ -129,7 +129,7 @@ export function GroupSessionViewer({
           `Your connection was closed (code ${code}). You'll be redirected in 3 seconds.`,
         );
         freezeThisClient();
-        return setTimeout(() => router.push("/"), 3000);
+        return setTimeout(() => router.push("/home"), 3000);
       }
     },
     onError: (msg) => toast.error(msg),
@@ -140,7 +140,7 @@ export function GroupSessionViewer({
           `Your client has exceeded the maximum amount of reconnection attempts (${n}). You'll be redirected in 3 seconds.`,
         );
       }, 100);
-      setTimeout(() => router.push("/"), 2900);
+      setTimeout(() => router.push("/home"), 2900);
     },
   });
 
