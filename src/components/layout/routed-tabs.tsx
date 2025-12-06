@@ -18,7 +18,7 @@ export function RoutedTabs({
   className,
   tabs,
   ...props
-}: Props & { tabs: RoutedTabData }) {
+}: { tabs: RoutedTabData } & Props) {
   const pathname = usePathname();
 
   return (

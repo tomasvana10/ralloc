@@ -1,24 +1,27 @@
 import type { SessionCreateSchemaType } from "@/features/forms/session-create";
 import { redisKey } from "..";
 
-export type GroupSessionMetadata = SessionCreateSchemaType & {
+export type GroupSessionMetadata = {
   createdOn: number;
   frozen: boolean;
   compressedHost: string;
-};
+} & SessionCreateSchemaType;
 
-export type GroupSessionData = GroupSessionMetadata & {
+export type GroupSessionData = {
   code: string;
   hostId: string;
   groups: GroupSessionGroupData[];
-};
+} & GroupSessionMetadata;
 
-export type GroupSessionGroupMetadata = Record<string, never>;
+/* biome-ignore lint/complexity/noBannedTypes: intended as a placeholder
+since Record<string, never> messes up GroupSessionGroupData
+*/
+export type GroupSessionGroupMetadata = {};
 
-export type GroupSessionGroupData = GroupSessionGroupMetadata & {
+export type GroupSessionGroupData = {
   name: string;
   members: string[];
-};
+} & GroupSessionGroupMetadata;
 
 export const paths = {
   sessionHost: (code: string) => redisKey("session", code, "host"),

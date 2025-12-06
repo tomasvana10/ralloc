@@ -13,11 +13,11 @@ export function Code({ className, ...props }: CodeProps) {
   return <code className={cn(defaultCodeStyles, className)} {...props} />;
 }
 
-type CopyableCodeProps = CodeProps & {
+type CopyableCodeProps = {
   copyValue: string;
   copyTimeoutMs?: number;
   copyButtonClassName?: string;
-};
+} & CodeProps;
 
 export function CopyableCode({
   className,

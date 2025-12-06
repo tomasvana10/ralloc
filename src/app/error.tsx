@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import { BaseError } from "@/components/layout/error";
 
 export interface ErrorProps {
-  error: Error & { digest?: string };
+  error: { digest?: string } & Error;
   reset: () => void;
 }
 
