@@ -13,7 +13,7 @@ export type GroupSessionData = GroupSessionMetadata & {
   groups: GroupSessionGroupData[];
 };
 
-export type GroupSessionGroupMetadata = {};
+export type GroupSessionGroupMetadata = Record<string, never>;
 
 export type GroupSessionGroupData = GroupSessionGroupMetadata & {
   name: string;
