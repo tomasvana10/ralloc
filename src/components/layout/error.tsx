@@ -18,7 +18,7 @@ export function BaseError({
           <AlertTitle>{title || "An error occurred"}</AlertTitle>
           {error && (
             <AlertDescription className="mt-1">
-              {error.name}: {error.message}
+              {error.name} - {error.message}
               {error.digest && (
                 <span>
                   <b>Digest:</b> {error.digest}
