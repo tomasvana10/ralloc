@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { usePatchGroupSessionSWRMutation } from "@/hooks/group-session";
+import { usePatchGroupSessionSWRMutation } from "@/hooks/use-group-session";
 import type { SessionEditSchemaType } from ".";
 import { sessionEditSchemaFactory } from "./schema";
 

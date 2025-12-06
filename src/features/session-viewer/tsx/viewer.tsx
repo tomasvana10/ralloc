@@ -35,7 +35,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
-import { useIsBelowBreakpoint } from "@/hooks/is-below-breakpoint";
+import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSServer } from "@/lib/group-session/proto";
 import { cn } from "@/lib/utils";
