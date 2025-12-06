@@ -11,6 +11,18 @@ export const metadata: Metadata = {
   description:
     "The go-to tool for simple, ephemeral group allocation sessions.",
   keywords: ["group", "groups", "management", "group management"],
+  icons: {
+    icon: [
+      {
+        url: "/icon-light.png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-dark.png",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
