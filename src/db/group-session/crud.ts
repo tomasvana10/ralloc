@@ -19,7 +19,7 @@ import {
 } from ".";
 
 const GROUP_SCAN_COUNT = Math.floor(seed.MAX_PARTS * 0.7);
-const ALL_SESSION_KEYS_SCAN_COUNT = GROUP_SCAN_COUNT * 1.1;
+const ALL_SESSION_KEYS_SCAN_COUNT = Math.floor(GROUP_SCAN_COUNT * 1.1);
 
 //#region create
 export async function createGroupSession(
