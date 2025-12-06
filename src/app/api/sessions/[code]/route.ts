@@ -1,4 +1,3 @@
-import { groupSessionRooms } from "@/app/api/session-ws/[code]/room";
 import { auth } from "@/auth";
 import { redisPub } from "@/db";
 import {
@@ -16,6 +15,7 @@ import {
 } from "@/features/forms/session-edit/schema";
 import { GSServer } from "@/lib/group-session/proto";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
+import { RoomManager } from "../../session-ws/[code]/room";
 
 type Params = Promise<{ code: string }>;
 
@@ -37,8 +37,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   if (userId !== hostId)
     return infoHeaders(new Response(null, { status: 403 }));
 
-  const gs = groupSessionRooms.get(code);
-  if (gs) gs.stale = true;
+  RoomManager.markAsStale(code);
 
   await deleteGroupSession(hostId, code);
   redisPub.publish(paths.pubsub.deleted(code), "");

@@ -13,14 +13,8 @@ import { ActionStatus } from "@/db/group-session/actions/types";
 import { rateLimit } from "@/db/rate-limit";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSClient, GSServer } from "@/lib/group-session/proto";
-import {
-  closeForbidden,
-  deleteGroupSessionRoom,
-  doSafeSync,
-  groupSessionRoomFactory,
-  send,
-  sendPreStringified,
-} from "./utils";
+import { RoomManager } from "./room";
+import { closeForbidden, doSafeSync, send, sendPreStringified } from "./utils";
 
 const getHeaders = new Headers();
 getHeaders.set("Connection", "Upgrade");
@@ -41,6 +35,29 @@ interface ClientState {
   rateLimits: number;
 }
 
+function createClientState(): ClientState {
+  return {
+    lastSync: 0,
+    successfulResponses: 0,
+    isPonging: true,
+    rateLimits: 0,
+  };
+}
+
+function setupHeartbeat(client: WebSocket, state: ClientState) {
+  return setInterval(() => {
+    if (client.readyState !== client.OPEN) return;
+
+    if (!state.isPonging) {
+      client.terminate();
+      return;
+    }
+
+    state.isPonging = false;
+    client.ping();
+  }, GSServer.PING_INTERVAL_MS);
+}
+
 export async function UPGRADE(
   client: WebSocket,
   _server: WebSocketServer,
@@ -49,18 +66,26 @@ export async function UPGRADE(
 ) {
   const { code } = ctx.params;
 
-  //console.log("client connected");
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const gs = await groupSessionRoomFactory(code, client);
-  if (!gs) return;
-  const { hostId, clients, cache } = gs;
+  const room = await RoomManager.get(code);
+  if (!room || !room.data) {
+    console.log(`[ws:${code}] client rejected - no room`);
+    return;
+  }
+
+  console.log(
+    `[ws:${code}] client connected (host: ${room.data.hostId === userId})`,
+  );
+
+  const { hostId, clients, cache } = room.data;
   if (!hostId) return;
   const isHost = userId === hostId;
 
   if (!(await doSafeSync(cache, code, client))) return;
-  clients.add(client);
+  room.setClient(client);
+  room.registerClient();
 
   /*
   const { res } = await rateLimit({
@@ -76,40 +101,18 @@ export async function UPGRADE(
     );
   */
 
-  const state: ClientState = {
-    lastSync: 0,
-    successfulResponses: 0,
-    isPonging: true,
-    rateLimits: 0,
-  };
-
-  const pingInt = setInterval(() => {
-    if (client.readyState !== client.OPEN) return;
-
-    if (!state.isPonging) {
-      client.terminate();
-      return;
-    }
-
-    state.isPonging = false;
-    client.ping();
-  }, GSServer.PING_INTERVAL_MS);
+  const state = createClientState();
+  const pingInt = setupHeartbeat(client, state);
 
   client.on("pong", () => {
     state.isPonging = true;
   });
 
   client.on("close", () => {
-    //console.log("onclose");
-    clients.delete(client);
+    console.log(`[ws:${code}] client disconnected`);
+    room.unregisterClient();
     clearInterval(pingInt);
-    //console.log(`client amount: ${clients.size.toString()}`);
-    if (clients.size === 0) {
-      deleteGroupSessionRoom(code);
-      //console.log(
-      //  `deleting room, total rooms are now: ${groupSessionRooms.size}`,
-      //);
-    }
+    void room.deleteIfEmpty();
   });
 
   client.on("message", async (rawData) => {
