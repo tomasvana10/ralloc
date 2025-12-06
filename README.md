@@ -1,4 +1,7 @@
-# ralloc
+![Ralloc logo](public/icon-light.png#gh-light-mode-only)
+![Ralloc logo](public/icon-dark.png#gh-dark-mode-only)
+
+# Ralloc
 
 Ralloc is a web-based tool designed for fast, ephemeral group allocation.
 
@@ -74,17 +77,19 @@ AUTH_<provider>_SECRET=...
 
 ### Important
 
+- [ ] (!!!) Write tests
+- [ ] (!!)Use renovate for dependency management (after writing tests)
 - [ ] Create `CONTRIBUTING.md`
+- [ ] Design landing page
 - [ ] Create support/help page (on the website or on github)
 - [ ] Create privacy and usage related markdown documents
 - [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
-- [ ] Write tests
-- [ ] Use renovate for dependency management (after writing tests)
 - [ ] Improve page metadata in general and possibly add sitemap
 - [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
-- [ ] Create a logo
-- [X] Implement group control - UI, websockets, etc.
+- [ ] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
 - [X] (!!!) TOKEN BUCKET RATE LIMITS FOR: websocket AND REST api
+- [X] Create a logo
+- [X] Implement group control - UI, websockets, etc.
 - [X] Document info for installation and usage on `README.md`
 - [X] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
 - [X] Lua scripting to ensure atomicity when joining/leaving a group
@@ -99,8 +104,8 @@ AUTH_<provider>_SECRET=...
 - [x] Add basic Google authentication
 
 ### To consider
+- [X] Support for deleting and adding groups
 - [ ] i18n through `next-intl` (probably - consider using crowdin for collab. aim to support japanese, czech, french and korean)
 - [ ] Make a wiki
 - [ ] Support joining multiple groups (probably not)
-- [ ] Support for deleting and adding groups
 - [ ] Individual group freezing (should be pretty easy if I need to do it)
