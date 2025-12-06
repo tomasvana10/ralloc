@@ -64,7 +64,7 @@ const groupNameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 });
 
-export function GroupSessionViewer({
+export function SessionViewer({
   code,
   userRepresentation,
 }: {
@@ -159,9 +159,9 @@ export function GroupSessionViewer({
   return (
     <>
       {!data ? (
-        <GroupSessionInfoSkeleton />
+        <SessionInfoSkeleton />
       ) : (
-        <GroupSessionInfo
+        <SessionInfo
           data={data}
           isHost={userRepresentation.userId === data.hostId}
           wsReadyState={wsReadyState}
@@ -250,7 +250,7 @@ export function GroupSessionViewer({
   );
 }
 
-function GroupSessionInfo({
+function SessionInfo({
   data,
   isHost,
   wsReadyState,
@@ -324,7 +324,7 @@ function GroupSessionInfo({
   );
 }
 
-function GroupSessionInfoSkeleton() {
+function SessionInfoSkeleton() {
   return (
     <div className="flex flex-row items-center sm:gap-4 gap-2 min-h-[70px]">
       <Skeleton className="size-16 rounded-full" />

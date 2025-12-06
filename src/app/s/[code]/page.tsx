@@ -6,7 +6,7 @@ import {
   doesGroupSessionExist,
   getGroupSessionByCode,
 } from "@/db/group-session";
-import { GroupSessionViewer } from "@/features/group-session-viewer";
+import { SessionViewer } from "@/features/session-viewer";
 import { UserRepresentation } from "@/lib/group-session";
 
 interface Props {
@@ -36,7 +36,7 @@ export default async function GroupSessionPage({ params }: Props) {
 
   return (
     <BasePage returnTo="/home">
-      <GroupSessionViewer
+      <SessionViewer
         code={code}
         userRepresentation={{
           avatarUrl: rep.avatarUrl,

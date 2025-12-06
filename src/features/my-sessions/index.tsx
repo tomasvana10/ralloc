@@ -48,7 +48,7 @@ import {
 
 const PATCHES_BEFORE_GET = 25;
 
-export function SessionsViewer({ userId }: { userId: string }) {
+export function MySessions({ userId }: { userId: string }) {
   const [patchCount, setPatchCount] = React.useState(0);
   const isMobile = useIsBelowBreakpoint(640);
 

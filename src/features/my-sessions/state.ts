@@ -1,5 +1,6 @@
 import type { GroupSessionData } from "@/db/group-session";
 import type { useGetGroupSessionsSWR } from "@/hooks/group-session";
+
 export type SelectedSessionsState = Set<string>;
 
 export type SelectedSessionsAction =
