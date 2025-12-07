@@ -30,5 +30,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "scripts/setup", "scripts/add-provider"]
+  "exclude": ["node_modules", "scripts/setup", "scripts/add-providers"]
 }
