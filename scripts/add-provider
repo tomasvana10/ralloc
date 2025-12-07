@@ -99,7 +99,7 @@ async function addProvider() {
       [`AUTH_${providerNameUpper}_SECRET`]: prodClientSecret,
     });
   } else {
-    console.log(chalk.cyan("\n  Global credentials:\n"));
+    console.log(chalk.cyan("\n  Global credentials:"));
 
     const clientId = await input({
       message: `  ${providerNameUpper} Client ID:`,
