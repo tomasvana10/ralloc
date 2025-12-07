@@ -171,6 +171,7 @@ export namespace GSServer {
      */
     export type MessageRateLimit = {
       code: Code.MessageRateLimit;
+      retryAfter: number;
     } & IdField;
   }
 

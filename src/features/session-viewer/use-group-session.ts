@@ -4,6 +4,7 @@ import type {
   GroupSessionData,
   GroupSessionGroupData,
 } from "@/db/group-session";
+import { getRateLimitMessage } from "@/db/rate-limit";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSClient, GSServer } from "@/lib/group-session/proto";
 import { findCurrentGroup, getErrorMessage } from "./utils";
@@ -287,7 +288,7 @@ export function useGroupSession({
           payload: { data: rollbacksRef.current.get(payload.id) },
         });
         rollbacksRef.current.delete(payload.id);
-        onError?.("You are sending too many requests. Please try again soon.");
+        onError?.(getRateLimitMessage(undefined, payload.retryAfter));
         break;
       }
       default:

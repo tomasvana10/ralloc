@@ -1,14 +1,16 @@
 import redis, { redisKey } from "@/db";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
 
-const tokenBucketScript = await loadLuaScript("token-bucket");
+export const IS_RATELIMIT_ENABLED = !!+(process.env.ENABLE_RATELIMITING ?? 1);
 
-export interface RateLimitResult {
+export interface AppliedRateLimitDetails {
   allowed: boolean;
   remaining: number;
   limit: number;
+  reset: number;
 }
 
+const tokenBucketScript = await loadLuaScript("tb-ratelimit");
 async function applyRateLimit(
   key: string,
   refillsPerSecond: number,
@@ -19,7 +21,7 @@ async function applyRateLimit(
 
   const sha = await getLuaScriptSha(tokenBucketScript);
 
-  const [allowed, tokens, limit] = (await redis.evalSha(sha, {
+  const [allowed, tokens, limit, reset] = (await redis.evalSha(sha, {
     keys: [key],
     arguments: [
       now.toString(),
@@ -27,12 +29,13 @@ async function applyRateLimit(
       burst.toString(),
       cost.toString(),
     ],
-  })) as [number, number, number];
+  })) as [number, number, number, number];
 
-  const result: RateLimitResult = {
+  const result: AppliedRateLimitDetails = {
     allowed: allowed === 1,
-    remaining: tokens,
+    remaining: Math.floor(tokens),
     limit,
+    reset,
   };
   return result;
 }
@@ -45,7 +48,7 @@ async function applyRateLimit(
  * @param requestsPerMinute How many requests can be made per minute.
  * @param burst How much instantaneous traffic can be processed at a time.
  *
- * @returns The `{ infoHeaders }` callback if a rate limit wasn't applied,
+ * @returns The `{ withRateLimitHeaders }` callback if a rate limit wasn't applied,
  * allowing the handler to apply rate-limit related information their
  * existing response. Otherwise, {@link rateLimit} returns `{ res }`
  * for the caller to immediately return due to a rate-limit being applied.
@@ -62,32 +65,45 @@ export async function rateLimit({
   requestsPerMinute: number;
   burst: number;
 }) {
+  if (!IS_RATELIMIT_ENABLED)
+    return { withRateLimitHeaders: (res: Response) => res };
+
   const result = await applyRateLimit(
     redisKey("rl", ...categories, id),
     requestsPerMinute / 60,
     burst,
   );
 
-  function infoHeaders(res: Response) {
-    res.headers.set("X-Rate-Limit-Limit", result.limit.toString());
-    res.headers.set("X-Rate-Limit-Remaining", result.remaining.toString());
+  function withRateLimitHeaders(res: Response) {
+    res.headers.set("RateLimit-Limit", result.limit.toString());
+    res.headers.set("RateLimit-Remaining", result.remaining.toString());
+    res.headers.set("RateLimit-Reset", result.reset.toString());
     return res;
   }
 
   if (!result.allowed) {
-    return {
-      res: infoHeaders(
-        Response.json(
-          {
-            error: { message: "Too many requests" },
-          },
-          {
-            status: 429,
-          },
-        ),
-      ),
-    };
+    const response = Response.json(
+      { error: { message: "Too many requests" } },
+      { status: 429 },
+    );
+    const retryAfter = Math.max(
+      1,
+      result.reset - Math.floor(Date.now() / 1000),
+    );
+    response.headers.set("Retry-After", retryAfter.toString());
+    return { res: withRateLimitHeaders(response), retryAfter };
   }
 
-  return { infoHeaders };
+  return { withRateLimitHeaders };
+}
+
+export function getRateLimitMessage(res?: Response, retryAfter?: number) {
+  let retry = res
+    ? (retryAfter ?? res.headers.get("Retry-After"))
+    : (retryAfter ?? null);
+  const baseMessage = "You're sending too many requests";
+  if (retry === null) return `${baseMessage}. Try again soon`;
+  if (typeof retry === "string") retry = +retry;
+
+  return `${baseMessage}. Try again in ${retry} ${retry === 1 ? "second" : "seconds"}`;
 }

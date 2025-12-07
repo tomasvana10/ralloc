@@ -24,7 +24,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const { infoHeaders, res } = await rateLimit({
+  const { withRateLimitHeaders, res } = await rateLimit({
     id: userId,
     categories: ["sessions/[code]", "POST"],
     requestsPerMinute: 80,
@@ -33,15 +33,15 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   if (res) return res;
 
   const hostId = await getHostId(code);
-  if (!hostId) return infoHeaders(new Response(null, { status: 404 }));
+  if (!hostId) return withRateLimitHeaders(new Response(null, { status: 404 }));
   if (userId !== hostId)
-    return infoHeaders(new Response(null, { status: 403 }));
+    return withRateLimitHeaders(new Response(null, { status: 403 }));
 
   RoomManager.markAsStale(code);
 
   await deleteGroupSession(hostId, code);
   redisPub.publish(paths.pubsub.deleted(code), "");
-  return infoHeaders(new Response(null, { status: 204 }));
+  return withRateLimitHeaders(new Response(null, { status: 204 }));
 }
 
 export async function PATCH(req: Request, { params }: { params: Params }) {
@@ -49,7 +49,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const { infoHeaders, res } = await rateLimit({
+  const { withRateLimitHeaders, res } = await rateLimit({
     id: session.user.id,
     categories: ["sessions/[code]", "SHARED"],
     requestsPerMinute: 80,
@@ -58,15 +58,15 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   if (res) return res;
 
   const hostId = await getHostId(code);
-  if (!hostId) return infoHeaders(new Response(null, { status: 404 }));
+  if (!hostId) return withRateLimitHeaders(new Response(null, { status: 404 }));
   if (userId !== hostId)
-    return infoHeaders(new Response(null, { status: 403 }));
+    return withRateLimitHeaders(new Response(null, { status: 403 }));
 
   const body = await req.json().catch(() => null);
   if (!body) return new Response(null, { status: 400 });
 
   if (!Object.keys(body).length)
-    return infoHeaders(
+    return withRateLimitHeaders(
       Response.json(
         { error: { message: "No data provided" } },
         { status: 400 },
@@ -83,7 +83,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const parseResult = sessionEditSchema.safeParse(body);
 
   if (!parseResult.success)
-    return infoHeaders(getZodSafeParseErrorResponse(parseResult));
+    return withRateLimitHeaders(getZodSafeParseErrorResponse(parseResult));
 
   await updateGroupSession(parseResult.data, hostId, code);
 
@@ -98,7 +98,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
     paths.pubsub.partialData(code),
     JSON.stringify(partialSyncPayload),
   );
-  return infoHeaders(new Response());
+  return withRateLimitHeaders(new Response());
 }
 
 export async function HEAD(_: Request, { params }: { params: Params }) {

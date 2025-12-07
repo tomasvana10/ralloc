@@ -35,6 +35,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
+import { getRateLimitMessage } from "@/db/rate-limit";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSServer } from "@/lib/group-session/proto";
@@ -93,7 +94,7 @@ export function SessionViewer({
   } = useGroupSession({
     code,
     thisCompressedUser: userRepresentation.compressedUser,
-    onClose: (code) => {
+    onClose: (code, reason) => {
       if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
 
       if (code > 4000) {
@@ -104,8 +105,8 @@ export function SessionViewer({
             customErrMsgBase = "This group session was deleted";
             break;
           case GSServer.CloseEventCodes.RateLimited:
-            customErrMsgBase =
-              "You're sending too many requests. Please try again soon";
+            // i am using `reason` as a way to transmit retryAfter. a lil cheeky but it's ok
+            customErrMsgBase = getRateLimitMessage(undefined, +reason);
             break;
           case GSServer.CloseEventCodes.Forbidden:
             customErrMsgBase =

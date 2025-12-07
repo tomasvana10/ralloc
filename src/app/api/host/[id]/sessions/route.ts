@@ -8,7 +8,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
   const { id: hostId } = await params;
   const session = (await auth())!;
 
-  const { infoHeaders, res } = await rateLimit({
+  const { withRateLimitHeaders, res } = await rateLimit({
     id: session.user.id,
     categories: ["host/[id]/sessions", "GET"],
     requestsPerMinute: 30,
@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
 
   if (session.user.id !== hostId) new Response(null, { status: 403 });
 
-  return infoHeaders(
+  return withRateLimitHeaders(
     Response.json({ data: await getGroupSessionsOfHost(hostId) }),
   );
 }

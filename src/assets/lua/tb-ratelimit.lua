@@ -32,6 +32,16 @@ if tokens >= cost then
   allowed = 1
 end
 
--- update bucket
-redis.call("SET", key, tokens .. SEP .. now)
-return { allowed, tokens, burst }
+-- calculate reset time (when at least 1 token will be available)
+local reset = now
+if tokens < 1 then
+  local tokensNeeded = 1 - tokens
+  local secondsUntilToken = math.ceil(tokensNeeded / refillsPerSecond)
+  reset = now + secondsUntilToken
+end
+
+local ttl = math.ceil(burst / refillsPerSecond) * 2
+-- update bucket with ttl
+redis.call("SET", key, tokens .. SEP .. now, "EX", ttl)
+
+return { allowed, tokens, burst, reset }

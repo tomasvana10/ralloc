@@ -81,28 +81,26 @@ export async function UPGRADE(
 
   const { hostId, clients, cache } = room.data;
   if (!hostId) return;
-  const isHost = userId === hostId;
 
-  if (!(await doSafeSync(cache, code, client))) return;
-  room.setClient(client);
-  room.registerClient();
-
-  /*
-  const { res } = await rateLimit({
+  const rl = await rateLimit({
     id: userId,
     categories: ["sessions-ws/[code]", "UPGRADE"],
     requestsPerMinute: 12,
     burst: 5,
   });
-  if (res)
-    client.close(
+  if (rl.res)
+    return client.close(
       GSServer.CloseEventCodes.RateLimited,
-      "rate limit exceeded",
+      rl.retryAfter.toString(),
     );
-  */
+
+  if (!(await doSafeSync(cache, code, client))) return;
+  room.setClient(client);
+  room.registerClient();
 
   const state = createClientState();
   const pingInt = setupHeartbeat(client, state);
+  const isHost = userId === hostId;
 
   client.on("pong", () => {
     state.isPonging = true;
@@ -130,16 +128,17 @@ export async function UPGRADE(
     const parseResult = GSClient.payload.safeParse(serialisedData);
     if (parseResult.error) return client.close(1008, "malformed json payload");
 
-    const { res } = await rateLimit({
+    const rl = await rateLimit({
       id: userId,
       categories: ["sessions-ws/[code]", "MESSAGE"],
       requestsPerMinute: 35,
       burst: 15,
     });
-    if (res) {
+    if (rl.res) {
       const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
         code: GSServer.Code.MessageRateLimit,
         id: parseResult.data.id,
+        retryAfter: rl.retryAfter,
       };
       state.rateLimits++;
       if (state.rateLimits >= GSServer.MIN_RATELIMITS_CONSIDERED_SUSPICIOUS)

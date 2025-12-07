@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const session = (await auth())!;
   const userId = session.user.id;
 
-  const { infoHeaders, res } = await rateLimit({
+  const { withRateLimitHeaders, res } = await rateLimit({
     id: session.user.id,
     categories: ["sessions", "POST"],
     requestsPerMinute: 15,
@@ -32,8 +32,8 @@ export async function POST(req: Request) {
   const parseResult = sessionCreateSchema.safeParse(body);
 
   if (!parseResult.success)
-    return infoHeaders(getZodSafeParseErrorResponse(parseResult));
+    return withRateLimitHeaders(getZodSafeParseErrorResponse(parseResult));
 
   const code = await createGroupSession(parseResult.data, userId, session);
-  return infoHeaders(Response.json({ code }, { status: 201 }));
+  return withRateLimitHeaders(Response.json({ code }, { status: 201 }));
 }

@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type z from "zod";
+import { getRateLimitMessage } from "@/db/rate-limit";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -37,8 +38,7 @@ export async function checkResponse(res: Response, context: string) {
 
   if (res.url.includes("/signin"))
     throw new Error("You aren't authenticated. Please reload the page.");
-  if (res.status === 429)
-    throw new Error("You're sending too many requests. Please try again soon.");
+  if (res.status === 429) throw new Error(getRateLimitMessage(res));
 
   // successful
   if (res.ok) {
