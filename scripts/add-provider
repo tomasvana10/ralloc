@@ -1,0 +1,171 @@
+#!/usr/bin/env node
+
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { confirm, input, select } from "@inquirer/prompts";
+import chalk from "chalk";
+import * as dotenv from "dotenv";
+
+function updateEnvFile(filename, vars) {
+  const existing = existsSync(filename)
+    ? dotenv.parse(readFileSync(filename, "utf-8"))
+    : {};
+
+  let added = 0;
+  for (const [key, value] of Object.entries(vars)) {
+    if (key in existing) {
+      console.log(
+        chalk.yellow(`  ${key} already exists in ${filename}, skipping.`),
+      );
+    } else {
+      existing[key] = value;
+      added++;
+    }
+  }
+
+  const content = Object.entries(existing)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("\n");
+
+  writeFileSync(filename, `${content}\n`);
+
+  if (added > 0)
+    console.log(chalk.green(`  Added ${added} variable(s) to ${filename}`));
+}
+
+async function addProvider() {
+  console.log(chalk.bold(chalk.bgBlue("Add OAuth Provider")));
+
+  // 1. get provider
+  const providerName = await input({
+    message: "Provider name:",
+    validate: (val) => {
+      if (!val.trim()) return "Provider name is required";
+      if (!/^[a-zA-Z][a-zA-Z0-9_]*$/.test(val)) {
+        return "Provider name must start with a letter and contain only letters, numbers, and underscores";
+      }
+      return true;
+    },
+  });
+
+  const providerNameUpper = providerName.toUpperCase();
+
+  // 2. scoped or global
+  const scopeChoice = await select({
+    message: "How do you want to configure credentials?",
+    choices: [
+      { name: "Scoped (separate credentials for dev/prod)", value: "scoped" },
+      { name: "Global (same credentials for both)", value: "global" },
+    ],
+    default: "scoped",
+  });
+
+  const isScoped = scopeChoice === "scoped";
+
+  // 3. get credentials
+  if (isScoped) {
+    console.log(chalk.cyan("\n  Development credentials:"));
+
+    const devClientId = await input({
+      message: `  ${providerName} Client ID (dev):`,
+      validate: (val) => (val.trim() ? true : "Client ID is required"),
+    });
+
+    const devClientSecret = await input({
+      message: `  ${providerName} Client Secret (dev):`,
+      validate: (val) => (val.trim() ? true : "Client Secret is required"),
+    });
+
+    console.log(chalk.cyan("\n  Production credentials:"));
+
+    const prodClientId = await input({
+      message: `  ${providerName} Client ID (prod):`,
+      validate: (val) => (val.trim() ? true : "Client ID is required"),
+    });
+
+    const prodClientSecret = await input({
+      message: `  ${providerName} Client Secret (prod):`,
+      validate: (val) => (val.trim() ? true : "Client Secret is required"),
+    });
+
+    // 4. write to env files
+    console.log("");
+    updateEnvFile(".env.development", {
+      [`AUTH_${providerNameUpper}_ID`]: devClientId,
+      [`AUTH_${providerNameUpper}_SECRET`]: devClientSecret,
+    });
+
+    updateEnvFile(".env.production", {
+      [`AUTH_${providerNameUpper}_ID`]: prodClientId,
+      [`AUTH_${providerNameUpper}_SECRET`]: prodClientSecret,
+    });
+  } else {
+    console.log(chalk.cyan("\n  Global credentials:\n"));
+
+    const clientId = await input({
+      message: `  ${providerNameUpper} Client ID:`,
+      validate: (val) => (val.trim() ? true : "Client ID is required"),
+    });
+
+    const clientSecret = await input({
+      message: `  ${providerNameUpper} Client Secret:`,
+      validate: (val) => (val.trim() ? true : "Client Secret is required"),
+    });
+
+    // 4. write to .env.local
+    console.log("");
+    updateEnvFile(".env.local", {
+      [`AUTH_${providerNameUpper}_ID`]: clientId,
+      [`AUTH_${providerNameUpper}_SECRET`]: clientSecret,
+    });
+  }
+
+  // 5. inform about svg and auth data
+  console.log(chalk.bold(chalk.bgCyan("\nManual Steps Required")));
+
+  console.log(
+    `1. add SVG icon${isScoped ? "s" : ""} for ${chalk.yellow(providerName)} to ${chalk.cyan("src/auth/svgs.tsx")}`,
+  );
+  console.log(`   you may want separate icons for light/dark themes.\n`);
+  console.log(
+    `2. add the provider configuration to ${chalk.cyan("src/auth/data.ts")}\n`,
+  );
+
+  // 6. reminder about existing data
+  console.log(
+    chalk.yellow(
+      "Reminder: delete any existing auth data/SVGs you no longer need.\n",
+    ),
+  );
+
+  console.log(chalk.green(`Provider ${providerName} added!\n`));
+}
+
+async function main() {
+  console.log(chalk.bold("\nRalloc AuthJS Provider Setup"));
+  console.log("This script will help you add OAuth providers to Ralloc.");
+  console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
+
+  while (true) {
+    await addProvider();
+
+    const addAnother = await confirm({
+      message: "Add another provider?",
+      default: true,
+    });
+
+    if (!addAnother) {
+      break;
+    }
+  }
+
+  console.log(chalk.green(chalk.bold("\nProvider setup complete!\n")));
+}
+
+main().catch((err) => {
+  if (err.name === "ExitPromptError") {
+    console.log(chalk.yellow("\nProvider setup cancelled.\n"));
+    process.exit(0);
+  }
+  console.error(chalk.red("\nAn error occurred:"), err);
+  process.exit(1);
+});

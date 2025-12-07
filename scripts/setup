@@ -1,0 +1,242 @@
+#!/usr/bin/env node
+
+import { execSync } from "node:child_process";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { confirm, input } from "@inquirer/prompts";
+import chalk from "chalk";
+import * as dotenv from "dotenv";
+
+const DEFAULT_PORT = 3001;
+const DOCKER_REDIS_URL = "redis://redis:6379";
+
+function commandExists(cmd) {
+  try {
+    execSync(`command -v ${cmd}`, { stdio: "ignore" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function writeEnvFile(filename, vars) {
+  let existing = {};
+
+  if (existsSync(filename))
+    existing = dotenv.parse(readFileSync(filename, "utf-8"));
+
+  const merged = { ...existing, ...vars };
+  const content = Object.entries(merged)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("\n");
+
+  writeFileSync(filename, `${content}\n`);
+  console.log(chalk.green(`Created ${filename}`));
+}
+
+async function main() {
+  if (!commandExists("pnpm")) {
+    console.log(chalk.red("pnpm is not installed."));
+    console.log(`Install it: ${chalk.cyan("https://pnpm.io/installation")}`);
+  }
+  console.log(chalk.bold("\nSetup Ralloc for Self-Hosting"));
+  console.log("This script sets up the Ralloc environment.");
+  console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
+
+  // 1. does user want to use docker
+  const useDocker = await confirm({
+    message: "Do you want to use Docker?",
+    default: true,
+  });
+
+  if (useDocker) {
+    if (!commandExists("docker")) {
+      console.log(chalk.red("Docker is not installed."));
+      console.log(
+        `Install it: ${chalk.cyan("https://docs.docker.com/get-docker/")}`,
+      );
+      process.exit(1);
+    }
+  }
+
+  // 2. base environment setup
+  // development
+  console.log(
+    chalk.bold(chalk.bgGreen("\nDevelopment Environment Configuration")),
+  );
+
+  const devPort = await input({
+    message: "Development port:",
+    default: DEFAULT_PORT.toString(),
+    validate: (val) => {
+      const num = parseInt(val, 10);
+      if (Number.isNaN(num) || num < 1 || num > 65535)
+        return "Please enter a valid port number (1-65535)";
+      return true;
+    },
+  });
+
+  const devPortNum = parseInt(devPort, 10);
+  if (devPortNum !== DEFAULT_PORT && useDocker) {
+    console.log(
+      chalk.yellow(
+        `\nPlease update the mapped ports in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+      ),
+    );
+  }
+
+  const devEnv = {
+    NEXT_PUBLIC_URL: `http://localhost:${devPortNum}`,
+    AUTH_URL: `http://localhost:${devPortNum}`,
+  };
+  if (!useDocker) devEnv.PORT = devPort;
+
+  let devUseBuiltinRedis = false;
+  if (useDocker)
+    devUseBuiltinRedis = await confirm({
+      message: "Use the built-in Redis service with Docker Compose?",
+      default: true,
+    });
+
+  if (devUseBuiltinRedis) {
+    devEnv.REDIS_URL = DOCKER_REDIS_URL;
+  } else {
+    const devRedisUrl = await input({
+      message: "Enter your Redis database URL:",
+      default: "redis://localhost:6379",
+    });
+    devEnv.REDIS_URL = devRedisUrl;
+
+    if (useDocker) {
+      console.log(
+        chalk.yellow(
+          `\nPlease remove the redis service in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+        ),
+      );
+    }
+  }
+
+  const devEnableRatelimiting = await confirm({
+    message: "Enable rate limiting in development?",
+    default: false,
+  });
+  devEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
+
+  writeEnvFile(".env.development", devEnv);
+
+  // production
+  console.log(
+    chalk.bold(chalk.bgMagenta("\nProduction Environment Configuration")),
+  );
+
+  const prodUrl = await input({
+    message: "App hostname:",
+    validate: (val) => {
+      if (!val.startsWith("http://") && !val.startsWith("https://")) {
+        return "URL must start with http:// or https://";
+      }
+      return true;
+    },
+  });
+
+  const prodEnv = {
+    NEXT_PUBLIC_URL: prodUrl,
+    AUTH_URL: prodUrl,
+  };
+
+  let prodUseBuiltinRedis = false;
+  if (useDocker) {
+    prodUseBuiltinRedis = await confirm({
+      message: "Use the built-in Redis service with Docker Compose?",
+      default: true,
+    });
+  }
+
+  if (prodUseBuiltinRedis) {
+    prodEnv.REDIS_URL = DOCKER_REDIS_URL;
+  } else {
+    const prodRedisUrl = await input({
+      message: "Enter your Redis database URL:",
+      default: "redis://localhost:6379",
+    });
+    prodEnv.REDIS_URL = prodRedisUrl;
+
+    if (useDocker) {
+      console.log(
+        chalk.yellow(
+          `\nPlease remove the redis service in ${chalk.cyan(".docker/compose.prod-local.yaml")} and/or ${chalk.cyan(".docker/compose.prod-ci.yaml")}\n`,
+        ),
+      );
+    }
+  }
+
+  const prodEnableRatelimiting = await confirm({
+    message: "Enable rate limiting in production?",
+    default: true,
+  });
+  prodEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
+
+  writeEnvFile(".env.production", prodEnv);
+
+  // 3. docker network
+  if (useDocker) {
+    console.log("");
+    const createNetwork = await confirm({
+      message: "Create Docker network `ralloc_net`?",
+      default: true,
+    });
+
+    if (createNetwork) {
+      try {
+        execSync("docker network create ralloc_net", { stdio: "pipe" });
+        console.log(chalk.green("Created Docker network `ralloc_net`."));
+      } catch (e) {
+        if (e.stderr?.toString().includes("already exists")) {
+          console.log(
+            chalk.yellow("Docker network `ralloc_net` already exists."),
+          );
+        } else {
+          console.log(chalk.red("Failed to create Docker network."));
+          console.log(e.message);
+        }
+      }
+    }
+  }
+
+  // 4. next steps
+  console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
+
+  console.log(`1. generate an auth secret:\n`);
+  console.log(`   ${chalk.green("pnpm dlx auth secret")}\n`);
+
+  console.log(`2. add OAuth providers using the provider script:\n`);
+  console.log(`   ${chalk.green("./scripts/add-provider")}\n`);
+
+  if (!useDocker) {
+    console.log(`3. since you aren't using Docker:\n`);
+    console.log(
+      `   - remove ${chalk.yellow('output: "standalone"')} from ${chalk.cyan("next.config.ts")}`,
+    );
+    console.log(`   - run in dev:  ${chalk.green("pnpm run dev")}`);
+    console.log(`   - run in prod: ${chalk.green("pnpm run deploy")}\n`);
+  } else {
+    console.log(`3. since you're using Docker:\n`);
+    console.log(`   - run in dev:          ${chalk.green("pnpm run d:dev")}`);
+    console.log(
+      `   - run in prod (local): ${chalk.green("pnpm run d:prod-local")}`,
+    );
+    console.log(
+      `   - run in prod (CI/CD): ${chalk.green("pnpm run d:prod-ci")}\n`,
+    );
+  }
+
+  console.log(chalk.green(chalk.bold("Environment setup complete!\n")));
+}
+
+main().catch((err) => {
+  if (err.name === "ExitPromptError") {
+    console.log(chalk.yellow("\nSetup cancelled.\n"));
+    process.exit(0);
+  }
+  console.error(chalk.red("\nAn error occurred:"), err);
+  process.exit(1);
+});
