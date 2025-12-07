@@ -1,4 +1,6 @@
 import { signIn } from "@/auth";
+import { PROVIDER_DATA, type SupportedProvider } from "@/auth/data";
+import { ProviderIcon } from "@/auth/svgs";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,9 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PROVIDER_DATA } from "@/lib/constants";
-import type { SupportedProvider } from "@/types";
-import { ProviderIcon } from "./provider-svgs";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (

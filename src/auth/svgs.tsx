@@ -2,7 +2,7 @@
 
 import { useTheme } from "next-themes";
 import React from "react";
-import type { PROVIDER_DATA } from "@/lib/constants";
+import type { PROVIDER_DATA } from "./data";
 
 type Props = React.SVGProps<SVGSVGElement>;
 export type ProviderSVG = React.FC<Props>;
