@@ -35,7 +35,7 @@ export default async function GroupSessionPage({ params }: Props) {
   if (!(await doesGroupSessionExist(code))) notFound();
 
   return (
-    <BasePage returnTo="/home">
+    <BasePage returnTo="/">
       <SessionViewer
         code={code}
         userRepresentation={{

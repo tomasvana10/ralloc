@@ -51,7 +51,7 @@ export function SignInForm({
       action={async () => {
         "use server";
         await signIn(provider, {
-          redirectTo: callbackUrl ?? "/home",
+          redirectTo: callbackUrl ?? "/",
         });
       }}>
       <Button

@@ -1,9 +1,19 @@
+import type { Metadata } from "next";
 import { BasePage } from "@/components/layout/base-page";
+import { HomeCards } from "@/components/layout/home-cards";
+import { RoutedMainTabs } from "@/components/layout/routed-tabs";
 
-export default function RootPage() {
+export const metadata: Metadata = {
+  title: "Home · Ralloc",
+};
+
+export default function HomePage() {
   return (
     <BasePage>
-      <h1>landing page</h1>
+      <div className="flex flex-col gap-2">
+        <RoutedMainTabs />
+        <HomeCards />
+      </div>
     </BasePage>
   );
 }
