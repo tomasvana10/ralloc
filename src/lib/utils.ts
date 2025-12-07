@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type z from "zod";
-import { getRateLimitMessage } from "@/db/rate-limit";
+import { getRateLimitMessage } from "@/db/rate-limit/utils";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

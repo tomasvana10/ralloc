@@ -4,7 +4,7 @@ import type {
   GroupSessionData,
   GroupSessionGroupData,
 } from "@/db/group-session";
-import { getRateLimitMessage } from "@/db/rate-limit";
+import { getRateLimitMessage } from "@/db/rate-limit/utils";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSClient, GSServer } from "@/lib/group-session/proto";
 import { findCurrentGroup, getErrorMessage } from "./utils";
