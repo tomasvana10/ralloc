@@ -54,7 +54,7 @@ async function addProvider() {
     message: "How do you want to configure credentials?",
     choices: [
       { name: "Scoped (separate credentials for dev/prod)", value: "scoped" },
-      { name: "Global (same credentials for both)", value: "global" },
+      { name: "Global (same credentials for both environments)", value: "global" },
     ],
     default: "scoped",
   });
@@ -120,7 +120,7 @@ async function addProvider() {
   }
 
   // 5. inform about svg and auth data
-  console.log(chalk.bold(chalk.bgCyan("\nManual Steps Required")));
+  console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(
     `1. add SVG icon${isScoped ? "s" : ""} for ${chalk.yellow(providerName)} to ${chalk.cyan("src/auth/svgs.tsx")}`,
@@ -133,7 +133,7 @@ async function addProvider() {
   // 6. reminder about existing data
   console.log(
     chalk.yellow(
-      "Reminder: delete any existing auth data/SVGs you no longer need.\n",
+      "Reminder: delete any existing auth data/SVGs you don't longer need.\n",
     ),
   );
 
