@@ -2,7 +2,7 @@
 
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { confirm, input } from "@inquirer/prompts";
+import { confirm, input, password } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
@@ -30,19 +30,45 @@ function writeEnvFile(filename, vars) {
     .join("\n");
 
   writeFileSync(filename, `${content}\n`);
-  console.log(chalk.green(`Created ${filename}`));
+  console.log(chalk.green(`Updated ${filename}`));
+}
+
+function writeRedisConf(filename, password) {
+  writeFileSync(
+    filename,
+    `bind 0.0.0.0\nprotected-mode no\nrequirepass ${password}`,
+  );
+  console.log(chalk.green(`Updated ${filename}`));
+}
+
+async function getPassword(asConfirmation, firstPassword = null, mask = "*") {
+  if (asConfirmation && !firstPassword)
+    throw new Error(
+      "must provide first password entry to compare against confirmation",
+    );
+  return await password({
+    message: asConfirmation ? "  Confirm password:" : "  Enter password:",
+    mask,
+    validate: (val) => {
+      if (val.length < 8) return "Password must be at least 8 characters";
+      if (asConfirmation && firstPassword !== val)
+        return "Passwords don't match";
+      return true;
+    },
+  });
 }
 
 async function main() {
   if (!commandExists("pnpm")) {
     console.log(chalk.red("pnpm is not installed."));
     console.log(`Install it: ${chalk.cyan("https://pnpm.io/installation")}`);
+    process.exit(1);
   }
   console.log(chalk.bold("\nSetup Ralloc for Self-Hosting"));
   console.log("This script sets up the Ralloc environment.");
   console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
 
-  // 1. does user want to use docker
+  //#region 1. does user want to use docker
   const useDocker = await confirm({
     message: "Do you want to use Docker?",
     default: true,
@@ -58,7 +84,7 @@ async function main() {
     }
   }
 
-  // 2. base environment setup
+  //#region 2. base environment setup
   // development
   console.log(
     chalk.bold(chalk.bgGreen("\nDevelopment Environment Configuration")),
@@ -115,6 +141,17 @@ async function main() {
     }
   }
 
+  const devOpenRedis = await confirm({
+    message: "Do you want to open the Redis database to your local network?",
+    default: false,
+  });
+
+  if (devOpenRedis) {
+    const passwordA = await getPassword(false);
+    await getPassword(true, passwordA);
+    devEnv.REDIS_PASSWORD = passwordA;
+  }
+
   const devEnableRatelimiting = await confirm({
     message: "Enable rate limiting in development?",
     default: false,
@@ -122,6 +159,7 @@ async function main() {
   devEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
 
   writeEnvFile(".env.development", devEnv);
+  if (devOpenRedis) writeRedisConf("redis.dev.conf", devEnv.REDIS_PASSWORD);
 
   // production
   console.log(
@@ -169,6 +207,17 @@ async function main() {
     }
   }
 
+  const prodOpenRedis = await confirm({
+    message: "Do you want to open the Redis database to your local network?",
+    default: false,
+  });
+
+  if (prodOpenRedis) {
+    const passwordA = await getPassword(false);
+    await getPassword(true, passwordA);
+    prodEnv.REDIS_PASSWORD = passwordA;
+  }
+
   const prodEnableRatelimiting = await confirm({
     message: "Enable rate limiting in production?",
     default: true,
@@ -176,8 +225,9 @@ async function main() {
   prodEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
 
   writeEnvFile(".env.production", prodEnv);
+  if (prodOpenRedis) writeRedisConf("redis.prod.conf", prodEnv.REDIS_PASSWORD);
 
-  // 3. docker network
+  //#region 3. docker network
   if (useDocker) {
     console.log("");
     const createNetwork = await confirm({
@@ -202,7 +252,7 @@ async function main() {
     }
   }
 
-  // 4. next steps
+  //#region 4. next steps
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(`1. generate an auth secret:\n`);
