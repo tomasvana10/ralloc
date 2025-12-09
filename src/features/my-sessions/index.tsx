@@ -39,6 +39,7 @@ import {
 } from "@/hooks/use-group-session";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { cn } from "@/lib/utils";
+import { confirm } from "../confirm";
 import {
   optimisticallyUpdateSessions,
   type SelectedSessionsAction,
@@ -182,6 +183,12 @@ function ActionItem({
         <ItemActions>
           <Button
             onClick={async () => {
+              const result = await confirm({
+                message: `${state.size} session${state.size === 1 ? "" : "s"} will be deleted. This action cannot be undone.`,
+                actionMessage: "Delete",
+              });
+              if (!result) return;
+
               let err = 0;
               for (const code of state) {
                 await deleter.trigger({ code }).catch(() => {
