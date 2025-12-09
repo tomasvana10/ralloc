@@ -72,7 +72,7 @@ export function SessionJoinForm() {
       <CardHeader>
         <CardTitle>Join</CardTitle>
         <CardDescription>
-          Join a group session using a code like <strong>abc123</strong>. You
+          Join a group session using a code like <strong>ab67cd</strong>. You
           can paste the code or type it manually.
         </CardDescription>
       </CardHeader>
