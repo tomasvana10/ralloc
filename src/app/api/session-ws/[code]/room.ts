@@ -30,7 +30,7 @@ export class RoomManager {
     this.code = code;
   }
 
-  get data(): Room | null {
+  get data() {
     return this.room;
   }
 
