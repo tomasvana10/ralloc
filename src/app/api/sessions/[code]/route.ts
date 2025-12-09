@@ -26,7 +26,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
 
   const { withRateLimitHeaders, res } = await rateLimit({
     id: userId,
-    categories: ["sessions/[code]", "POST"],
+    categories: ["sessions/[code]", "SHARED"],
     requestsPerMinute: 80,
     burst: 15,
   });
@@ -103,10 +103,21 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
 
 export async function HEAD(_: Request, { params }: { params: Params }) {
   const { code } = await params;
+  const session = (await auth())!;
+
+  const { withRateLimitHeaders, res } = await rateLimit({
+    id: session.user.id,
+    categories: ["sessions", "HEAD"],
+    requestsPerMinute: 70,
+    burst: 20,
+  });
+  if (res) return res;
 
   const exists = await doesGroupSessionExist(code);
 
-  return new Response(null, {
-    status: exists ? 200 : 404,
-  });
+  return withRateLimitHeaders(
+    new Response(null, {
+      status: exists ? 200 : 404,
+    }),
+  );
 }
