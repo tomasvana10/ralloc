@@ -21,5 +21,7 @@ export async function doesGroupSessionExist(code: string) {
 }
 
 export async function getGroupSessionGroupSize(hostId: string, code: string) {
-  return await redis.hGet(paths.metadata(hostId, code), "groupSize");
+  const size = await redis.hGet(paths.metadata(hostId, code), "groupSize");
+  if (size === null) return null;
+  return +size;
 }

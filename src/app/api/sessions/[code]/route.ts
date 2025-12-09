@@ -76,7 +76,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   const hasGroupSizeProperty = "groupSize" in body;
   const sessionEditSchema = hasGroupSizeProperty
     ? sessionEditSchemaFactory(
-        +((await getGroupSessionGroupSize(hostId, code)) || 0),
+        (await getGroupSessionGroupSize(hostId, code)) || 0,
         true,
       )
     : baseSessionEditSchema.partial().strict();
