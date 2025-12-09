@@ -50,7 +50,7 @@ export async function BasePage({
               </div>
             </CardTitle>
           </div>
-          <div className="flex gap-2 max-[350px]:flex-col-reverse">
+          <div className="flex gap-2">
             <ThemeCycler />
             {session ? <Profile /> : null}
           </div>
