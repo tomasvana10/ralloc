@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  BrushCleaning,
-  CheckIcon,
-  CircleXIcon,
-  LockIcon,
-  SearchIcon,
-  XIcon,
-} from "lucide-react";
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
+import { BrushCleaning, CircleXIcon, LockIcon, SearchIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useRemark } from "react-remark";
-import { ReadyState } from "react-use-websocket-lite";
+import type { ReadyState } from "react-use-websocket-lite";
+import { VirtuosoGrid, type VirtuosoGridProps } from "react-virtuoso";
 import { toast } from "sonner";
 import { ClientAvatar } from "@/components/auth/avatar";
 import {
@@ -20,7 +15,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -31,7 +25,7 @@ import {
 } from "@/components/ui/empty";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import type { GroupSessionData } from "@/db/group-session";
@@ -44,13 +38,55 @@ import { SessionEditForm } from "../../forms/session-edit/form";
 import { useGroupSession } from "../use-group-session";
 import { GlobalActionsModal } from "./global-actions-modal";
 import { Group } from "./group";
+import { WebSocketStatus } from "./websocket-status";
+
+const groupGridComponents: VirtuosoGridProps<
+  undefined,
+  undefined
+>["components"] = {
+  Scroller: ({
+    ref,
+    style,
+    children,
+    ...props
+  }: React.ComponentPropsWithRef<"div">) => (
+    <ScrollAreaPrimitive.Root className="w-full overflow-none rounded-sm border border-border">
+      <ScrollAreaPrimitive.Viewport
+        ref={ref}
+        {...props}
+        style={style}
+        className="h-full w-full">
+        {children}
+      </ScrollAreaPrimitive.Viewport>
+
+      <ScrollBar />
+    </ScrollAreaPrimitive.Root>
+  ),
+
+  List: ({
+    ref,
+    style,
+    children,
+    ...props
+  }: React.ComponentPropsWithRef<"div">) => (
+    <div
+      ref={ref}
+      {...props}
+      style={style}
+      className={cn("grid grid-cols-1 auto-rows-fr", "sm:grid-cols-2")}>
+      {children}
+    </div>
+  ),
+};
+
+const MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION = 60;
 
 function getGroupBorderClasses(
   index: number,
   visibleTotal: number,
   isMobile: boolean,
 ) {
-  if (isMobile) return cn("[div+div]:border-t", index === 0 && "border-t-0");
+  if (isMobile) return "border-b";
 
   if (visibleTotal <= 1) return "";
 
@@ -87,6 +123,13 @@ export function SessionViewer({
     useIsBelowBreakpoint(350),
     useIsBelowBreakpoint(768),
   ];
+  const maxVisibleAvatarsPerGroup = isBelow350
+    ? 4
+    : isMobile
+      ? 6
+      : isBelow768
+        ? 3
+        : 5;
   const [groupQuery, setGroupQuery] = React.useState("");
   const {
     data,
@@ -165,15 +208,6 @@ export function SessionViewer({
       .sort((a, b) => groupNameCollator.compare(a.name, b.name));
   }, [data, groupQuery]);
 
-  const below = React.useMemo(
-    () => ({
-      w350: isBelow350,
-      w640: isMobile,
-      w768: isBelow768,
-    }),
-    [isBelow350, isMobile, isBelow768],
-  );
-
   return (
     <>
       {!data ? (
@@ -218,7 +252,7 @@ export function SessionViewer({
               clearGroupMembers={clearGroupMembers}
               removeGroup={removeGroup}
               frozen={data.frozen}
-              below={below}
+              maxVisibleAvatarsPerGroup={maxVisibleAvatarsPerGroup}
             />
           </div>
         ) : (
@@ -252,9 +286,13 @@ export function SessionViewer({
         <Spinner className="size-24 stroke-1 w-full" />
       ) : groupCollection.length === 0 ? (
         <GroupsEmpty />
-      ) : (
+      ) : groupCollection.length < MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION ? (
         <ScrollArea className="rounded-sm border border-border">
-          <div className="max-h-[calc(100vh-32rem)] sm:min-h-[380px] min-h-[450px]">
+          <div
+            className={cn(
+              "max-h-[calc(100vh-32rem)]",
+              groupQuery ? "min-h-[90px]" : "sm:min-h-[380px] min-h-[450px]",
+            )}>
             <div
               className={cn(
                 "grid grid-cols-1 auto-rows-fr",
@@ -278,12 +316,48 @@ export function SessionViewer({
                   clearGroupMembers={clearGroupMembers}
                   removeGroup={removeGroup}
                   frozen={data.frozen}
-                  below={below}
+                  maxVisibleAvatarsPerGroup={maxVisibleAvatarsPerGroup}
                 />
               ))}
             </div>
           </div>
         </ScrollArea>
+      ) : (
+        <VirtuosoGrid
+          style={{ height: "520px" }}
+          className="rounded-sm"
+          totalCount={groupCollection.length}
+          components={groupGridComponents}
+          itemContent={(index) => {
+            const { members, name } = groupCollection[index];
+
+            return (
+              <Group
+                key={name}
+                className={cn(
+                  "border-0 rounded-none",
+                  getGroupBorderClasses(
+                    index,
+                    groupCollection.length,
+                    isMobile,
+                  ),
+                )}
+                members={members}
+                name={name}
+                groupSize={data.groupSize}
+                isWithinCollection={true}
+                compressedUser={userRepresentation.compressedUser}
+                currentGroupName={currentGroup?.name ?? null}
+                joinGroup={joinGroup}
+                leaveGroup={leaveGroup}
+                clearGroupMembers={clearGroupMembers}
+                removeGroup={removeGroup}
+                frozen={data.frozen}
+                maxVisibleAvatarsPerGroup={maxVisibleAvatarsPerGroup}
+              />
+            );
+          }}
+        />
       )}
     </>
   );
@@ -317,7 +391,6 @@ function SessionInfo({
           name={repr.name}
           className="sm:size-16 size-8 bg-card border border-accent"
         />
-
         <div className="flex flex-col gap-2">
           <div className="flex gap-2 items-center max-sm:flex-col max-sm:items-start">
             <h1 className="text-lg font-semibold leading-none hyphens-auto flex items-center gap-1 wrap-break-word">
@@ -393,31 +466,5 @@ function GroupsEmpty() {
         <EmptyDescription>Try a different query.</EmptyDescription>
       </EmptyHeader>
     </Empty>
-  );
-}
-
-const statusData: Record<
-  ReadyState,
-  [
-    string,
-    React.ComponentType,
-    "default" | "outline" | "secondary" | "destructive",
-  ]
-> = {
-  [ReadyState.UNINSTANTIATED]: ["Uninstantiated", XIcon, "outline"],
-  [ReadyState.CONNECTING]: ["Connecting", Spinner, "outline"],
-  [ReadyState.OPEN]: ["Connected", CheckIcon, "outline"],
-  [ReadyState.CLOSING]: ["Closing", Spinner, "outline"],
-  [ReadyState.CLOSED]: ["Closed", XIcon, "destructive"],
-};
-
-function WebSocketStatus({ readyState }: { readyState: ReadyState }) {
-  const [text, Prefix, variant] = statusData[readyState];
-
-  return (
-    <Badge variant={variant}>
-      <Prefix />
-      {text}
-    </Badge>
   );
 }
