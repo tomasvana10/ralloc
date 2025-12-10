@@ -38,12 +38,12 @@ const ConfirmationDialog = ({
       </AlertDialogHeader>
       <AlertDialogFooter>
         <AlertDialogCancel
-          className="min-w-[100px]"
+          className="min-w-[80px]"
           onClick={() => proceed(false)}>
           {cancelMessage ?? "Cancel"}
         </AlertDialogCancel>
         <AlertDialogAction
-          className="min-w-[100px]"
+          className="min-w-[80px]"
           onClick={() => proceed(true)}>
           {actionMessage ?? "Continue"}
         </AlertDialogAction>
