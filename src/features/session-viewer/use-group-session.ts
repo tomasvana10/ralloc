@@ -32,7 +32,7 @@ type GroupSessionUpdateAction =
   | { type: "Rollback"; payload: { data?: GroupSessionData } }
   | { type: "Freeze" | "ClearAllGroupMem" };
 
-function findGroupIndex(
+function _findGroupIndex(
   groups: GroupSessionGroupData[],
   groupName: string,
 ): number {
@@ -59,12 +59,12 @@ function _updateGroupAtIndex(
   return { ...state, groups };
 }
 
-function updateGroup(
+function _updateGroup(
   state: GroupSessionData,
   groupName: string,
   updater: _GroupUpdater,
 ): GroupSessionState {
-  const iGroup = findGroupIndex(state.groups, groupName);
+  const iGroup = _findGroupIndex(state.groups, groupName);
   if (iGroup === -1) return state;
 
   return _updateGroupAtIndex(state, iGroup, updater);
@@ -90,7 +90,7 @@ function groupSessionReducer(
     case "Freeze":
       return { ...state, frozen: true };
     case "Join":
-      return updateGroup(state, action.payload.groupName, (group) => {
+      return _updateGroup(state, action.payload.groupName, (group) => {
         const { compressedUser } = action.payload;
         if (
           group.members.some((m) =>
@@ -102,7 +102,7 @@ function groupSessionReducer(
         return { ...group, members: [...group.members, compressedUser] };
       });
     case "Leave":
-      return updateGroup(state, action.payload.groupName, (group) => {
+      return _updateGroup(state, action.payload.groupName, (group) => {
         const { compressedUser } = action.payload;
         const members = group.members.filter(
           (m) => !UserRepresentation.areSameCompressedUser(compressedUser, m),
@@ -123,7 +123,7 @@ function groupSessionReducer(
     }
     case "RemGroup": {
       const { groupName } = action.payload;
-      const iGroup = findGroupIndex(state.groups, groupName);
+      const iGroup = _findGroupIndex(state.groups, groupName);
       if (iGroup === -1) return state;
 
       return {
@@ -135,7 +135,7 @@ function groupSessionReducer(
       };
     }
     case "ClearGroupMem":
-      return updateGroup(state, action.payload.groupName, (group) => {
+      return _updateGroup(state, action.payload.groupName, (group) => {
         if (group.members.length === 0) return null;
 
         return { ...group, members: [] };
@@ -174,6 +174,7 @@ interface UseGroupSessionOptions {
 }
 
 export type UseGroupSessionReturn = ReturnType<typeof useGroupSession>;
+type Rollbacks = Map<string, GroupSessionData>;
 
 export function useGroupSession({
   code,
@@ -190,115 +191,12 @@ export function useGroupSession({
   );
 
   // id => GroupSessionData
-  const rollbacksRef = React.useRef(new Map<string, GroupSessionData>());
+  const rollbacksRef = React.useRef<Rollbacks>(new Map());
+  const dataRef = React.useRef<GroupSessionData>(null);
 
-  function onMessage(ev: MessageEvent<any>) {
-    let payload: GSServer.Payload;
-    try {
-      payload = JSON.parse(ev.data);
-    } catch {
-      return onError?.("Invalid data received from server");
-    }
-
-    switch (payload.code) {
-      case GSServer.Code.GroupMembersClear:
-      case GSServer.Code.GroupMutation:
-      case GSServer.Code.GroupMembership: {
-        // failure
-        if (!payload.ok) {
-          if ("error" in payload) onError?.(getErrorMessage(payload.error));
-          if (!payload.willSync) {
-            dispatchGroupSession({
-              type: "Rollback",
-              payload: {
-                data: rollbacksRef.current.get(payload.id),
-              },
-            });
-          }
-          rollbacksRef.current.delete(payload.id);
-
-          break;
-        }
-
-        const isReply = rollbacksRef.current.has(payload.id);
-
-        // success
-        if (!isReply) {
-          // isn't a directly reply to the original client, so the state must be updated
-          if (payload.code === GSServer.Code.GroupMembership) {
-            dispatchGroupSession({
-              payload: {
-                groupName: payload.context.groupName,
-                compressedUser: payload.context.compressedUser,
-              },
-              type: payload.context.action,
-            });
-          } else if (payload.code === GSServer.Code.GroupMutation) {
-            if (payload.context.action === "AddGroup") {
-              dispatchGroupSession({
-                payload: {
-                  groupName: payload.context.group.name,
-                },
-                type: payload.context.action,
-              });
-            } else {
-              dispatchGroupSession({
-                payload: {
-                  groupName: payload.context.groupName,
-                },
-                type: payload.context.action,
-              });
-            }
-          } else {
-            if (payload.context.action === "ClearGroupMem") {
-              dispatchGroupSession({
-                payload: {
-                  groupName: payload.context.groupName,
-                },
-                type: payload.context.action,
-              });
-            } else {
-              dispatchGroupSession({
-                type: payload.context.action,
-              });
-            }
-          }
-        } else {
-          // this is a direct reply, all that needs to be done is delete the rollback data
-          rollbacksRef.current.delete(payload.id);
-        }
-
-        break;
-      }
-      case GSServer.Code.Synchronise: {
-        dispatchGroupSession({
-          payload: { data: payload.data },
-          type: "Sync",
-        });
-        break;
-      }
-      case GSServer.Code.PartialSynchronise: {
-        dispatchGroupSession({
-          payload: { data: payload.data },
-          type: "PSync",
-        });
-        break;
-      }
-      case GSServer.Code.MessageRateLimit: {
-        dispatchGroupSession({
-          type: "Rollback",
-          payload: { data: rollbacksRef.current.get(payload.id) },
-        });
-        rollbacksRef.current.delete(payload.id);
-        onError?.(getRateLimitMessage(undefined, payload.retryAfter));
-        break;
-      }
-      default:
-        return onError?.(
-          "Invalid/unsupported payload received from server. Try reloading your page.",
-        );
-    }
-  }
+  React.useEffect(() => {
+    dataRef.current = data;
+  }, [data]);
 
   const { sendMessage, readyState } = useWebSocket({
     url: `/api/session-ws/${code}`,
@@ -311,7 +209,8 @@ export function useGroupSession({
       rollbacksRef.current.clear();
       onClose?.(ev.code, ev.reason);
     },
-    onMessage,
+    onMessage: (ev) =>
+      onMessage(ev, onError, dispatchGroupSession, rollbacksRef),
     ...wsOptions,
   });
 
@@ -327,12 +226,13 @@ export function useGroupSession({
     ) => {
       const id = GSClient.createPayloadId();
       const payload = createPayload(id);
-      if (data) rollbacksRef.current.set(id, data);
-      // queueing messages is disabled for this implementation (second param).
+      if (dataRef.current) rollbacksRef.current.set(id, dataRef.current);
+      // because the client maintains its state through optimistic updates,
+      // websocket message queueing is disabled, as it would break stuff.
       sendMessage(JSON.stringify(payload), false);
       dispatchGroupSession(dispatchAction);
     },
-    [sendMessage, data],
+    [sendMessage],
   );
 
   const joinGroup = React.useCallback(
@@ -415,4 +315,117 @@ export function useGroupSession({
     freezeThisClient,
     wsReadyState: readyState,
   } as const;
+}
+
+function onMessage(
+  ev: MessageEvent<any>,
+  onError: UseGroupSessionOptions["onError"],
+  dispatchGroupSession: React.Dispatch<GroupSessionUpdateAction>,
+  rollbacksRef: React.RefObject<Rollbacks>,
+) {
+  let payload: GSServer.Payload;
+  try {
+    payload = JSON.parse(ev.data);
+  } catch {
+    return onError?.("Invalid data received from server");
+  }
+
+  switch (payload.code) {
+    case GSServer.Code.GroupMembersClear:
+    case GSServer.Code.GroupMutation:
+    case GSServer.Code.GroupMembership: {
+      // failure
+      if (!payload.ok) {
+        if ("error" in payload) onError?.(getErrorMessage(payload.error));
+        if (!payload.willSync) {
+          dispatchGroupSession({
+            type: "Rollback",
+            payload: {
+              data: rollbacksRef.current.get(payload.id),
+            },
+          });
+        }
+        rollbacksRef.current.delete(payload.id);
+
+        break;
+      }
+
+      // success
+      const isReply = rollbacksRef.current.has(payload.id);
+      if (isReply) {
+        // this is a direct reply, all that needs to be done is delete the rollback data
+        rollbacksRef.current.delete(payload.id);
+        break;
+      }
+
+      // isn't a directly reply to the original client, so the state must be updated
+      if (payload.code === GSServer.Code.GroupMembership) {
+        dispatchGroupSession({
+          payload: {
+            groupName: payload.context.groupName,
+            compressedUser: payload.context.compressedUser,
+          },
+          type: payload.context.action,
+        });
+      } else if (payload.code === GSServer.Code.GroupMutation) {
+        if (payload.context.action === "AddGroup") {
+          dispatchGroupSession({
+            payload: {
+              groupName: payload.context.group.name,
+            },
+            type: payload.context.action,
+          });
+        } else {
+          dispatchGroupSession({
+            payload: {
+              groupName: payload.context.groupName,
+            },
+            type: payload.context.action,
+          });
+        }
+      } else {
+        if (payload.context.action === "ClearGroupMem") {
+          dispatchGroupSession({
+            payload: {
+              groupName: payload.context.groupName,
+            },
+            type: payload.context.action,
+          });
+        } else {
+          dispatchGroupSession({
+            type: payload.context.action,
+          });
+        }
+      }
+
+      break;
+    }
+    case GSServer.Code.Synchronise: {
+      dispatchGroupSession({
+        payload: { data: payload.data },
+        type: "Sync",
+      });
+      break;
+    }
+    case GSServer.Code.PartialSynchronise: {
+      dispatchGroupSession({
+        payload: { data: payload.data },
+        type: "PSync",
+      });
+      break;
+    }
+    case GSServer.Code.MessageRateLimit: {
+      dispatchGroupSession({
+        type: "Rollback",
+        payload: { data: rollbacksRef.current.get(payload.id) },
+      });
+      rollbacksRef.current.delete(payload.id);
+      onError?.(getRateLimitMessage(undefined, payload.retryAfter));
+      break;
+    }
+    default:
+      return onError?.(
+        "Invalid/unsupported payload received from server. Try reloading your page.",
+      );
+  }
 }
