@@ -30,8 +30,8 @@ export async function BasePage({
 
   return (
     <div className="flex justify-center sm:p-10 p-1 min-h-screen">
-      <Card className="max-w-[700px] w-full gap-4">
-        <CardHeader className="flex justify-between max-[450px]:gap-4">
+      <Card className="max-w-[700px] w-full sm:gap-4 gap-2 max-sm:pt-3">
+        <CardHeader className="flex justify-between max-[450px]:gap-4 max-sm:p-3 max-sm:pb-0 max-sm:pt-0">
           <div>
             <CardTitle className="text-3xl">
               <div className="flex items-center gap-4">
@@ -42,7 +42,9 @@ export async function BasePage({
                       aria-label="Go back"
                       size={ReturnToIcon ? "default" : "icon"}>
                       <ChevronLeftIcon className="size-4" />
-                      {ReturnToIcon && <ReturnToIcon className="size-4" />}
+                      {ReturnToIcon && (
+                        <ReturnToIcon className="size-4 max-sm:hidden" />
+                      )}
                     </Button>
                   </Link>
                 )}
