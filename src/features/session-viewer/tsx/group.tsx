@@ -49,26 +49,19 @@ const _groupAnimationVariants: Variants = {
   }),
 };
 
-const _groupHiddenCountAnimationVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 350,
-      damping: 25,
-    },
-  },
-  exit: {
-    opacity: 0,
-    scale: 0.8,
-    transition: {
-      duration: 0.2,
-    },
-  },
-};
+const decompressedUserCache = new Map<string, UserRepresentation>();
 
+function getDecompressedUser(compressedString: string) {
+  if (!decompressedUserCache.has(compressedString)) {
+    decompressedUserCache.set(
+      compressedString,
+      UserRepresentation.fromCompressedString(compressedString),
+    );
+  }
+  return decompressedUserCache.get(compressedString)!;
+}
+
+/*
 const sampleUsers = [
   "usr_001\u001fAlice Chen\u001fgithub\u001f12345678",
   "usr_002\u001fBob Martinez\u001fgithub\u001f23456789",
@@ -88,9 +81,9 @@ const sampleUsers = [
   "usr_014\u001fNina Kowalski\u001fgoogle\u001f\u001e",
   "usr_015\u001fOscar Nguyen\u001fgithub\u001f\u001e",
 ];
+*/
 
 export const Group = React.memo(_Group);
-
 export function _Group({
   name,
   members,
@@ -98,7 +91,7 @@ export function _Group({
   compressedUser,
   currentGroupName,
   isWithinCollection,
-  below,
+  maxVisibleAvatarsPerGroup,
   joinGroup,
   leaveGroup,
   removeGroup,
@@ -113,11 +106,7 @@ export function _Group({
   currentGroupName: string | null;
   isWithinCollection: boolean;
   className?: string;
-  below: {
-    w768: boolean;
-    w640: boolean;
-    w350: boolean;
-  };
+  maxVisibleAvatarsPerGroup: number;
   joinGroup: UseGroupSessionReturn["joinGroup"];
   leaveGroup: UseGroupSessionReturn["leaveGroup"];
   removeGroup: UseGroupSessionReturn["removeGroup"];
@@ -128,45 +117,24 @@ export function _Group({
   const isCurrentGroupAndWithinCollection =
     isCurrentGroup && isWithinCollection;
 
-  const decompressedUserCache = React.useRef<Map<string, UserRepresentation>>(
-    new Map(),
-  );
   const isFirstRender = React.useRef(true);
-
-  function decompressUser(compressedString: string) {
-    let cachedValue = decompressedUserCache.current.get(compressedString);
-    if (!cachedValue) {
-      cachedValue = UserRepresentation.fromCompressedString(compressedString);
-      decompressedUserCache.current.set(compressedString, cachedValue);
-    }
-    return cachedValue;
-  }
 
   React.useEffect(() => {
     isFirstRender.current = false;
   }, []);
 
   const userRepresentations = React.useMemo(
-    () => members.map(decompressUser),
+    () => members.map(getDecompressedUser),
     [members],
   );
   const thisUserId = React.useMemo(
-    () => decompressUser(compressedUser).userId,
+    () => getDecompressedUser(compressedUser).userId,
     [compressedUser],
   );
 
-  // only animate layout shifts if the members have changed.
-  // this prevents unecessary animations when additional elements are
-  // rendered (e.g. the host adds a description which causes all the content)
-  // to shift down
-  const layoutDependency = React.useMemo(
-    () => userRepresentations.map((repr) => repr.userId).join(","),
-    [userRepresentations],
-  );
-
-  const maxVisibleUsers = below.w350 ? 4 : below.w640 ? 6 : below.w768 ? 3 : 5;
-  const visibleUsers = userRepresentations.slice(0, maxVisibleUsers);
-  const hiddenUserCount = userRepresentations.length - maxVisibleUsers;
+  const visibleUsers = userRepresentations.slice(0, maxVisibleAvatarsPerGroup);
+  const hiddenUserCount =
+    userRepresentations.length - maxVisibleAvatarsPerGroup;
 
   return (
     <Item
@@ -181,7 +149,7 @@ export function _Group({
       )}>
       <ItemContent
         className={cn(
-          "flex h-full",
+          "flex h-full min-h-[64px]",
           isCurrentGroupAndWithinCollection
             ? "justify-center"
             : "justify-between",
@@ -191,7 +159,7 @@ export function _Group({
         </ItemTitle>
         {!isCurrentGroupAndWithinCollection && (
           <div className="flex flex-col justify-end">
-            {!sampleUsers.length && <ItemDescription>Empty</ItemDescription>}
+            {!members.length && <ItemDescription>Empty</ItemDescription>}
 
             <div className="flex flex-row items-center gap-2">
               <GroupMembersModal
@@ -200,7 +168,6 @@ export function _Group({
                 userRepresentations={userRepresentations}
                 hiddenUserCount={hiddenUserCount}
                 isFirstRender={isFirstRender}
-                layoutDependency={layoutDependency}
                 visibleUsers={visibleUsers}
               />
             </div>
@@ -253,7 +220,6 @@ export function GroupMembersModal({
   visibleUsers,
   hiddenUserCount,
   isFirstRender,
-  layoutDependency,
 }: {
   userRepresentations: UserRepresentation[];
   thisUserId: string;
@@ -261,7 +227,6 @@ export function GroupMembersModal({
   visibleUsers: UserRepresentation[];
   hiddenUserCount: number;
   isFirstRender: React.RefObject<boolean>;
-  layoutDependency: string;
 }) {
   return (
     <Dialog>
@@ -278,8 +243,6 @@ export function GroupMembersModal({
               return (
                 <motion.div
                   key={repr.userId}
-                  layout
-                  layoutDependency={layoutDependency}
                   custom={isThisUser}
                   variants={_groupAnimationVariants}
                   initial={shouldAnimateEntry ? "hidden" : false}
@@ -304,16 +267,9 @@ export function GroupMembersModal({
               );
             })}
             {hiddenUserCount > 0 && (
-              <motion.div
-                layout
-                layoutDependency={layoutDependency}
-                variants={_groupHiddenCountAnimationVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                className="ml-4 flex items-center justify-center size-8 rounded-full bg-muted border border-accent text-xs font-medium ring-2 ring-card">
+              <div className="ml-4 flex items-center justify-center size-8 rounded-full bg-muted border border-accent text-xs font-medium ring-2 ring-card">
                 +{hiddenUserCount}
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </button>
