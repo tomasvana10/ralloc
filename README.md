@@ -20,9 +20,8 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 
 1. Clone the repository using `git clone https://github.com/tomasvana10/ralloc`
 2. `cd ralloc`
-3. Install all dependencies with `pnpm i` if you are using docker. Otherwise, run `pnpm i --dev`.
+3. If you are using docker, install dev dependencies using `pnpm i --dev`. Otherwise, install all dependencies using `pnpm i`.
 4. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
-5. Create however many OAuth applications you want (Ralloc currently uses Google and GitHub).
 6. Set up the environment by running `./scripts/setup`. This script will also inform you how Ralloc can be started in development/production.
 7. Add your OAuth providers by running `./scripts/add-provider`.
 
