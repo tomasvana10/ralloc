@@ -42,6 +42,7 @@ import { GSServer } from "@/lib/group-session/proto";
 import { cn } from "@/lib/utils";
 import { SessionEditForm } from "../../forms/session-edit/form";
 import { useGroupSession } from "../use-group-session";
+import { GlobalActionsModal } from "./global-actions-modal";
 import { Group } from "./group";
 
 function getGroupBorderClasses(
@@ -67,9 +68,11 @@ const groupNameCollator = new Intl.Collator(undefined, {
 
 export function SessionViewer({
   code,
+  hostId,
   userRepresentation,
 }: {
   code: string;
+  hostId: string;
   userRepresentation: {
     avatarUrl: string;
     name: string;
@@ -77,6 +80,7 @@ export function SessionViewer({
     compressedUser: string;
   };
 }) {
+  const isHost = hostId === userRepresentation.userId;
   const router = useRouter();
   const isMobile = useIsBelowBreakpoint(640);
   const [isBelow350, isBelow768] = [
@@ -88,6 +92,10 @@ export function SessionViewer({
     data,
     joinGroup,
     leaveGroup,
+    addGroup,
+    removeGroup,
+    clearAllGroupMembers,
+    clearGroupMembers,
     currentGroup,
     freezeThisClient,
     wsReadyState,
@@ -97,7 +105,7 @@ export function SessionViewer({
     onClose: (code, reason) => {
       if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
 
-      if (code > 4000) {
+      if (code >= 4000) {
         // custom close event code
         let customErrMsgBase = "";
         switch (code) {
@@ -157,6 +165,15 @@ export function SessionViewer({
       .sort((a, b) => groupNameCollator.compare(a.name, b.name));
   }, [data, groupQuery]);
 
+  const below = React.useMemo(
+    () => ({
+      w350: isBelow350,
+      w640: isMobile,
+      w768: isBelow768,
+    }),
+    [isBelow350, isMobile, isBelow768],
+  );
+
   return (
     <>
       {!data ? (
@@ -166,6 +183,23 @@ export function SessionViewer({
           data={data}
           isHost={userRepresentation.userId === data.hostId}
           wsReadyState={wsReadyState}
+          modals={[
+            <GlobalActionsModal
+              key={0}
+              addGroup={addGroup}
+              clearAllGroupMembers={clearAllGroupMembers}
+            />,
+            <SessionEditForm
+              key={1}
+              code={data.code}
+              data={{
+                description: data.description,
+                frozen: data.frozen,
+                name: data.name,
+                groupSize: data.groupSize,
+              }}
+            />,
+          ]}
         />
       )}
 
@@ -181,8 +215,10 @@ export function SessionViewer({
               isWithinCollection={false}
               joinGroup={joinGroup}
               leaveGroup={leaveGroup}
+              clearGroupMembers={clearGroupMembers}
+              removeGroup={removeGroup}
               frozen={data.frozen}
-              below={{ w350: isBelow350, w640: isMobile, w768: isBelow768 }}
+              below={below}
             />
           </div>
         ) : (
@@ -204,7 +240,7 @@ export function SessionViewer({
             onChange={(ev) => setGroupQuery(ev.target.value)}
           />
           <Button
-            variant="destructive"
+            variant="outline"
             size="icon"
             onClick={() => setGroupQuery("")}>
             <CircleXIcon />
@@ -218,7 +254,7 @@ export function SessionViewer({
         <GroupsEmpty />
       ) : (
         <ScrollArea className="rounded-sm border border-border">
-          <div className="max-h-[calc(100vh-19.5rem)] min-h-[75px]">
+          <div className="max-h-[calc(100vh-32rem)] sm:min-h-[380px] min-h-[450px]">
             <div
               className={cn(
                 "grid grid-cols-1 auto-rows-fr",
@@ -239,8 +275,10 @@ export function SessionViewer({
                   currentGroupName={currentGroup?.name ?? null}
                   joinGroup={joinGroup}
                   leaveGroup={leaveGroup}
+                  clearGroupMembers={clearGroupMembers}
+                  removeGroup={removeGroup}
                   frozen={data.frozen}
-                  below={{ w350: isBelow350, w640: isMobile, w768: isBelow768 }}
+                  below={below}
                 />
               ))}
             </div>
@@ -255,10 +293,12 @@ function SessionInfo({
   data,
   isHost,
   wsReadyState,
+  modals,
 }: {
   data: GroupSessionData;
   isHost: boolean;
   wsReadyState: ReadyState;
+  modals: React.ReactNode[];
 }) {
   const repr = UserRepresentation.fromCompressedString(data.compressedHost);
   const [reactMarkdown, setReactMarkdown] = useRemark();
@@ -271,15 +311,16 @@ function SessionInfo({
 
   return (
     <div className="flex flex-col mb-4 gap-2">
-      <div className="flex flex-row items-center sm:gap-4 gap-2 min-h-[70px]">
+      <div className="flex flex-row sm:items-center items-start sm:gap-4 gap-2 min-h-[70px]">
         <ClientAvatar
           image={repr.avatarUrl}
           name={repr.name}
-          className="size-16 bg-card border border-accent"
+          className="sm:size-16 size-8 bg-card border border-accent"
         />
+
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2 items-center">
-            <h1 className="text-lg font-semibold leading-none wrap-break-word hyphens-auto flex items-center gap-1">
+          <div className="flex gap-2 items-center max-sm:flex-col max-sm:items-start">
+            <h1 className="text-lg font-semibold leading-none hyphens-auto flex items-center gap-1 wrap-break-word">
               {data.frozen && <LockIcon className="size-4" />} {data.name}
             </h1>
             <WebSocketStatus readyState={wsReadyState} />
@@ -293,17 +334,7 @@ function SessionInfo({
           </p>
         </div>
         {isHost && (
-          <div className="ml-auto">
-            <SessionEditForm
-              code={data.code}
-              data={{
-                description: data.description,
-                frozen: data.frozen,
-                name: data.name,
-                groupSize: data.groupSize,
-              }}
-            />
-          </div>
+          <div className="ml-auto flex max-sm:flex-col gap-2">{modals}</div>
         )}
       </div>
       {data.description && (

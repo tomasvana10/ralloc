@@ -173,6 +173,8 @@ interface UseGroupSessionOptions {
   >;
 }
 
+export type UseGroupSessionReturn = ReturnType<typeof useGroupSession>;
+
 export function useGroupSession({
   code,
   thisCompressedUser,

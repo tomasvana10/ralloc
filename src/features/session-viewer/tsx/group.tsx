@@ -25,7 +25,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { GroupSessionData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
-import type { useGroupSession } from "../use-group-session";
+import type { UseGroupSessionReturn } from "../use-group-session";
 
 const _groupAnimationVariants: Variants = {
   hidden: { width: 0, opacity: 0, scale: 0.8 },
@@ -69,7 +69,6 @@ const _groupHiddenCountAnimationVariants: Variants = {
   },
 };
 
-/*
 const sampleUsers = [
   "usr_001\u001fAlice Chen\u001fgithub\u001f12345678",
   "usr_002\u001fBob Martinez\u001fgithub\u001f23456789",
@@ -89,20 +88,23 @@ const sampleUsers = [
   "usr_014\u001fNina Kowalski\u001fgoogle\u001f\u001e",
   "usr_015\u001fOscar Nguyen\u001fgithub\u001f\u001e",
 ];
-*/
 
-export function Group({
+export const Group = React.memo(_Group);
+
+export function _Group({
   name,
   members,
   groupSize,
   compressedUser,
   currentGroupName,
-  joinGroup: join,
-  leaveGroup: leave,
   isWithinCollection,
+  below,
+  joinGroup,
+  leaveGroup,
+  removeGroup,
+  clearGroupMembers,
   frozen,
   className,
-  below,
 }: {
   name: string;
   members: string[];
@@ -116,28 +118,42 @@ export function Group({
     w640: boolean;
     w350: boolean;
   };
-} & Pick<ReturnType<typeof useGroupSession>, "joinGroup" | "leaveGroup"> &
-  Pick<GroupSessionData, "frozen">) {
+  joinGroup: UseGroupSessionReturn["joinGroup"];
+  leaveGroup: UseGroupSessionReturn["leaveGroup"];
+  removeGroup: UseGroupSessionReturn["removeGroup"];
+  clearGroupMembers: UseGroupSessionReturn["clearGroupMembers"];
+} & Pick<GroupSessionData, "frozen">) {
   const isCurrentGroup = currentGroupName === name;
   const isFull = members.length === groupSize;
   const isCurrentGroupAndWithinCollection =
     isCurrentGroup && isWithinCollection;
 
+  const decompressedUserCache = React.useRef<Map<string, UserRepresentation>>(
+    new Map(),
+  );
   const isFirstRender = React.useRef(true);
+
+  function decompressUser(compressedString: string) {
+    let cachedValue = decompressedUserCache.current.get(compressedString);
+    if (!cachedValue) {
+      cachedValue = UserRepresentation.fromCompressedString(compressedString);
+      decompressedUserCache.current.set(compressedString, cachedValue);
+    }
+    return cachedValue;
+  }
 
   React.useEffect(() => {
     isFirstRender.current = false;
   }, []);
 
-  const { userRepresentations, thisUserId } = React.useMemo(() => {
-    return {
-      userRepresentations: members.map((member) =>
-        UserRepresentation.fromCompressedString(member),
-      ),
-      thisUserId:
-        UserRepresentation.fromCompressedString(compressedUser).userId,
-    };
-  }, [members, compressedUser]);
+  const userRepresentations = React.useMemo(
+    () => members.map(decompressUser),
+    [members],
+  );
+  const thisUserId = React.useMemo(
+    () => decompressUser(compressedUser).userId,
+    [compressedUser],
+  );
 
   // only animate layout shifts if the members have changed.
   // this prevents unecessary animations when additional elements are
@@ -150,7 +166,7 @@ export function Group({
 
   const maxVisibleUsers = below.w350 ? 4 : below.w640 ? 6 : below.w768 ? 3 : 5;
   const visibleUsers = userRepresentations.slice(0, maxVisibleUsers);
-  const hiddenUsers = userRepresentations.length - maxVisibleUsers;
+  const hiddenUserCount = userRepresentations.length - maxVisibleUsers;
 
   return (
     <Item
@@ -175,67 +191,17 @@ export function Group({
         </ItemTitle>
         {!isCurrentGroupAndWithinCollection && (
           <div className="flex flex-col justify-end">
-            {!members.length && <ItemDescription>Empty</ItemDescription>}
+            {!sampleUsers.length && <ItemDescription>Empty</ItemDescription>}
 
             <div className="flex flex-row items-center gap-2">
               <GroupMembersModal
                 name={name}
                 thisUserId={thisUserId}
                 userRepresentations={userRepresentations}
-                trigger={
-                  <button
-                    type="button"
-                    className="isolate flex -space-x-2 cursor-pointer">
-                    <AnimatePresence mode="popLayout">
-                      {visibleUsers.map((repr, i) => {
-                        const isThisUser = repr.userId === thisUserId;
-
-                        const shouldAnimateEntry =
-                          isThisUser || !isFirstRender.current;
-
-                        return (
-                          <motion.div
-                            key={repr.userId}
-                            layout
-                            layoutDependency={layoutDependency}
-                            custom={isThisUser}
-                            variants={_groupAnimationVariants}
-                            initial={shouldAnimateEntry ? "hidden" : false}
-                            animate="visible"
-                            exit="exit"
-                            style={{
-                              zIndex: i,
-                            }}>
-                            <ClientAvatar
-                              image={repr.avatarUrl}
-                              name={repr.name}
-                              imageProps={{
-                                draggable: false,
-                                className: "select-none",
-                              }}
-                              className={cn(
-                                "bg-card border border-accent relative ring-2 shrink-0",
-                                isThisUser ? "ring-primary/80" : "ring-card",
-                              )}
-                            />
-                          </motion.div>
-                        );
-                      })}
-                      {hiddenUsers > 0 && (
-                        <motion.div
-                          layout
-                          layoutDependency={layoutDependency}
-                          variants={_groupHiddenCountAnimationVariants}
-                          initial="hidden"
-                          animate="visible"
-                          exit="exit"
-                          className="ml-4 flex items-center justify-center size-8 rounded-full bg-muted border border-accent text-xs font-medium ring-2 ring-card">
-                          +{hiddenUsers}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </button>
-                }
+                hiddenUserCount={hiddenUserCount}
+                isFirstRender={isFirstRender}
+                layoutDependency={layoutDependency}
+                visibleUsers={visibleUsers}
               />
             </div>
           </div>
@@ -245,20 +211,21 @@ export function Group({
         {isCurrentGroup ? (
           <Button
             variant="destructive"
-            size="icon-lg"
+            size="icon"
             disabled={frozen}
-            onClick={() => leave(name, compressedUser)}
+            onClick={() => leaveGroup(name, compressedUser)}
             aria-label="leave group">
             <LogOutIcon />
           </Button>
         ) : (
           currentGroupName && (
             <Button
-              size="icon-lg"
+              size="icon"
               disabled={frozen || isFull}
               onClick={() => {
-                if (currentGroupName) leave(currentGroupName, compressedUser);
-                join(name, compressedUser);
+                if (currentGroupName)
+                  leaveGroup(currentGroupName, compressedUser);
+                joinGroup(name, compressedUser);
               }}
               aria-label="switch group">
               <SwitchCameraIcon />
@@ -268,8 +235,8 @@ export function Group({
         {!currentGroupName && (
           <Button
             disabled={frozen || isFull}
-            size="icon-lg"
-            onClick={() => join(name, compressedUser)}
+            size="icon"
+            onClick={() => joinGroup(name, compressedUser)}
             aria-label="join group">
             <PlusIcon />
           </Button>
@@ -283,20 +250,81 @@ export function GroupMembersModal({
   userRepresentations,
   thisUserId,
   name,
-  trigger,
+  visibleUsers,
+  hiddenUserCount,
+  isFirstRender,
+  layoutDependency,
 }: {
   userRepresentations: UserRepresentation[];
   thisUserId: string;
   name: string;
-  trigger: React.ReactNode;
+  visibleUsers: UserRepresentation[];
+  hiddenUserCount: number;
+  isFirstRender: React.RefObject<boolean>;
+  layoutDependency: string;
 }) {
   return (
     <Dialog>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="isolate flex -space-x-2 cursor-pointer">
+          <AnimatePresence mode="popLayout">
+            {visibleUsers.map((repr, i) => {
+              const isThisUser = repr.userId === thisUserId;
+
+              const shouldAnimateEntry = isThisUser || !isFirstRender.current;
+
+              return (
+                <motion.div
+                  key={repr.userId}
+                  layout
+                  layoutDependency={layoutDependency}
+                  custom={isThisUser}
+                  variants={_groupAnimationVariants}
+                  initial={shouldAnimateEntry ? "hidden" : false}
+                  animate="visible"
+                  exit="exit"
+                  style={{
+                    zIndex: i,
+                  }}>
+                  <ClientAvatar
+                    image={repr.avatarUrl}
+                    name={repr.name}
+                    imageProps={{
+                      draggable: false,
+                      className: "select-none",
+                    }}
+                    className={cn(
+                      "bg-card border border-accent relative ring-2 shrink-0",
+                      isThisUser ? "ring-primary/80" : "ring-card",
+                    )}
+                  />
+                </motion.div>
+              );
+            })}
+            {hiddenUserCount > 0 && (
+              <motion.div
+                layout
+                layoutDependency={layoutDependency}
+                variants={_groupHiddenCountAnimationVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                className="ml-4 flex items-center justify-center size-8 rounded-full bg-muted border border-accent text-xs font-medium ring-2 ring-card">
+                +{hiddenUserCount}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader className="text-left">
           <DialogTitle>{name}</DialogTitle>
-          <DialogDescription>Members</DialogDescription>
+          <DialogDescription>
+            {userRepresentations.length} member
+            {userRepresentations.length === 1 ? "" : "s"}
+          </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] sm:max-h-[70vh]">
           <ul className="grid grid-cols-1 min-[550px]:grid-cols-2 gap-2 pr-4 pl-1">
