@@ -59,11 +59,7 @@ export function SessionCreateForm() {
   const [reactMarkdown, setReactMarkdown] = useRemark();
   const isMobile = useIsBelowBreakpoint(640);
 
-  const form = useForm<
-    z.input<typeof sessionCreateSchema>,
-    unknown,
-    z.output<typeof sessionCreateSchema>
-  >({
+  const form = useForm({
     resolver: zodResolver(sessionCreateSchema),
     defaultValues: state.data,
     mode: "all",

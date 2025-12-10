@@ -28,7 +28,7 @@ import {
 
 export function SessionJoinForm() {
   const state = useSessionJoinStore();
-  const form = useForm<SessionJoinSchemaType>({
+  const form = useForm({
     resolver: zodResolver(sessionJoinSchema),
     defaultValues: state.data,
     mode: "onSubmit",

@@ -47,11 +47,7 @@ export function SessionEditForm({
     return sessionEditSchemaFactory(data.groupSize);
   }, [data.groupSize]);
 
-  const form = useForm<
-    z.input<typeof sessionEditSchema>,
-    unknown,
-    z.output<typeof sessionEditSchema>
-  >({
+  const form = useForm({
     resolver: zodResolver(sessionEditSchema),
     mode: "all",
     defaultValues: data,
