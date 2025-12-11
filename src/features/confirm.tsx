@@ -1,3 +1,4 @@
+import type { VariantProps } from "class-variance-authority";
 import {
   type ConfirmDialogProps,
   confirmable,
@@ -13,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button, type buttonVariants } from "@/components/ui/button";
 
 const ConfirmationDialog = ({
   show,
@@ -20,13 +22,17 @@ const ConfirmationDialog = ({
   title,
   message,
   cancelMessage,
+  cancelVariant,
   actionMessage,
+  actionVariant,
 }: ConfirmDialogProps<
   {
     title?: string;
     message: string;
     cancelMessage?: string;
+    cancelVariant?: VariantProps<typeof buttonVariants>["variant"];
     actionMessage?: string;
+    actionVariant?: VariantProps<typeof buttonVariants>["variant"];
   },
   boolean
 >) => (
@@ -37,15 +43,21 @@ const ConfirmationDialog = ({
         <AlertDialogDescription>{message}</AlertDialogDescription>
       </AlertDialogHeader>
       <AlertDialogFooter>
-        <AlertDialogCancel
-          className="min-w-[80px]"
-          onClick={() => proceed(false)}>
-          {cancelMessage ?? "Cancel"}
+        <AlertDialogCancel asChild>
+          <Button
+            className="min-w-[80px]"
+            variant={cancelVariant}
+            onClick={() => proceed(false)}>
+            {cancelMessage ?? "Cancel"}
+          </Button>
         </AlertDialogCancel>
-        <AlertDialogAction
-          className="min-w-[80px]"
-          onClick={() => proceed(true)}>
-          {actionMessage ?? "Continue"}
+        <AlertDialogAction asChild>
+          <Button
+            className="min-w-[80px]"
+            variant={actionVariant}
+            onClick={() => proceed(true)}>
+            {actionMessage ?? "Continue"}
+          </Button>
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
