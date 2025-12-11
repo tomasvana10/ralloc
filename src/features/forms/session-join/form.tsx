@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CodeIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { Controller, useForm } from "react-hook-form";
@@ -70,7 +71,10 @@ export function SessionJoinForm() {
   return (
     <Card className="border-primary">
       <CardHeader>
-        <CardTitle>Join</CardTitle>
+        <CardTitle className="flex items-center gap-2 h-[1em]">
+          <CodeIcon className="size-4" />
+          Join
+        </CardTitle>
         <CardDescription>
           Join a group session using a code like <strong>ab67cd</strong>. You
           can paste the code or type it manually.

@@ -48,7 +48,9 @@ export function SessionGroupAddForm({
                   id="form-group-add-session-groupname"
                   aria-invalid={fieldState.invalid}
                 />
-                <Button type="submit">Add</Button>
+                <Button type="submit" className="min-w-[80px]">
+                  Add
+                </Button>
               </div>
               {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
             </Field>

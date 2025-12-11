@@ -1,7 +1,12 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { BadgeCheckIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
+import {
+  BadgeCheckIcon,
+  ChevronRightIcon,
+  InfoIcon,
+  PlusIcon,
+} from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import React from "react";
@@ -105,7 +110,10 @@ export function SessionCreateForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create</CardTitle>
+        <CardTitle className="flex items-center gap-2 h-[1em]">
+          <PlusIcon className="size-4" />
+          Create
+        </CardTitle>
         <CardDescription>Create and open a group session.</CardDescription>
       </CardHeader>
       <CardContent>
