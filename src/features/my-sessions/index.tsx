@@ -101,7 +101,7 @@ export function MySessions({ userId }: { userId: string }) {
         <div
           className={cn(
             "flex flex-col max-h-[calc(100vh-19.5rem)]",
-            getter.data.length > 1 && "min-h-[100px]",
+            getter.data.length > 1 && "min-h-[110px]",
           )}>
           {getter.data
             .sort((a, b) => b.createdOn - a.createdOn)
@@ -324,7 +324,7 @@ function _SessionBlock({
                 <span className="wrap-break-word hyphens-auto">
                   {data.name}
                 </span>
-                <CopyableCode className="py-px" copyValue={data.code}>
+                <CopyableCode className="h-6" copyValue={data.code}>
                   {data.code}
                 </CopyableCode>
               </ItemTitle>
