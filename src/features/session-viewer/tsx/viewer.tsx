@@ -9,12 +9,14 @@ import type { ReadyState } from "react-use-websocket-lite";
 import { VirtuosoGrid, type VirtuosoGridProps } from "react-virtuoso";
 import { toast } from "sonner";
 import { ClientAvatar } from "@/components/auth/avatar";
+import { CopyableCode } from "@/components/code";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Empty,
@@ -104,11 +106,9 @@ const groupNameCollator = new Intl.Collator(undefined, {
 
 export function SessionViewer({
   code,
-  hostId,
   userRepresentation,
 }: {
   code: string;
-  hostId: string;
   userRepresentation: {
     avatarUrl: string;
     name: string;
@@ -116,7 +116,6 @@ export function SessionViewer({
     compressedUser: string;
   };
 }) {
-  const isHost = hostId === userRepresentation.userId;
   const router = useRouter();
   const isMobile = useIsBelowBreakpoint(640);
   const [isBelow350, isBelow768] = [
@@ -140,11 +139,12 @@ export function SessionViewer({
     clearAllGroupMembers,
     clearGroupMembers,
     currentGroup,
-    freezeThisClient,
+    freezeClient,
     wsReadyState,
+    isHost,
   } = useGroupSession({
     code,
-    thisCompressedUser: userRepresentation.compressedUser,
+    compressedUser: userRepresentation.compressedUser,
     onClose: (code, reason) => {
       if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
 
@@ -172,7 +172,7 @@ export function SessionViewer({
         toast.warning(
           `${customErrMsgBase}. You'll be redirected in 3 seconds.`,
         );
-        freezeThisClient();
+        freezeClient();
         return setTimeout(() => router.push("/"), 3000);
       }
 
@@ -180,14 +180,14 @@ export function SessionViewer({
         toast.error(
           `Your connection was closed (code ${code}). You'll be redirected in 3 seconds.`,
         );
-        freezeThisClient();
+        freezeClient();
         return setTimeout(() => router.push("/"), 3000);
       }
     },
     onError: (msg) => toast.error(msg),
     onReconnectStop: (n) => {
       setTimeout(() => {
-        freezeThisClient();
+        freezeClient();
         toast.warning(
           `Your client has exceeded the maximum amount of reconnection attempts (${n}). You'll be redirected in 3 seconds.`,
         );
@@ -215,8 +215,9 @@ export function SessionViewer({
       ) : (
         <SessionInfo
           data={data}
-          isHost={userRepresentation.userId === data.hostId}
+          isHost={isHost}
           wsReadyState={wsReadyState}
+          isMobile={isMobile}
           modals={[
             <GlobalActionsModal
               key={0}
@@ -263,7 +264,7 @@ export function SessionViewer({
       <Field>
         <FieldLabel htmlFor="group-search">
           <SearchIcon className="size-4" />
-          Search for a group
+          Search for a Group
         </FieldLabel>
         <div className="flex gap-2">
           <Input
@@ -290,7 +291,7 @@ export function SessionViewer({
         <ScrollArea className="rounded-sm border border-border">
           <div
             className={cn(
-              "max-h-[calc(100vh-32rem)]",
+              "max-h-[calc(100vh-33.5rem)]",
               groupQuery ? "min-h-[90px]" : "sm:min-h-[380px] min-h-[450px]",
             )}>
             <div
@@ -324,7 +325,7 @@ export function SessionViewer({
         </ScrollArea>
       ) : (
         <VirtuosoGrid
-          style={{ height: "520px" }}
+          style={{ height: "480px" }}
           className="rounded-sm"
           totalCount={groupCollection.length}
           components={groupGridComponents}
@@ -368,11 +369,13 @@ function SessionInfo({
   isHost,
   wsReadyState,
   modals,
+  isMobile,
 }: {
   data: GroupSessionData;
   isHost: boolean;
   wsReadyState: ReadyState;
   modals: React.ReactNode[];
+  isMobile: boolean;
 }) {
   const repr = UserRepresentation.fromCompressedString(data.compressedHost);
   const [reactMarkdown, setReactMarkdown] = useRemark();
@@ -384,26 +387,52 @@ function SessionInfo({
   }, [data.description, setReactMarkdown]);
 
   return (
-    <div className="flex flex-col mb-4 gap-2">
+    <div className="flex flex-col mb-4 gap-2 max-sm:px-2">
       <div className="flex flex-row sm:items-center items-start sm:gap-4 gap-2 min-h-[70px]">
-        <ClientAvatar
-          image={repr.avatarUrl}
-          name={repr.name}
-          className="sm:size-16 size-8 bg-card border border-accent"
-        />
+        {!isMobile && (
+          <ClientAvatar
+            image={repr.avatarUrl}
+            name={repr.name}
+            className="size-16 bg-card border border-accent"
+          />
+        )}
         <div className="flex flex-col gap-2">
-          <div className="flex gap-2 items-center max-sm:flex-col max-sm:items-start">
-            <h1 className="text-lg font-semibold leading-none hyphens-auto flex items-center gap-1 wrap-break-word">
-              {data.frozen && <LockIcon className="size-4" />} {data.name}
-            </h1>
-            <WebSocketStatus readyState={wsReadyState} />
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="flex flex-row gap-2">
+              {isMobile && (
+                <ClientAvatar
+                  image={repr.avatarUrl}
+                  name={repr.name}
+                  className="size-8 bg-card border border-accent"
+                />
+              )}
+              <h1 className="text-lg font-semibold leading-none hyphens-auto flex items-center gap-1 wrap-break-word">
+                {data.name}
+              </h1>
+            </div>
+            <div className="flex gap-1 flex-wrap">
+              <CopyableCode className="h-fit text-xs" copyValue={data.code}>
+                {data.code}
+              </CopyableCode>
+              {data.frozen && (
+                <Badge variant="secondary">
+                  <LockIcon />
+                  Locked
+                </Badge>
+              )}
+            </div>
           </div>
+          <WebSocketStatus readyState={wsReadyState} />
+
           <p className="text-sm text-muted-foreground">
             Created by {repr.name} on{" "}
             {new Date(data.createdOn).toLocaleDateString()}
           </p>
           <p className="text-sm text-muted-foreground leading-none">
-            {data.groupSize} member{data.groupSize === 1 ? "" : "s"} per group
+            <strong>{data.groups.length}</strong> group
+            {data.groups.length === 1 ? "" : "s"} |{" "}
+            <strong>{data.groupSize}</strong> member
+            {data.groupSize === 1 ? "" : "s"} per group
           </p>
         </div>
         {isHost && (

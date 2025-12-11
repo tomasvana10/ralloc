@@ -157,7 +157,7 @@ function groupSessionReducer(
 
 interface UseGroupSessionOptions {
   code: string;
-  thisCompressedUser: string;
+  compressedUser: string;
   onError?: (msg: string) => any;
   onClose?: (code: number, reason: string) => any;
   onOpen?: () => any;
@@ -178,7 +178,7 @@ type Rollbacks = Map<string, GroupSessionData>;
 
 export function useGroupSession({
   code,
-  thisCompressedUser,
+  compressedUser,
   onClose,
   onError,
   onOpen,
@@ -216,8 +216,8 @@ export function useGroupSession({
 
   const currentGroup = React.useMemo(() => {
     if (!data) return null;
-    return findCurrentGroup(data, thisCompressedUser);
-  }, [data, thisCompressedUser]);
+    return findCurrentGroup(data, compressedUser);
+  }, [data, compressedUser]);
 
   const _sendAndDispatch = React.useCallback(
     <T extends GSClient.Payload>(
@@ -298,10 +298,17 @@ export function useGroupSession({
     [_sendAndDispatch],
   );
 
-  const freezeThisClient = React.useCallback(
+  const freezeClient = React.useCallback(
     () => dispatchGroupSession({ type: "Freeze" }),
     [],
   );
+
+  const isHost = !data
+    ? false
+    : UserRepresentation.areSameCompressedUser(
+        data.compressedHost,
+        compressedUser,
+      );
 
   return {
     data,
@@ -312,8 +319,9 @@ export function useGroupSession({
     removeGroup,
     clearGroupMembers,
     clearAllGroupMembers,
-    freezeThisClient,
+    freezeClient,
     wsReadyState: readyState,
+    isHost,
   } as const;
 }
 
