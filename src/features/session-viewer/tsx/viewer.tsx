@@ -79,7 +79,7 @@ const groupGridComponents: VirtuosoGridProps<
   ),
 };
 
-const MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION = 60;
+const MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION = 50;
 
 function getGroupBorderClasses(
   index: number,
