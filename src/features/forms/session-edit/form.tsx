@@ -42,6 +42,7 @@ export function SessionEditForm({
     onSuccess: () => toast.success("Session updated successfully."),
     onError: (err) => toast.error(err.message),
   });
+  const closeButtonRef = React.useRef<HTMLButtonElement>(null);
 
   const sessionEditSchema = React.useMemo(() => {
     return sessionEditSchemaFactory(data.groupSize);
@@ -62,6 +63,7 @@ export function SessionEditForm({
 
   async function onSubmit(values: z.output<typeof sessionEditSchema>) {
     await patcher.trigger({ code, data: { ...values } }).catch(() => null);
+    closeButtonRef.current?.click();
   }
 
   return (
@@ -197,7 +199,10 @@ export function SessionEditForm({
             </Button>
 
             <DialogClose asChild>
-              <Button variant="outline" className="sm:min-w-[80px]">
+              <Button
+                variant="outline"
+                className="sm:min-w-[80px]"
+                ref={closeButtonRef}>
                 Close
               </Button>
             </DialogClose>
