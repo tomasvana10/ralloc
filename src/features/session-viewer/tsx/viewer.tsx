@@ -248,6 +248,7 @@ export function SessionViewer({
               compressedUser={userRepresentation.compressedUser}
               currentGroupName={currentGroup?.name ?? null}
               isWithinCollection={false}
+              isHost={isHost}
               joinGroup={joinGroup}
               leaveGroup={leaveGroup}
               clearGroupMembers={clearGroupMembers}
@@ -310,6 +311,7 @@ export function SessionViewer({
                   name={name}
                   groupSize={data.groupSize}
                   isWithinCollection={true}
+                  isHost={isHost}
                   compressedUser={userRepresentation.compressedUser}
                   currentGroupName={currentGroup?.name ?? null}
                   joinGroup={joinGroup}
@@ -344,6 +346,7 @@ export function SessionViewer({
                   ),
                 )}
                 members={members}
+                isHost={isHost}
                 name={name}
                 groupSize={data.groupSize}
                 isWithinCollection={true}
@@ -425,7 +428,8 @@ function SessionInfo({
           <WebSocketStatus readyState={wsReadyState} />
 
           <p className="text-sm text-muted-foreground">
-            Created by {repr.name} on{" "}
+            Created by {repr.name}
+            {isHost ? <strong> (you)</strong> : ""} on{" "}
             {new Date(data.createdOn).toLocaleDateString()}
           </p>
           <p className="text-sm text-muted-foreground leading-none">

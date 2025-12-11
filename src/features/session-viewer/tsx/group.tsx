@@ -1,4 +1,10 @@
-import { LogOutIcon, PlusIcon, SwitchCameraIcon } from "lucide-react";
+import {
+  EllipsisVerticalIcon,
+  LogOutIcon,
+  PlusIcon,
+  SwitchCameraIcon,
+  TrashIcon,
+} from "lucide-react";
 import { AnimatePresence, motion, type Variants } from "motion/react";
 import React from "react";
 import { ClientAvatar } from "@/components/auth/avatar";
@@ -15,14 +21,23 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Item,
   ItemActions,
   ItemContent,
   ItemDescription,
   ItemTitle,
 } from "@/components/ui/item";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { GroupSessionData } from "@/db/group-session";
+import { confirm } from "@/features/confirm";
 import { UserRepresentation } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import type { UseGroupSessionReturn } from "../use-group-session";
@@ -92,6 +107,7 @@ export function _Group({
   currentGroupName,
   isWithinCollection,
   maxVisibleAvatarsPerGroup,
+  isHost,
   joinGroup,
   leaveGroup,
   removeGroup,
@@ -107,6 +123,7 @@ export function _Group({
   isWithinCollection: boolean;
   className?: string;
   maxVisibleAvatarsPerGroup: number;
+  isHost: boolean;
   joinGroup: UseGroupSessionReturn["joinGroup"];
   leaveGroup: UseGroupSessionReturn["leaveGroup"];
   removeGroup: UseGroupSessionReturn["removeGroup"];
@@ -116,6 +133,7 @@ export function _Group({
   const isFull = members.length === groupSize;
   const isCurrentGroupAndWithinCollection =
     isCurrentGroup && isWithinCollection;
+  const isInteractive = !frozen && !isHost && (!isFull || isCurrentGroup);
 
   const isFirstRender = React.useRef(true);
 
@@ -135,61 +153,137 @@ export function _Group({
   const visibleUsers = userRepresentations.slice(0, maxVisibleAvatarsPerGroup);
   const hiddenUserCount =
     userRepresentations.length - maxVisibleAvatarsPerGroup;
+  const id = `${name}-${isWithinCollection ? "collection" : "active"}`;
 
   return (
     <Item
+      asChild
       variant="outline"
       size="sm"
       className={cn(
         className,
         "flex flex-row min-h-[90px]",
+        isInteractive && "hover:bg-accent/20",
         isCurrentGroup && !isWithinCollection
           ? "bg-accent/20 border-primary"
-          : isCurrentGroupAndWithinCollection && "bg-black/20",
+          : isCurrentGroupAndWithinCollection && "bg-accent/20",
       )}>
-      <ItemContent
-        className={cn(
-          "flex h-full min-h-[64px]",
-          isCurrentGroupAndWithinCollection
-            ? "justify-center"
-            : "justify-between",
-        )}>
-        <ItemTitle className="wrap-break-word hyphens-auto">
-          {name} {isFull && <Badge variant="destructive">Full</Badge>}
-        </ItemTitle>
-        {!isCurrentGroupAndWithinCollection && (
-          <div className="flex flex-col justify-end">
-            {!members.length && <ItemDescription>Empty</ItemDescription>}
+      <Label htmlFor={id}>
+        <ItemContent
+          className={cn(
+            "flex h-full min-h-[64px]",
+            isCurrentGroupAndWithinCollection
+              ? "justify-center"
+              : "justify-between",
+          )}>
+          <ItemTitle className="wrap-break-word hyphens-auto">
+            {name} {isFull && <Badge variant="destructive">Full</Badge>}
+          </ItemTitle>
+          {!isCurrentGroupAndWithinCollection && (
+            <div className="flex flex-col justify-end">
+              {!members.length && <ItemDescription>Empty</ItemDescription>}
 
-            <div className="flex flex-row items-center gap-2">
-              <GroupMembersModal
-                name={name}
-                thisUserId={thisUserId}
-                userRepresentations={userRepresentations}
-                hiddenUserCount={hiddenUserCount}
-                isFirstRender={isFirstRender}
-                visibleUsers={visibleUsers}
-              />
+              <div className="flex flex-row items-center gap-2">
+                <GroupMembersModal
+                  name={name}
+                  thisUserId={thisUserId}
+                  userRepresentations={userRepresentations}
+                  hiddenUserCount={hiddenUserCount}
+                  isFirstRender={isFirstRender}
+                  visibleUsers={visibleUsers}
+                />
+              </div>
             </div>
-          </div>
-        )}
-      </ItemContent>
-      <ItemActions>
-        {isCurrentGroup ? (
-          <Button
-            variant="destructive"
-            size="icon"
-            disabled={frozen}
-            onClick={() => leaveGroup(name, compressedUser)}
-            aria-label="leave group">
-            <LogOutIcon />
-          </Button>
-        ) : (
-          currentGroupName && (
+          )}
+        </ItemContent>
+        <ItemActions>
+          {isHost ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                asChild
+                className="select-none cursor-pointer">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  aria-label="group options">
+                  <EllipsisVerticalIcon />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {isCurrentGroup ? (
+                  <DropdownMenuItem
+                    disabled={frozen}
+                    aria-label="leave group"
+                    className="flex justify-between items-center w-full cursor-pointer"
+                    onClick={() => leaveGroup(name, compressedUser)}>
+                    Leave <LogOutIcon />
+                  </DropdownMenuItem>
+                ) : currentGroupName ? (
+                  <DropdownMenuItem
+                    disabled={frozen || isFull}
+                    aria-label="switch group"
+                    className="flex justify-between items-center w-full cursor-pointer"
+                    onClick={() => {
+                      if (currentGroupName)
+                        leaveGroup(currentGroupName, compressedUser);
+                      joinGroup(name, compressedUser);
+                    }}>
+                    Switch <SwitchCameraIcon />
+                  </DropdownMenuItem>
+                ) : (
+                  <DropdownMenuItem
+                    disabled={frozen || isFull}
+                    aria-label="join group"
+                    className="flex justify-between items-center w-full cursor-pointer"
+                    onClick={() => joinGroup(name, compressedUser)}>
+                    Join <PlusIcon />
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  aria-label="delete group"
+                  className="flex justify-between items-center w-full cursor-pointer"
+                  onClick={async () => {
+                    if (members.length) {
+                      const result = await confirm({
+                        message:
+                          "This group has allocated members which will be removed on deletion. This action can't be undone.",
+                        actionMessage: "Delete",
+                        actionVariant: "destructive",
+                      });
+                      if (!result) return;
+                    }
+
+                    removeGroup(name);
+                  }}>
+                  Delete <TrashIcon />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : isCurrentGroup ? (
             <Button
+              id={isInteractive ? id : undefined}
+              variant="outline"
+              className="border-primary dark:border-primary dark:hover:bg-accent/90"
               size="icon"
+              disabled={frozen}
+              onClick={(e) => {
+                e.preventDefault();
+                leaveGroup(name, compressedUser);
+              }}
+              aria-label="leave group">
+              <LogOutIcon />
+            </Button>
+          ) : currentGroupName ? (
+            <Button
+              id={isInteractive ? id : undefined}
+              size="icon"
+              variant="outline"
+              className="dark:hover:bg-accent/90"
               disabled={frozen || isFull}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
                 if (currentGroupName)
                   leaveGroup(currentGroupName, compressedUser);
                 joinGroup(name, compressedUser);
@@ -197,18 +291,23 @@ export function _Group({
               aria-label="switch group">
               <SwitchCameraIcon />
             </Button>
-          )
-        )}
-        {!currentGroupName && (
-          <Button
-            disabled={frozen || isFull}
-            size="icon"
-            onClick={() => joinGroup(name, compressedUser)}
-            aria-label="join group">
-            <PlusIcon />
-          </Button>
-        )}
-      </ItemActions>
+          ) : (
+            <Button
+              id={isInteractive ? id : undefined}
+              disabled={frozen || isFull}
+              size="icon"
+              className="dark:hover:bg-accent/90"
+              variant="outline"
+              onClick={(e) => {
+                e.preventDefault();
+                joinGroup(name, compressedUser);
+              }}
+              aria-label="join group">
+              <PlusIcon />
+            </Button>
+          )}
+        </ItemActions>
+      </Label>
     </Item>
   );
 }
