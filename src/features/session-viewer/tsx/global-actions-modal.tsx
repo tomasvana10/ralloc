@@ -1,6 +1,6 @@
 "use client";
 
-import { WrenchIcon } from "lucide-react";
+import { FlameIcon, UsersIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { confirm } from "@/features/confirm";
 import { SessionGroupAddForm } from "@/features/forms/session-group-add";
 import type { UseGroupSessionReturn } from "../use-group-session";
 
@@ -25,14 +26,32 @@ export function GlobalActionsModal({
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon-lg">
-          <WrenchIcon />
+          <UsersIcon />
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="text-left">
-          <DialogTitle>Global Actions</DialogTitle>
+          <DialogTitle>Group Session Actions</DialogTitle>
         </DialogHeader>
-        <SessionGroupAddForm addGroup={addGroup} />
+        <div className="space-y-4">
+          <SessionGroupAddForm addGroup={addGroup} />
+          <Button
+            variant="destructive"
+            onClick={async () => {
+              const result = await confirm({
+                message:
+                  "All group members will be deallocated. This action can't be undone.",
+                actionMessage: "Clear",
+                actionVariant: "destructive",
+              });
+              if (!result) return;
+
+              clearAllGroupMembers();
+            }}>
+            <FlameIcon />
+            Deallocate All Members
+          </Button>
+        </div>
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" className="sm:min-w-[80px]">

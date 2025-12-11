@@ -184,8 +184,9 @@ function ActionItem({
           <Button
             onClick={async () => {
               const result = await confirm({
-                message: `${state.size} session${state.size === 1 ? "" : "s"} will be deleted. This action cannot be undone.`,
+                message: `${state.size} session${state.size === 1 ? "" : "s"} will be deleted. This action can't be undone.`,
                 actionMessage: "Delete",
+                actionVariant: "destructive",
               });
               if (!result) return;
 
