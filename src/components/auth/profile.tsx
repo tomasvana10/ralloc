@@ -1,5 +1,6 @@
 "use server";
 
+import { LogOutIcon } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import {
   DropdownMenu,
@@ -37,7 +38,9 @@ export async function Profile() {
         <DropdownMenuSeparator />
         <form action={handleSignOut}>
           <button type="submit" className="w-full">
-            <DropdownMenuItem>Sign out</DropdownMenuItem>
+            <DropdownMenuItem className="flex justify-between items-center w-full cursor-pointer">
+              Sign out <LogOutIcon />
+            </DropdownMenuItem>
           </button>
         </form>
       </DropdownMenuContent>
