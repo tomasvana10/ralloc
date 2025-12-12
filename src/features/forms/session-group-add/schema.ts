@@ -1,8 +1,8 @@
 import z from "zod";
-import { GROUP_SEED } from "@/lib/group-session";
+import { groupName } from "@/lib/group-session/group-seed";
 
 export const sessionGroupAddSchema = z.object({
-  groupName: z.string().min(1).max(GROUP_SEED.MAX_PART_LENGTH),
+  groupName,
 });
 
 export type SessionGroupAddSchemaType = z.infer<typeof sessionGroupAddSchema>;

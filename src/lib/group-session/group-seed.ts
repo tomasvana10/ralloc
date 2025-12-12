@@ -3,6 +3,7 @@
  * into a set of values
  */
 
+import z from "zod";
 import { areSameCase } from "../utils";
 
 export interface ExpansionResult {
@@ -27,6 +28,8 @@ export const GROUP_SEED = {
   NUM_RANGE_REGEX: /\[(-?\d+)-(-?\d+)\]/g,
   CHAR_RANGE_REGEX: /\[([a-zA-Z])-([a-zA-Z])\]/g,
 };
+
+export const groupName = z.string().min(1).max(GROUP_SEED.MAX_PARTS);
 
 export function expandGroupSeed(input: string): ExpansionResult {
   // this used to trim and filter out empty strings, but zod

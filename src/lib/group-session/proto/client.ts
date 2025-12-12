@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { GROUP_SEED } from "@/lib/group-session";
+import { groupName } from "../group-seed";
 
 /**
  * Client library for a group session websockets
@@ -23,7 +23,6 @@ export namespace GSClient {
   export const PAYLOAD_ID_LENGTH = (PAYLOAD_ID_BYTES / 3) * 4;
 
   export namespace Payloads {
-    const _groupName = z.string().min(1).max(GROUP_SEED.MAX_PART_LENGTH);
     const _compressedUser = z.string().min(1);
     const _id = z.base64().length(GSClient.PAYLOAD_ID_LENGTH);
 
@@ -32,7 +31,7 @@ export namespace GSClient {
         code: z.literal(code.enum.JoinGroup),
         id: _id,
         compressedUser: _compressedUser,
-        groupName: _groupName,
+        groupName,
       }),
       z.object({
         code: z.literal(code.enum.LeaveGroup),
@@ -49,7 +48,7 @@ export namespace GSClient {
         z.literal(code.enum.RemoveGroup),
       ]),
       id: _id,
-      groupName: _groupName,
+      groupName,
     });
     export type MutateGroup = z.infer<typeof mutateGroup>;
 
@@ -57,7 +56,7 @@ export namespace GSClient {
       z.object({
         code: z.literal(code.enum.ClearGroupMembers),
         id: _id,
-        groupName: _groupName,
+        groupName,
       }),
       z.object({
         code: z.literal(code.enum.ClearAllGroupMembers),
