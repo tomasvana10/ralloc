@@ -207,7 +207,7 @@ export function _Group({
                 <Button
                   variant="outline"
                   size="icon"
-                  aria-label="group options">
+                  aria-label="Group options">
                   <EllipsisVerticalIcon />
                 </Button>
               </DropdownMenuTrigger>
@@ -215,7 +215,7 @@ export function _Group({
                 {isCurrentGroup ? (
                   <DropdownMenuItem
                     disabled={frozen}
-                    aria-label="leave group"
+                    aria-label="Leave group"
                     className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => leaveGroup(name, compressedUser)}>
                     Leave <LogOutIcon />
@@ -223,7 +223,7 @@ export function _Group({
                 ) : currentGroupName ? (
                   <DropdownMenuItem
                     disabled={frozen || isFull}
-                    aria-label="switch group"
+                    aria-label="Switch group"
                     className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => {
                       if (currentGroupName)
@@ -235,7 +235,7 @@ export function _Group({
                 ) : (
                   <DropdownMenuItem
                     disabled={frozen || isFull}
-                    aria-label="join group"
+                    aria-label="Join group"
                     className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => joinGroup(name, compressedUser)}>
                     Join <PlusIcon />
@@ -244,7 +244,7 @@ export function _Group({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
-                  aria-label="delete group"
+                  aria-label="Delete group"
                   className="flex justify-between items-center w-full cursor-pointer"
                   onClick={async () => {
                     if (members.length) {
@@ -274,7 +274,7 @@ export function _Group({
                 e.preventDefault();
                 leaveGroup(name, compressedUser);
               }}
-              aria-label="leave group">
+              aria-label="Leave group">
               <LogOutIcon />
             </Button>
           ) : currentGroupName ? (
@@ -290,7 +290,7 @@ export function _Group({
                   leaveGroup(currentGroupName, compressedUser);
                 joinGroup(name, compressedUser);
               }}
-              aria-label="switch group">
+              aria-label="Switch group">
               <SwitchCameraIcon />
             </Button>
           ) : (
@@ -304,7 +304,7 @@ export function _Group({
                 e.preventDefault();
                 joinGroup(name, compressedUser);
               }}
-              aria-label="join group">
+              aria-label="Join group">
               <PlusIcon />
             </Button>
           )}
@@ -337,7 +337,7 @@ export function GroupMembersModal({
           size="icon"
           variant="ghost"
           className="isolate flex -space-x-2 cursor-pointer p-0 h-auto ring-offset-2 ring-offset-card"
-          aria-label="view group members">
+          aria-label="View group members">
           <AnimatePresence mode="popLayout">
             {visibleUsers.map((repr, i) => {
               const isThisUser = repr.userId === thisUserId;

@@ -280,7 +280,7 @@ export function SessionViewer({
           <Button
             variant="outline"
             size="icon"
-            aria-label="clear search query"
+            aria-label="Clear group search query"
             onClick={() => setGroupQuery("")}>
             <CircleXIcon />
           </Button>

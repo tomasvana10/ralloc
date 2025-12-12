@@ -72,7 +72,7 @@ export function SessionEditForm({
         <Button
           variant="outline"
           size="icon-lg"
-          aria-label="edit session details">
+          aria-label="Edit session details">
           <PencilIcon />
         </Button>
       </DialogTrigger>

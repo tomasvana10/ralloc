@@ -28,7 +28,7 @@ export function GlobalActionsModal({
         <Button
           variant="outline"
           size="icon-lg"
-          aria-label="open global session actions">
+          aria-label="Open global session actions">
           <UsersIcon />
         </Button>
       </DialogTrigger>

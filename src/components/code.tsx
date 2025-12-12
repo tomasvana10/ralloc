@@ -38,7 +38,7 @@ export function CopyableCode({
         disabled={isCopied}
         className="px-2"
         variant="ghost"
-        aria-label="copy value">
+        aria-label="Copy value">
         <code {...props} className="flex items-center gap-1">
           <CodeIcon className="size-[1em]" />
           {isCopied ? "Copied!" : children}
