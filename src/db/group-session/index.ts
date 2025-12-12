@@ -5,6 +5,7 @@ export type GroupSessionMetadata = {
   createdOn: number;
   frozen: boolean;
   compressedHost: string;
+  groupCount: number;
 } & Omit<SessionCreateSchemaType, "groupSeed">;
 
 export type GroupSessionData = {

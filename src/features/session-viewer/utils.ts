@@ -15,7 +15,11 @@ export function getErrorMessage(error: ActionErrorMessage) {
     case ActionErrorMessage.NotInGroup:
       return "You aren't in this group.";
     case ActionErrorMessage.Existent:
-      return "This group already exists. ";
+      return "This group already exists.";
+    case ActionErrorMessage.MaximumGroupsReached:
+      return "You can't add any more groups.";
+    case ActionErrorMessage.MinimumGroupsReached:
+      return "You can't remove any more groups.";
   }
 }
 

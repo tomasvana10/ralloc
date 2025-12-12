@@ -17,4 +17,6 @@ export enum ActionErrorMessage {
   Existent = "existent",
   NotInGroup = "notInGroup",
   Frozen = "frozen",
+  MaximumGroupsReached = "maxGroupsReached",
+  MinimumGroupsReached = "minGroupsReached",
 }

@@ -1,12 +1,16 @@
 import redis, { REDIS } from "@/db";
 import { getLuaScriptSha, loadLuaScript } from "@/db/lua-script";
-import { UserRepresentation } from "@/lib/group-session";
+import {
+  MAX_GROUPS,
+  MIN_GROUPS,
+  UserRepresentation,
+} from "@/lib/group-session";
 import { paths } from "../..";
-import type {
-  ActionErrorMessage,
+import {
+  type ActionErrorMessage,
   ActionStatus,
-  BaseActionFailure,
-  BaseActionSuccess,
+  type BaseActionFailure,
+  type BaseActionSuccess,
 } from "../types";
 
 function parseScriptResult(result: string[]) {
@@ -18,7 +22,9 @@ function parseScriptResult(result: string[]) {
 
 export type GroupMutationErrorMessage =
   | ActionErrorMessage.Existent
-  | ActionErrorMessage.Nonexistent;
+  | ActionErrorMessage.Nonexistent
+  | ActionErrorMessage.MaximumGroupsReached
+  | ActionErrorMessage.MinimumGroupsReached;
 export type GroupMutationResult =
   | BaseActionSuccess
   | BaseActionFailure<GroupMutationErrorMessage>;
@@ -35,7 +41,7 @@ async function _mutateGroup(
 
   const { status, message } = parseScriptResult(result);
 
-  return status === "failure"
+  return status === ActionStatus.Failure
     ? {
         status,
         message: message as GroupMutationErrorMessage,
@@ -53,9 +59,14 @@ export async function addGroup({
   code: string;
   groupName: string;
 }) {
-  return await _mutateGroup(await getLuaScriptSha(addGroupScript), [
-    paths.groupMetadata(hostId, code, groupName),
-  ]);
+  return await _mutateGroup(
+    await getLuaScriptSha(addGroupScript),
+    [
+      paths.metadata(hostId, code),
+      paths.groupMetadata(hostId, code, groupName),
+    ],
+    ["groupCount", MAX_GROUPS.toString()],
+  );
 }
 
 const removeGroupScript = await loadLuaScript("remove-group");
@@ -71,10 +82,13 @@ export async function removeGroup({
   return await _mutateGroup(
     await getLuaScriptSha(removeGroupScript),
     [
+      paths.metadata(hostId, code),
       paths.groupMetadata(hostId, code, groupName),
       paths.groupMembers(hostId, code, groupName),
     ],
     [
+      "groupCount",
+      MIN_GROUPS.toString(),
       paths.userGroupTemplate(hostId, code),
       UserRepresentation.UNIT_SEPARATOR,
       REDIS.SEP,

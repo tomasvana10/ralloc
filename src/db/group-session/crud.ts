@@ -4,8 +4,8 @@ import type { sessionCreateSchema } from "@/features/forms/group-session/create"
 import type { baseSessionEditSchema } from "@/features/forms/group-session/edit";
 import {
   expandGroupSeed,
-  GROUP_SEED,
   generateSessionCode,
+  MAX_GROUPS,
   MAX_USER_SESSIONS,
   UserRepresentation,
 } from "@/lib/group-session";
@@ -19,7 +19,7 @@ import {
   paths,
 } from ".";
 
-const GROUP_SCAN_COUNT = Math.floor(GROUP_SEED.MAX_PARTS * 0.7);
+const GROUP_SCAN_COUNT = Math.floor(MAX_GROUPS * 0.7);
 const ALL_SESSION_KEYS_SCAN_COUNT = Math.floor(GROUP_SCAN_COUNT * 1.1);
 
 //#region create
@@ -32,9 +32,11 @@ export async function createGroupSession(
 
   // persisting the group seed itself serves no purpose currently
   const { groupSeed, ...rest } = data;
+  const groupNames = expandGroupSeed(groupSeed).values;
   const metadata: GroupSessionMetadata = {
     createdOn: Date.now(),
     compressedHost: UserRepresentation.from(session).toCompressedString(),
+    groupCount: groupNames.length,
     ...rest,
   };
 
@@ -44,10 +46,8 @@ export async function createGroupSession(
     ...metadata,
     frozen: (+metadata.frozen).toString(),
   });
-  console.log(JSON.stringify(metadata));
   tx.set(paths.sessionHost(code), hostId);
 
-  const groupNames = expandGroupSeed(groupSeed).values;
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future
@@ -187,6 +187,7 @@ async function assembleGroupSession(
     groupSize: +metadata.groupSize,
     name: metadata.name,
     description: metadata.description,
+    groupCount: +metadata.groupCount,
     code,
     hostId,
     compressedHost: metadata.compressedHost,
