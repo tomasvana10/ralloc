@@ -38,7 +38,7 @@ export async function Profile() {
         <DropdownMenuSeparator />
         <form action={handleSignOut}>
           <button type="submit" className="w-full">
-            <DropdownMenuItem className="flex justify-between items-center w-full cursor-pointer">
+            <DropdownMenuItem>
               Sign out <LogOutIcon />
             </DropdownMenuItem>
           </button>
