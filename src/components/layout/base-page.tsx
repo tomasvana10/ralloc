@@ -42,17 +42,18 @@ export async function BasePage({
             <CardTitle className="text-3xl">
               <div className="flex items-center gap-4">
                 {returnTo && (
-                  <Link href={returnTo} tabIndex={-1} className="leading-0">
-                    <Button
-                      variant="outline"
-                      aria-label="Go back"
-                      size={ReturnToIcon ? "default" : "icon"}>
+                  <Button
+                    asChild
+                    variant="outline"
+                    aria-label="Go back"
+                    size={ReturnToIcon ? "default" : "icon"}>
+                    <Link href={returnTo} className="leading-0">
                       <ChevronLeftIcon className="size-4" />
                       {ReturnToIcon && (
                         <ReturnToIcon className="size-4 max-sm:hidden" />
                       )}
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 )}
                 <span>Ralloc</span>
               </div>
