@@ -84,10 +84,10 @@
   --font-serif: "Bitter", serif;
   --letter-spacing: var(--letter-spacing);
   --radius: 0.75rem;
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 0px);
-  --radius-xl: calc(var(--radius) + 0px);
+  --radius-xl: calc(var(--radius) * 1.25);
   --shadow: var(--shadow);
   --shadow-2xl: var(--shadow-2xl);
   --shadow-2xs: var(--shadow-2xs);
