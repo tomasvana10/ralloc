@@ -39,7 +39,7 @@ import { UserRepresentation } from "@/lib/group-session";
 import { GSServer } from "@/lib/group-session/proto";
 import { cn } from "@/lib/utils";
 import { useGroupSession } from "../use-group-session";
-import { GlobalActionsModal } from "./global-actions-modal";
+import { GlobalActionsDialog } from "./global-actions-dialog";
 import { Group } from "./group";
 import { WebSocketStatus } from "./websocket-status";
 
@@ -220,8 +220,8 @@ export function SessionViewer({
           isHost={isHost}
           wsReadyState={wsReadyState}
           isMobile={isMobile}
-          modals={[
-            <GlobalActionsModal
+          dialogs={[
+            <GlobalActionsDialog
               key={0}
               addGroup={addGroup}
               clearAllGroupMembers={clearAllGroupMembers}
@@ -370,13 +370,13 @@ function SessionInfo({
   data,
   isHost,
   wsReadyState,
-  modals,
+  dialogs,
   isMobile,
 }: {
   data: GroupSessionData;
   isHost: boolean;
   wsReadyState: ReadyState;
-  modals: React.ReactNode[];
+  dialogs: React.ReactNode[];
   isMobile: boolean;
 }) {
   const repr = UserRepresentation.fromCompressedString(data.compressedHost);
@@ -439,7 +439,7 @@ function SessionInfo({
           </p>
         </div>
         {isHost && (
-          <div className="ml-auto flex max-sm:flex-col gap-2">{modals}</div>
+          <div className="ml-auto flex max-sm:flex-col gap-2">{dialogs}</div>
         )}
       </div>
       {data.description && (

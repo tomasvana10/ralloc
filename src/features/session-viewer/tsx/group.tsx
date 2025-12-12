@@ -185,7 +185,7 @@ export function _Group({
 
               {!!members.length && (
                 <div className="flex flex-row items-center gap-2">
-                  <GroupMembersModal
+                  <GroupMembersDialog
                     name={name}
                     thisUserId={thisUserId}
                     userRepresentations={userRepresentations}
@@ -314,7 +314,7 @@ export function _Group({
   );
 }
 
-export function GroupMembersModal({
+export function GroupMembersDialog({
   userRepresentations,
   thisUserId,
   name,
