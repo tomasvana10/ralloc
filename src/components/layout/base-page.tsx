@@ -1,4 +1,9 @@
-import { ChevronLeftIcon, HomeIcon, type LucideIcon } from "lucide-react";
+import {
+  ChevronLeftIcon,
+  HomeIcon,
+  ListIcon,
+  type LucideIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { Profile } from "../auth/profile";
@@ -16,6 +21,7 @@ import { Footer } from "./footer";
 
 const returnToIcons: Record<string, LucideIcon> = {
   "/": HomeIcon,
+  "/sessions": ListIcon,
 };
 
 export async function BasePage({

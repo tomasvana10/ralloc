@@ -5,6 +5,7 @@ import { BasePage } from "@/components/layout/base-page";
 import {
   doesGroupSessionExist,
   getGroupSessionByCode,
+  getHostId,
 } from "@/db/group-session";
 import { SessionViewer } from "@/features/session-viewer";
 import { UserRepresentation } from "@/lib/group-session";
@@ -30,12 +31,17 @@ export async function generateMetadata(
 
 export default async function GroupSessionPage({ params }: Props) {
   const { code } = await params;
-  const rep = UserRepresentation.from((await auth())!);
+  const session = (await auth())!;
+  const rep = UserRepresentation.from(session);
 
   if (!(await doesGroupSessionExist(code))) notFound();
+  const hostId = await getHostId(code);
+  if (!hostId) notFound();
+
+  const isHost = session.user.id === hostId;
 
   return (
-    <BasePage returnTo="/">
+    <BasePage returnTo={isHost ? "/sessions" : "/"}>
       <SessionViewer
         code={code}
         userRepresentation={{
