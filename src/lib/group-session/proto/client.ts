@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { seed } from "@/lib/group-session";
+import { GROUP_SEED } from "@/lib/group-session";
 
 /**
  * Client library for a group session websockets
@@ -23,7 +23,7 @@ export namespace GSClient {
   export const PAYLOAD_ID_LENGTH = (PAYLOAD_ID_BYTES / 3) * 4;
 
   export namespace Payloads {
-    const _groupName = z.string().min(1).max(seed.MAX_PART_LENGTH);
+    const _groupName = z.string().min(1).max(GROUP_SEED.MAX_PART_LENGTH);
     const _compressedUser = z.string().min(1);
     const _id = z.base64().length(GSClient.PAYLOAD_ID_LENGTH);
 

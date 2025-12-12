@@ -39,7 +39,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateGroupSessionSWRMutation } from "@/hooks/use-group-session";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
-import { expand } from "@/lib/group-session";
+import { expandGroupSeed } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import {
   type SessionCreateSchemaType,
@@ -289,7 +289,7 @@ export function SessionCreateForm() {
                         <InfoIcon className="size-4 min-w-4 min-h-4" />
                         <span className="pr-1.5 pl-1">Expands to: </span>
                         <p className="text-ellipsis overflow-hidden">
-                          {expand(form.getValues("groupSeed"))
+                          {expandGroupSeed(form.getValues("groupSeed"))
                             .values.join(", ")
                             .slice(0, 150)}
                         </p>

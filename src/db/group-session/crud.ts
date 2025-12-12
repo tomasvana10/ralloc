@@ -2,10 +2,10 @@ import type { Session } from "next-auth";
 import type z from "zod";
 import type { sessionCreateSchema } from "@/features/forms/session-create";
 import {
-  expand,
+  expandGroupSeed,
+  GROUP_SEED,
   generateSessionCode,
   MAX_USER_SESSIONS,
-  seed,
   UserRepresentation,
 } from "@/lib/group-session";
 import redis, { REDIS } from "..";
@@ -18,7 +18,7 @@ import {
   paths,
 } from ".";
 
-const GROUP_SCAN_COUNT = Math.floor(seed.MAX_PARTS * 0.7);
+const GROUP_SCAN_COUNT = Math.floor(GROUP_SEED.MAX_PARTS * 0.7);
 const ALL_SESSION_KEYS_SCAN_COUNT = Math.floor(GROUP_SCAN_COUNT * 1.1);
 
 //#region create
@@ -42,7 +42,7 @@ export async function createGroupSession(
   });
   tx.set(paths.sessionHost(code), hostId);
 
-  const groupNames = expand(data.groupSeed).values;
+  const groupNames = expandGroupSeed(data.groupSeed).values;
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future

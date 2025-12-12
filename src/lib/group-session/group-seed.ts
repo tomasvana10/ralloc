@@ -1,5 +1,5 @@
 /**
- * Utility functions to expand a CSV of regex-like expressions or plain text
+ * Utility functions to expandGroupSeed a CSV of regex-like expressions or plain text
  * into a set of values
  */
 
@@ -17,7 +17,7 @@ export interface ExpansionResult {
     | "duplicate_values";
 }
 
-export const seed = {
+export const GROUP_SEED = {
   PART_SEPARATOR: ",",
   MAX_PART_LENGTH: 50,
   MAX_PARTS: 500,
@@ -28,10 +28,10 @@ export const seed = {
   CHAR_RANGE_REGEX: /\[([a-zA-Z])-([a-zA-Z])\]/g,
 };
 
-export function expand(input: string): ExpansionResult {
+export function expandGroupSeed(input: string): ExpansionResult {
   // this used to trim and filter out empty strings, but zod
   // takes care of it now
-  const filtered = input.split(seed.PART_SEPARATOR);
+  const filtered = input.split(GROUP_SEED.PART_SEPARATOR);
   const values = [];
 
   let totalExpandedPartCount = 0;
@@ -40,12 +40,13 @@ export function expand(input: string): ExpansionResult {
     const result = expandPart(part);
     if (!Array.isArray(result)) return { values: [], issue: result };
     totalExpandedPartCount += result.length;
-    if (totalExpandedPartCount > seed.MAX_PARTS)
+    if (totalExpandedPartCount > GROUP_SEED.MAX_PARTS)
       return { values: [], issue: "too_big" };
     values.push(...result);
   }
 
-  if (values.length < seed.MIN_PARTS) return { values: [], issue: "too_short" };
+  if (values.length < GROUP_SEED.MIN_PARTS)
+    return { values: [], issue: "too_short" };
   if (new Set(values).size < values.length)
     return { values: [], issue: "duplicate_values" };
 
@@ -53,7 +54,7 @@ export function expand(input: string): ExpansionResult {
 }
 
 function expandPart(part: string): ExpansionResult["issue"] | string[] {
-  if (part.length > seed.MAX_PART_LENGTH) return "too_big_part";
+  if (part.length > GROUP_SEED.MAX_PART_LENGTH) return "too_big_part";
   let results = [part];
 
   const numericExpansion = expandNumericRanges(part, results);
@@ -64,7 +65,7 @@ function expandPart(part: string): ExpansionResult["issue"] | string[] {
   if (!Array.isArray(characterExpansion)) return characterExpansion;
   results = characterExpansion;
 
-  if (results.length > seed.MAX_PARTS) return "too_big";
+  if (results.length > GROUP_SEED.MAX_PARTS) return "too_big";
   return results;
 }
 
@@ -76,8 +77,8 @@ function expandNumericRanges(
   part: string,
   results: string[],
 ): ExpansionResult["issue"] | string[] {
-  const numRanges = [...part.matchAll(seed.NUM_RANGE_REGEX)];
-  if (numRanges.length > seed.MAX_NUM_RANGES_PER_PART)
+  const numRanges = [...part.matchAll(GROUP_SEED.NUM_RANGE_REGEX)];
+  if (numRanges.length > GROUP_SEED.MAX_NUM_RANGES_PER_PART)
     return "too_many_num_ranges";
 
   let current = results;
@@ -93,7 +94,7 @@ function expandNumericRanges(
         ? Math.max(start.length, end.length)
         : 0;
 
-    if ((Math.abs(a - b) + 1) * current.length > seed.MAX_PARTS)
+    if ((Math.abs(a - b) + 1) * current.length > GROUP_SEED.MAX_PARTS)
       return "too_big";
 
     const next: string[] = [];
@@ -102,12 +103,16 @@ function expandNumericRanges(
       if (a > b) {
         for (let i = a; i >= b; i--) {
           const padded = width > 0 ? padNumeric(i, width) : i.toString();
-          next.push(r.replace(full, padded).slice(0, seed.MAX_PART_LENGTH));
+          next.push(
+            r.replace(full, padded).slice(0, GROUP_SEED.MAX_PART_LENGTH),
+          );
         }
       } else {
         for (let i = a; i <= b; i++) {
           const padded = width > 0 ? padNumeric(i, width) : i.toString();
-          next.push(r.replace(full, padded).slice(0, seed.MAX_PART_LENGTH));
+          next.push(
+            r.replace(full, padded).slice(0, GROUP_SEED.MAX_PART_LENGTH),
+          );
         }
       }
     }
@@ -122,8 +127,8 @@ function expandCharacterRanges(
   part: string,
   results: string[],
 ): ExpansionResult["issue"] | string[] {
-  const charRanges = [...part.matchAll(seed.CHAR_RANGE_REGEX)];
-  if (charRanges.length > seed.MAX_CHAR_RANGES_PER_PART)
+  const charRanges = [...part.matchAll(GROUP_SEED.CHAR_RANGE_REGEX)];
+  if (charRanges.length > GROUP_SEED.MAX_CHAR_RANGES_PER_PART)
     return "too_many_char_ranges";
 
   let current = results;
@@ -134,7 +139,7 @@ function expandCharacterRanges(
 
     const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
 
-    if ((Math.abs(b - a) + 1) * current.length > seed.MAX_PARTS)
+    if ((Math.abs(b - a) + 1) * current.length > GROUP_SEED.MAX_PARTS)
       return "too_big";
 
     const next: string[] = [];
@@ -145,7 +150,7 @@ function expandCharacterRanges(
           next.push(
             r
               .replace(full, String.fromCharCode(i))
-              .slice(0, seed.MAX_PART_LENGTH),
+              .slice(0, GROUP_SEED.MAX_PART_LENGTH),
           );
         }
       } else {
@@ -153,7 +158,7 @@ function expandCharacterRanges(
           next.push(
             r
               .replace(full, String.fromCharCode(i))
-              .slice(0, seed.MAX_PART_LENGTH),
+              .slice(0, GROUP_SEED.MAX_PART_LENGTH),
           );
         }
       }
