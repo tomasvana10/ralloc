@@ -38,7 +38,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { focusStyles } from "@/constants";
-import { useCreateGroupSessionSWRMutation } from "@/hooks/use-group-session";
+import { useCreateGroupSessionSWRMutation } from "@/hooks/group-session-swr";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { expandGroupSeed } from "@/lib/group-session";
 import { cn } from "@/lib/utils";

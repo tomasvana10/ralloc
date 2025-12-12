@@ -36,7 +36,7 @@ import {
   useDeleteGroupSessionSWRMutation,
   useGetGroupSessionsSWR,
   usePatchGroupSessionSWRMutation,
-} from "@/hooks/use-group-session";
+} from "@/hooks/group-session-swr";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { cn } from "@/lib/utils";
 import { confirm } from "../confirm";

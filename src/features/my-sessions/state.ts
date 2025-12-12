@@ -1,5 +1,5 @@
 import type { GroupSessionData } from "@/db/group-session";
-import type { useGetGroupSessionsSWR } from "@/hooks/use-group-session";
+import type { useGetGroupSessionsSWR } from "@/hooks/group-session-swr";
 
 export type SelectedSessionsState = Set<string>;
 
