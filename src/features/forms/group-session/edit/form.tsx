@@ -69,7 +69,10 @@ export function SessionEditForm({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon-lg">
+        <Button
+          variant="outline"
+          size="icon-lg"
+          aria-label="edit session details">
           <PencilIcon />
         </Button>
       </DialogTrigger>

@@ -366,15 +366,16 @@ function _SessionBlock({
                 <UnlockIcon />
               )}
             </Button>
-            <Link href={`/s/${data.code}`} tabIndex={-1}>
-              <Button
-                variant="outline"
-                size="icon-lg"
-                id="x"
-                aria-label="Go to session">
+            <Button
+              variant="outline"
+              size="icon-lg"
+              id="x"
+              aria-label="Go to session"
+              asChild>
+              <Link href={`/s/${data.code}`}>
                 <ChevronRightIcon className="size-4" />
-              </Button>
-            </Link>
+              </Link>
+            </Button>
           </div>
         </ItemActions>
       </Label>

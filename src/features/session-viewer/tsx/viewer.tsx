@@ -30,6 +30,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import { focusStyles } from "@/constants";
 import type { GroupSessionData } from "@/db/group-session";
 import { getRateLimitMessage } from "@/db/rate-limit/utils";
 import { SessionEditForm } from "@/features/forms/group-session/edit";
@@ -54,10 +55,11 @@ const groupGridComponents: VirtuosoGridProps<
   }: React.ComponentPropsWithRef<"div">) => (
     <ScrollAreaPrimitive.Root className="w-full overflow-none rounded-sm border border-border">
       <ScrollAreaPrimitive.Viewport
+        tabIndex={0}
         ref={ref}
         {...props}
         style={style}
-        className="h-full w-full">
+        className={cn("h-full w-full rounded-sm", focusStyles)}>
         {children}
       </ScrollAreaPrimitive.Viewport>
 
@@ -278,6 +280,7 @@ export function SessionViewer({
           <Button
             variant="outline"
             size="icon"
+            aria-label="clear search query"
             onClick={() => setGroupQuery("")}>
             <CircleXIcon />
           </Button>
