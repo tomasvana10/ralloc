@@ -37,6 +37,7 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { focusStyles } from "@/constants";
 import { useCreateGroupSessionSWRMutation } from "@/hooks/use-group-session";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { expandGroupSeed } from "@/lib/group-session";
@@ -190,6 +191,7 @@ export function SessionCreateForm() {
                       <span>Description</span>
                       <Badge variant="outline" asChild>
                         <a
+                          className={focusStyles}
                           href="https://commonmark.org/help/"
                           target="_blank"
                           rel="noopener">

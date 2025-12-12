@@ -183,16 +183,18 @@ export function _Group({
             <div className="flex flex-col justify-end">
               {!members.length && <ItemDescription>Empty</ItemDescription>}
 
-              <div className="flex flex-row items-center gap-2">
-                <GroupMembersModal
-                  name={name}
-                  thisUserId={thisUserId}
-                  userRepresentations={userRepresentations}
-                  hiddenUserCount={hiddenUserCount}
-                  isFirstRender={isFirstRender}
-                  visibleUsers={visibleUsers}
-                />
-              </div>
+              {!!members.length && (
+                <div className="flex flex-row items-center gap-2">
+                  <GroupMembersModal
+                    name={name}
+                    thisUserId={thisUserId}
+                    userRepresentations={userRepresentations}
+                    hiddenUserCount={hiddenUserCount}
+                    isFirstRender={isFirstRender}
+                    visibleUsers={visibleUsers}
+                  />
+                </div>
+              )}
             </div>
           )}
         </ItemContent>
@@ -330,9 +332,12 @@ export function GroupMembersModal({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <button
+        <Button
           type="button"
-          className="isolate flex -space-x-2 cursor-pointer">
+          size="icon"
+          variant="ghost"
+          className="isolate flex -space-x-2 cursor-pointer p-0 h-auto ring-offset-2 ring-offset-card"
+          aria-label="view group members">
           <AnimatePresence mode="popLayout">
             {visibleUsers.map((repr, i) => {
               const isThisUser = repr.userId === thisUserId;
@@ -371,7 +376,7 @@ export function GroupMembersModal({
               </div>
             )}
           </AnimatePresence>
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="text-left">

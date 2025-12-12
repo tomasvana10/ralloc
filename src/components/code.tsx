@@ -4,6 +4,7 @@ import { CodeIcon } from "lucide-react";
 import * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 export function CopyableCode({
   className,
@@ -31,16 +32,18 @@ export function CopyableCode({
       asChild
       variant="outline"
       className={cn("cursor-pointer", className)}>
-      <button
+      <Button
         type="button"
         onClick={handleCopy}
         disabled={isCopied}
+        className="px-2"
+        variant="ghost"
         aria-label="copy value">
         <code {...props} className="flex items-center gap-1">
           <CodeIcon className="size-[1em]" />
           {isCopied ? "Copied!" : children}
         </code>
-      </button>
+      </Button>
     </Badge>
   );
 }

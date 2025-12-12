@@ -4,6 +4,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { focusStyles } from "@/constants";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 
 export function SimpleTooltip({
@@ -15,7 +16,7 @@ export function SimpleTooltip({
       {/* desktop */}
       <div className="hidden sm:block">
         <Tooltip>
-          <TooltipTrigger asChild tabIndex={0}>
+          <TooltipTrigger asChild tabIndex={0} className={focusStyles}>
             {children ?? (
               <CircleQuestionMark className="text-foreground size-4" />
             )}
