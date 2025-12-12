@@ -290,11 +290,7 @@ export function SessionViewer({
         <GroupsEmpty />
       ) : groupCollection.length < MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION ? (
         <ScrollArea className="rounded-sm border border-border">
-          <div
-            className={cn(
-              "max-h-[calc(100vh-33.5rem)]",
-              groupQuery ? "min-h-[90px]" : "sm:min-h-[380px] min-h-[450px]",
-            )}>
+          <div className="max-h-[calc(100vh-33.5rem)] min-h-[90px]">
             <div
               className={cn(
                 "grid grid-cols-1 auto-rows-fr",
