@@ -1,5 +1,5 @@
 import type z from "zod";
-import { sessionCreateSchema } from "../session-create";
+import { sessionCreateSchema } from "../create";
 
 export const baseSessionEditSchema = sessionCreateSchema.pick({
   name: true,

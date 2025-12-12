@@ -1,7 +1,7 @@
 "use client";
 
-import { SessionCreateForm } from "@/features/forms/session-create/form";
-import { SessionJoinForm } from "@/features/forms/session-join";
+import { SessionCreateForm } from "@/features/forms/group-session/create/form";
+import { SessionJoinForm } from "@/features/forms/group-session/join";
 
 export function HomeCards() {
   return (

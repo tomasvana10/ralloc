@@ -1,4 +1,4 @@
-import type { SessionCreateSchemaType } from "@/features/forms/session-create";
+import type { SessionCreateSchemaType } from "@/features/forms/group-session/create";
 import { redisKey } from "..";
 
 export type GroupSessionMetadata = {

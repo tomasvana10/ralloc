@@ -12,7 +12,7 @@ import { rateLimit } from "@/db/rate-limit";
 import {
   baseSessionEditSchema,
   sessionEditSchemaFactory,
-} from "@/features/forms/session-edit/schema";
+} from "@/features/forms/group-session/edit/schema";
 import { GSServer } from "@/lib/group-session/proto";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 import { RoomManager } from "../../session-ws/[code]/room";

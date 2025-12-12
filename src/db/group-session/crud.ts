@@ -1,6 +1,6 @@
 import type { Session } from "next-auth";
 import type z from "zod";
-import type { sessionCreateSchema } from "@/features/forms/session-create";
+import type { sessionCreateSchema } from "@/features/forms/group-session/create";
 import {
   expandGroupSeed,
   GROUP_SEED,

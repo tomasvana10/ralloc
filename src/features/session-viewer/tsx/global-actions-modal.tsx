@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { confirm } from "@/features/confirm";
-import { SessionGroupAddForm } from "@/features/forms/session-group-add";
+import { SessionGroupAddForm } from "@/features/forms/group-session/group-add";
 import type { UseGroupSessionReturn } from "../use-group-session";
 
 export function GlobalActionsModal({
