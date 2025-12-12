@@ -5,6 +5,7 @@
 
 import z from "zod";
 import { areSameCase } from "../utils";
+import { MAX_GROUPS, MIN_GROUPS } from "./constants";
 
 export interface ExpansionResult {
   values: string[];
@@ -21,15 +22,15 @@ export interface ExpansionResult {
 export const GROUP_SEED = {
   PART_SEPARATOR: ",",
   MAX_PART_LENGTH: 50,
-  MAX_PARTS: 500,
-  MIN_PARTS: 2,
+  MAX_PARTS: MAX_GROUPS,
+  MIN_PARTS: MIN_GROUPS,
   MAX_NUM_RANGES_PER_PART: 2,
   MAX_CHAR_RANGES_PER_PART: 2,
   NUM_RANGE_REGEX: /\[(-?\d+)-(-?\d+)\]/g,
   CHAR_RANGE_REGEX: /\[([a-zA-Z])-([a-zA-Z])\]/g,
 };
 
-export const groupName = z.string().min(1).max(GROUP_SEED.MAX_PARTS);
+export const groupName = z.string().min(1).max(GROUP_SEED.MAX_PART_LENGTH);
 
 export function expandGroupSeed(input: string): ExpansionResult {
   // this used to trim and filter out empty strings, but zod

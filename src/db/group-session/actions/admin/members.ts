@@ -1,6 +1,6 @@
 import redis from "@/db";
 import { getKeys } from "@/db/utils";
-import { GROUP_SEED, UserRepresentation } from "@/lib/group-session";
+import { MAX_GROUPS, UserRepresentation } from "@/lib/group-session";
 import { paths } from "../..";
 import {
   ActionErrorMessage,
@@ -9,7 +9,7 @@ import {
   type BaseActionSuccess,
 } from "../types";
 
-const GROUP_MEMBER_SCAN_COUNT = Math.floor(GROUP_SEED.MAX_PARTS * 0.7) * 1.5;
+const GROUP_MEMBER_SCAN_COUNT = Math.floor(MAX_GROUPS * 0.7) * 1.5;
 
 export type GroupMembersClearErrorMessage = ActionErrorMessage.Nonexistent;
 export type GroupMembersClearResult =

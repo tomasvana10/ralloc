@@ -6,3 +6,5 @@ export const SESSION_CODE_CHARACTERS = Array.from(
   .filter((char) => !SESSION_CODE_CHARACTERS_EXCLUDE.includes(char))
   .join("");
 export const MAX_USER_SESSIONS = 10;
+export const MIN_GROUPS = 2;
+export const MAX_GROUPS = 500;
