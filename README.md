@@ -38,8 +38,8 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 - [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
 - [ ] Improve page metadata in general and possibly add sitemap
 - [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
-- [ ] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
 - [X] (!!!) TOKEN BUCKET RATE LIMITS FOR: websocket AND REST api
+- [X] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
 - [X] Create a logo
 - [X] Implement group control - UI, websockets, etc.
 - [X] Document info for installation and usage on `README.md`
