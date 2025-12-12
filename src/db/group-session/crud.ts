@@ -1,6 +1,7 @@
 import type { Session } from "next-auth";
 import type z from "zod";
 import type { sessionCreateSchema } from "@/features/forms/group-session/create";
+import type { baseSessionEditSchema } from "@/features/forms/group-session/edit";
 import {
   expandGroupSeed,
   GROUP_SEED,
@@ -28,10 +29,13 @@ export async function createGroupSession(
   session: Session,
 ) {
   const code = generateSessionCode();
+
+  // persisting the group seed itself serves no purpose currently
+  const { groupSeed, ...rest } = data;
   const metadata: GroupSessionMetadata = {
     createdOn: Date.now(),
     compressedHost: UserRepresentation.from(session).toCompressedString(),
-    ...data,
+    ...rest,
   };
 
   const tx = redis.multi();
@@ -40,9 +44,10 @@ export async function createGroupSession(
     ...metadata,
     frozen: (+metadata.frozen).toString(),
   });
+  console.log(JSON.stringify(metadata));
   tx.set(paths.sessionHost(code), hostId);
 
-  const groupNames = expandGroupSeed(data.groupSeed).values;
+  const groupNames = expandGroupSeed(groupSeed).values;
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future
@@ -101,7 +106,7 @@ export async function getGroupSessionByCode(code: string) {
 
 //#region update
 export async function updateGroupSession(
-  data: Partial<z.output<typeof sessionCreateSchema>>,
+  data: Partial<z.output<typeof baseSessionEditSchema>>,
   hostId: string,
   code: string,
 ) {
@@ -179,7 +184,6 @@ async function assembleGroupSession(
   const session: GroupSessionData = {
     createdOn: +metadata.createdOn,
     frozen: !!+metadata.frozen,
-    groupSeed: metadata.groupSeed,
     groupSize: +metadata.groupSize,
     name: metadata.name,
     description: metadata.description,
