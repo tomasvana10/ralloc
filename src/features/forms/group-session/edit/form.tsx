@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PencilIcon } from "lucide-react";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -27,16 +26,16 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import type { GroupSessionData } from "@/db/group-session";
 import { usePatchGroupSessionSWRMutation } from "@/hooks/use-group-session";
-import type { SessionEditSchemaType } from ".";
 import { sessionEditSchemaFactory } from "./schema";
 
 export function SessionEditForm({
-  code,
   data,
+  trigger,
 }: {
-  code: string;
-  data: SessionEditSchemaType;
+  data: GroupSessionData;
+  trigger: React.ReactNode;
 }) {
   const patcher = usePatchGroupSessionSWRMutation({
     onSuccess: () => toast.success("Session updated successfully."),
@@ -62,20 +61,15 @@ export function SessionEditForm({
   }, [data, form]);
 
   async function onSubmit(values: z.output<typeof sessionEditSchema>) {
-    await patcher.trigger({ code, data: { ...values } }).catch(() => null);
+    await patcher
+      .trigger({ code: data.code, data: { ...values } })
+      .catch(() => null);
     closeButtonRef.current?.click();
   }
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon-lg"
-          aria-label="Edit session details">
-          <PencilIcon />
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent>
         <DialogHeader className="text-left">
           <DialogTitle>Edit</DialogTitle>

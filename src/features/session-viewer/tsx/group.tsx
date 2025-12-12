@@ -1,5 +1,6 @@
 import {
   EllipsisVerticalIcon,
+  FlameIcon,
   LogOutIcon,
   PlusIcon,
   SwitchCameraIcon,
@@ -38,7 +39,7 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { GroupSessionData } from "@/db/group-session";
 import { confirm } from "@/features/confirm";
-import { UserRepresentation } from "@/lib/group-session";
+import { MIN_GROUPS, UserRepresentation } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import type { UseGroupSessionReturn } from "../use-group-session";
 
@@ -103,6 +104,7 @@ export function _Group({
   name,
   members,
   groupSize,
+  groupCount,
   compressedUser,
   currentGroupName,
   isWithinCollection,
@@ -118,6 +120,7 @@ export function _Group({
   name: string;
   members: string[];
   groupSize: number;
+  groupCount: number;
   compressedUser: string;
   currentGroupName: string | null;
   isWithinCollection: boolean;
@@ -155,6 +158,10 @@ export function _Group({
     userRepresentations.length - maxVisibleAvatarsPerGroup;
   const id = `${name}-${isWithinCollection ? "collection" : "active"}`;
 
+  const disableJoinButtons = isFull || (isHost ? false : frozen);
+  const disableLeaveButtons = isHost ? false : frozen;
+  const disableSwitchButtons = isFull || (isHost ? false : frozen);
+
   return (
     <Item
       asChild
@@ -181,19 +188,21 @@ export function _Group({
           </ItemTitle>
           {!isCurrentGroupAndWithinCollection && (
             <div className="flex flex-col justify-end">
-              {!members.length && <ItemDescription>Empty</ItemDescription>}
-
-              {!!members.length && (
+              {members.length ? (
                 <div className="flex flex-row items-center gap-2">
                   <GroupMembersDialog
                     name={name}
                     thisUserId={thisUserId}
+                    isHost={isHost}
                     userRepresentations={userRepresentations}
                     hiddenUserCount={hiddenUserCount}
                     isFirstRender={isFirstRender}
                     visibleUsers={visibleUsers}
+                    leaveGroup={leaveGroup}
                   />
                 </div>
+              ) : (
+                <ItemDescription>Empty</ItemDescription>
               )}
             </div>
           )}
@@ -201,9 +210,7 @@ export function _Group({
         <ItemActions>
           {isHost ? (
             <DropdownMenu>
-              <DropdownMenuTrigger
-                asChild
-                className="select-none cursor-pointer">
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
@@ -214,17 +221,15 @@ export function _Group({
               <DropdownMenuContent>
                 {isCurrentGroup ? (
                   <DropdownMenuItem
-                    disabled={frozen}
+                    disabled={disableLeaveButtons}
                     aria-label="Leave group"
-                    className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => leaveGroup(name, compressedUser)}>
                     Leave <LogOutIcon />
                   </DropdownMenuItem>
                 ) : currentGroupName ? (
                   <DropdownMenuItem
-                    disabled={frozen || isFull}
+                    disabled={disableSwitchButtons}
                     aria-label="Switch group"
-                    className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => {
                       if (currentGroupName)
                         leaveGroup(currentGroupName, compressedUser);
@@ -234,18 +239,33 @@ export function _Group({
                   </DropdownMenuItem>
                 ) : (
                   <DropdownMenuItem
-                    disabled={frozen || isFull}
+                    disabled={disableJoinButtons}
                     aria-label="Join group"
-                    className="flex justify-between items-center w-full cursor-pointer"
                     onClick={() => joinGroup(name, compressedUser)}>
                     Join <PlusIcon />
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
+                  disabled={!members.length}
+                  variant="destructive"
+                  aria-label="Deallocate group members"
+                  onClick={async () => {
+                    const result = await confirm({
+                      message: "This action can't be undone.",
+                      actionMessage: "Deallocate",
+                      actionVariant: "destructive",
+                    });
+                    if (!result) return;
+
+                    clearGroupMembers(name);
+                  }}>
+                  Deallocate All Members <FlameIcon />
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={groupCount <= MIN_GROUPS}
                   variant="destructive"
                   aria-label="Delete group"
-                  className="flex justify-between items-center w-full cursor-pointer"
                   onClick={async () => {
                     if (members.length) {
                       const result = await confirm({
@@ -269,7 +289,7 @@ export function _Group({
               variant="outline"
               className="border-primary dark:border-primary dark:hover:bg-accent/90"
               size="icon"
-              disabled={frozen}
+              disabled={disableLeaveButtons}
               onClick={(e) => {
                 e.preventDefault();
                 leaveGroup(name, compressedUser);
@@ -283,7 +303,7 @@ export function _Group({
               size="icon"
               variant="outline"
               className="dark:hover:bg-accent/90"
-              disabled={frozen || isFull}
+              disabled={disableSwitchButtons}
               onClick={(e) => {
                 e.preventDefault();
                 if (currentGroupName)
@@ -296,7 +316,7 @@ export function _Group({
           ) : (
             <Button
               id={isInteractive ? id : undefined}
-              disabled={frozen || isFull}
+              disabled={disableJoinButtons}
               size="icon"
               className="dark:hover:bg-accent/90"
               variant="outline"
@@ -321,6 +341,8 @@ export function GroupMembersDialog({
   visibleUsers,
   hiddenUserCount,
   isFirstRender,
+  isHost,
+  leaveGroup,
 }: {
   userRepresentations: UserRepresentation[];
   thisUserId: string;
@@ -328,15 +350,22 @@ export function GroupMembersDialog({
   visibleUsers: UserRepresentation[];
   hiddenUserCount: number;
   isFirstRender: React.RefObject<boolean>;
+  isHost: boolean;
+  leaveGroup: UseGroupSessionReturn["leaveGroup"];
 }) {
+  const [open, setOpen] = React.useState(false);
+
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
           type="button"
-          size="icon"
           variant="ghost"
-          className="isolate flex -space-x-2 cursor-pointer p-0 h-auto ring-offset-2 ring-offset-card"
+          onClick={() => setOpen(true)}
+          className={cn(
+            "isolate flex -space-x-4 cursor-pointer h-auto ring-offset-2 ring-offset-card justify-start p-0",
+            "hover:ring-2! hover:ring-accent! hover:bg-accent! dark:hover:ring-2! dark:hover:ring-card! dark:hover:bg-card!",
+          )}
           aria-label="View group members">
           <AnimatePresence mode="popLayout">
             {visibleUsers.map((repr, i) => {
@@ -387,7 +416,7 @@ export function GroupMembersDialog({
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[60vh] sm:max-h-[70vh]">
-          <ul className="grid grid-cols-1 min-[550px]:grid-cols-2 gap-2 pr-4 pl-1">
+          <ul className="grid grid-cols-1 min-[550px]:grid-cols-2 gap-2 gap-x-4 pr-4 pl-1">
             {userRepresentations.map((repr) => {
               const isThisUser = repr.userId === thisUserId;
               return (
@@ -406,9 +435,19 @@ export function GroupMembersDialog({
                       isThisUser ? "ring-primary/80" : "ring-card",
                     )}
                   />
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    {isThisUser && <Badge className="shrink-0">You</Badge>}
+                  <span className="flex items-center justify-between gap-1.5 min-w-0 w-full">
                     <span className="truncate">{repr.name}</span>
+                    {isHost && (
+                      <Button
+                        size="icon-sm"
+                        variant="outline"
+                        aria-label={`Kick ${repr.name} from group`}
+                        onClick={() => {
+                          leaveGroup(name, repr.toCompressedString());
+                        }}>
+                        <LogOutIcon />
+                      </Button>
+                    )}
                   </span>
                 </li>
               );
@@ -417,7 +456,10 @@ export function GroupMembersDialog({
         </ScrollArea>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline" className="sm:min-w-[80px]">
+            <Button
+              variant="outline"
+              className="sm:min-w-[80px]"
+              onClick={() => setOpen(false)}>
               Close
             </Button>
           </DialogClose>

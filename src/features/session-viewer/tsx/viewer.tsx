@@ -1,7 +1,15 @@
 "use client";
 
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
-import { BrushCleaning, CircleXIcon, LockIcon, SearchIcon } from "lucide-react";
+import {
+  BrushCleaning,
+  EllipsisVertical,
+  FlameIcon,
+  LockIcon,
+  PenIcon,
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React from "react";
 import { useRemark } from "react-remark";
@@ -19,27 +27,42 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { focusStyles } from "@/constants";
 import type { GroupSessionData } from "@/db/group-session";
 import { getRateLimitMessage } from "@/db/rate-limit/utils";
+import { confirm } from "@/features/confirm";
 import { SessionEditForm } from "@/features/forms/group-session/edit";
+import { SessionGroupAddForm } from "@/features/forms/group-session/group-add";
 import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { UserRepresentation } from "@/lib/group-session";
 import { GSServer } from "@/lib/group-session/proto";
 import { cn } from "@/lib/utils";
-import { useGroupSession } from "../use-group-session";
-import { GlobalActionsDialog } from "./global-actions-dialog";
+import {
+  type UseGroupSessionReturn,
+  useGroupSession,
+} from "../use-group-session";
 import { Group } from "./group";
 import { WebSocketStatus } from "./websocket-status";
 
@@ -213,30 +236,14 @@ export function SessionViewer({
   return (
     <>
       {!data ? (
-        <SessionInfoSkeleton />
+        <SessionSummarySkeleton />
       ) : (
-        <SessionInfo
+        <SessionHeader
           data={data}
           isHost={isHost}
           wsReadyState={wsReadyState}
           isMobile={isMobile}
-          dialogs={[
-            <GlobalActionsDialog
-              key={0}
-              addGroup={addGroup}
-              clearAllGroupMembers={clearAllGroupMembers}
-            />,
-            <SessionEditForm
-              key={1}
-              code={data.code}
-              data={{
-                description: data.description,
-                frozen: data.frozen,
-                name: data.name,
-                groupSize: data.groupSize,
-              }}
-            />,
-          ]}
+          clearAllGroupMembers={clearAllGroupMembers}
         />
       )}
 
@@ -247,6 +254,7 @@ export function SessionViewer({
               members={currentGroup.members}
               name={currentGroup.name}
               groupSize={data.groupSize}
+              groupCount={data.groups.length}
               compressedUser={userRepresentation.compressedUser}
               currentGroupName={currentGroup?.name ?? null}
               isWithinCollection={false}
@@ -260,32 +268,32 @@ export function SessionViewer({
             />
           </div>
         ) : (
-          <CurrentGroupEmpty />
+          <CurrentGroupEmpty isHost={isHost} frozen={data?.frozen ?? false} />
         )}
       </div>
 
-      <Field>
-        <FieldLabel htmlFor="group-search">
-          <SearchIcon className="size-4" />
-          Search for a Group
-        </FieldLabel>
-        <div className="flex gap-2">
-          <Input
-            placeholder="Name"
-            className="mb-2"
-            id="group-search"
+      <div className="flex flex-row gap-2 mb-2 max-sm:flex-col-reverse">
+        <InputGroup className={cn(isHost && "sm:flex-[0.6]")}>
+          <InputGroupInput
+            placeholder="Search for a group..."
+            aria-label="Search for a group"
             value={groupQuery}
             onChange={(ev) => setGroupQuery(ev.target.value)}
           />
-          <Button
-            variant="outline"
-            size="icon"
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+          <InputGroupButton
             aria-label="Clear group search query"
+            size="icon-sm"
             onClick={() => setGroupQuery("")}>
-            <CircleXIcon />
-          </Button>
-        </div>
-      </Field>
+            <XIcon />
+          </InputGroupButton>
+        </InputGroup>
+        {isHost && (
+          <SessionGroupAddForm className="sm:flex-[0.4]" addGroup={addGroup} />
+        )}
+      </div>
 
       {!data ? (
         <Spinner className="size-24 stroke-1 w-full" />
@@ -307,6 +315,7 @@ export function SessionViewer({
                     getGroupBorderClasses(i, groupCollection.length, isMobile),
                   )}
                   members={members}
+                  groupCount={data.groups.length}
                   name={name}
                   groupSize={data.groupSize}
                   isWithinCollection={true}
@@ -326,7 +335,7 @@ export function SessionViewer({
         </ScrollArea>
       ) : (
         <VirtuosoGrid
-          style={{ height: "480px" }}
+          style={{ height: "510px" }}
           className="rounded-sm"
           totalCount={groupCollection.length}
           components={groupGridComponents}
@@ -347,6 +356,7 @@ export function SessionViewer({
                 members={members}
                 isHost={isHost}
                 name={name}
+                groupCount={data.groups.length}
                 groupSize={data.groupSize}
                 isWithinCollection={true}
                 compressedUser={userRepresentation.compressedUser}
@@ -366,18 +376,18 @@ export function SessionViewer({
   );
 }
 
-function SessionInfo({
+function SessionHeader({
   data,
   isHost,
   wsReadyState,
-  dialogs,
   isMobile,
+  clearAllGroupMembers,
 }: {
   data: GroupSessionData;
   isHost: boolean;
   wsReadyState: ReadyState;
-  dialogs: React.ReactNode[];
   isMobile: boolean;
+  clearAllGroupMembers: UseGroupSessionReturn["clearAllGroupMembers"];
 }) {
   const repr = UserRepresentation.fromCompressedString(data.compressedHost);
   const [reactMarkdown, setReactMarkdown] = useRemark();
@@ -439,7 +449,48 @@ function SessionInfo({
           </p>
         </div>
         {isHost && (
-          <div className="ml-auto flex max-sm:flex-col gap-2">{dialogs}</div>
+          <div className="ml-auto flex max-sm:flex-col-reverse gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <EllipsisVertical />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <SessionEditForm
+                  data={data}
+                  trigger={
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      aria-label="Edit group session">
+                      Edit <PenIcon />
+                    </DropdownMenuItem>
+                  }
+                />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled={
+                    !data.groups.some((group) => group.members.length > 0)
+                  }
+                  aria-label="Deallocate all group members"
+                  variant="destructive"
+                  onClick={async () => {
+                    const result = await confirm({
+                      message:
+                        "All group members will be deallocated. This action can't be undone.",
+                      actionMessage: "Deallocate",
+                      actionVariant: "destructive",
+                    });
+                    if (!result) return;
+
+                    clearAllGroupMembers();
+                  }}>
+                  Deallocate All Members
+                  <FlameIcon />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         )}
       </div>
       {data.description && (
@@ -461,7 +512,7 @@ function SessionInfo({
   );
 }
 
-function SessionInfoSkeleton() {
+function SessionSummarySkeleton() {
   return (
     <div className="flex flex-row items-center sm:gap-4 gap-2 min-h-[70px]">
       <Skeleton className="size-16 rounded-full" />
@@ -474,13 +525,28 @@ function SessionInfoSkeleton() {
   );
 }
 
-function CurrentGroupEmpty() {
+function CurrentGroupEmpty({
+  isHost,
+  frozen,
+}: {
+  isHost: boolean;
+  frozen: boolean;
+}) {
   return (
     <Empty className="border border-dashed p-0! min-h-[90px]">
       <EmptyHeader>
         <EmptyTitle>You Have No Group</EmptyTitle>
-        <EmptyDescription>
-          Join one below by clicking on the "+".
+        <EmptyDescription className="whitespace-nowrap">
+          {isHost ? (
+            <span className="inline-flex items-center">
+              Access group options through the{" "}
+              <EllipsisVertical className="size-4" /> menu.
+            </span>
+          ) : frozen ? (
+            "You can't join a group right now, as the session has been locked by the host."
+          ) : (
+            "Join one below by clicking on a group."
+          )}
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

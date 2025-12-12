@@ -1,23 +1,25 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon, UsersIcon } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import type z from "zod";
-import { Button } from "@/components/ui/button";
+import { Field } from "@/components/ui/field";
 import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { sessionGroupAddSchema } from "./schema";
 
 export function SessionGroupAddForm({
   addGroup,
+  className,
+  ...props
 }: {
   addGroup: (groupName: string) => void;
-}) {
+} & React.ComponentProps<"form">) {
   const form = useForm({
     resolver: zodResolver(sessionGroupAddSchema),
     defaultValues: { groupName: "" },
@@ -25,38 +27,41 @@ export function SessionGroupAddForm({
 
   async function onSubmit(values: z.output<typeof sessionGroupAddSchema>) {
     addGroup(values.groupName);
+    form.reset();
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      <FieldGroup>
-        <Controller
-          name="groupName"
-          control={form.control}
-          render={({ field, fieldState }) => (
-            <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor="form-group-add-session-groupname">
-                Add a Group
-              </FieldLabel>
-              <div className="flex flex-row gap-4">
-                <Input
-                  {...field}
-                  type="text"
-                  placeholder="Name"
-                  className="max-w-[250px]"
-                  autoComplete="off"
-                  id="form-group-add-session-groupname"
-                  aria-invalid={fieldState.invalid}
-                />
-                <Button type="submit" className="min-w-[80px]">
-                  Add
-                </Button>
-              </div>
-              {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-            </Field>
-          )}
-        />
-      </FieldGroup>
+    <form
+      onSubmit={form.handleSubmit(onSubmit)}
+      className={className}
+      {...props}>
+      <Controller
+        name="groupName"
+        control={form.control}
+        render={({ field, fieldState }) => (
+          <Field data-invalid={fieldState.invalid}>
+            <InputGroup>
+              <InputGroupInput
+                {...field}
+                type="text"
+                placeholder="Add a group"
+                aria-label="Group name to add"
+                autoComplete="off"
+                aria-invalid={fieldState.invalid}
+              />
+              <InputGroupAddon>
+                <UsersIcon />
+              </InputGroupAddon>
+              <InputGroupButton
+                size="icon-sm"
+                aria-label="Add group"
+                type="submit">
+                <PlusIcon />
+              </InputGroupButton>
+            </InputGroup>
+          </Field>
+        )}
+      />
     </form>
   );
 }
