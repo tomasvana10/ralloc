@@ -15,7 +15,7 @@ export namespace GSClient {
     ClearAllGroupMembers: "ClearAllGroupMem",
   } as const;
   export const code = z.enum(_codes);
-  export type ZodCode = typeof code.enum;
+  export type CodeEnumType = typeof code.enum;
   export const Code = code.enum;
   export type Code = z.infer<typeof code>;
 

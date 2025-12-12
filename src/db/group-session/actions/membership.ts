@@ -28,23 +28,25 @@ type BaseGroupResult<
 
 type BaseGroupMembershipErrorMessage = ActionErrorMessage.Frozen;
 
-export type GroupJoinErrorMessage =
+type GroupJoinErrorMessage =
   | BaseGroupMembershipErrorMessage
   | ActionErrorMessage.Full
   | ActionErrorMessage.AlreadyAllocated
   | ActionErrorMessage.Nonexistent;
-export type GroupJoinSuccess = BaseActionSuccess &
-  BaseGroupResult<null, string>;
-export type GroupJoinFailure = BaseActionFailure<GroupJoinErrorMessage> &
+type GroupJoinSuccess = BaseActionSuccess & BaseGroupResult<null, string>;
+type GroupJoinFailure = BaseActionFailure<GroupJoinErrorMessage> &
   BaseGroupResult<string | null, string | null>;
 
-export type GroupLeaveErrorMessage =
+type GroupLeaveErrorMessage =
   | BaseGroupMembershipErrorMessage
   | ActionErrorMessage.NotInGroup;
-export type GroupLeaveSuccess = BaseActionSuccess &
-  BaseGroupResult<string, null>;
-export type GroupLeaveFailure = BaseActionFailure<GroupLeaveErrorMessage> &
+type GroupLeaveSuccess = BaseActionSuccess & BaseGroupResult<string, null>;
+type GroupLeaveFailure = BaseActionFailure<GroupLeaveErrorMessage> &
   BaseGroupResult<string | null, string | null>;
+
+export type GroupMembershipErrorMessage =
+  | GroupJoinErrorMessage
+  | GroupLeaveErrorMessage;
 
 const joinGroupScript = await loadLuaScript("join-group");
 export async function joinGroup({

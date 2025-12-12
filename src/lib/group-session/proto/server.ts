@@ -6,10 +6,7 @@ import type {
   GroupMembersClearErrorMessage,
   GroupMutationErrorMessage,
 } from "@/db/group-session/actions/admin";
-import type {
-  GroupJoinErrorMessage,
-  GroupLeaveErrorMessage,
-} from "@/db/group-session/actions/membership";
+import type { GroupMembershipErrorMessage } from "@/db/group-session/actions/membership";
 import type { GSClient } from ".";
 
 /**
@@ -63,7 +60,7 @@ export namespace GSServer {
     };
 
   export enum Code {
-    GroupMembership = "GMemShip",
+    GroupMembership = "GMemship",
     GroupMembersClear = "GMemClear",
     GroupMutation = "GMut",
     Synchronise = "Sync",
@@ -74,72 +71,66 @@ export namespace GSServer {
   export namespace Payloads {
     type Yes = 1;
     type No = 0;
-    type IdField = { id: string };
-    type WillSyncField = { willSync: boolean };
 
     /**
-     * Payload sent in response to a client joining/leaving a group
+     * Generic base type for any payload that serves as:
+     *   1. The sole response to the original client's payload in
+     *      case of error.
+     *   2. A response to the original client and all connected clients
+     *      (of a group session) to update their state.
      */
-    export type GroupMembership =
-      | ({
+    type DynamicRelayableAction<
+      TCode extends Code,
+      TContext extends {
+        action: GSClient.CodeEnumType[keyof GSClient.CodeEnumType];
+      },
+      TError extends string,
+    > =
+      | {
           ok: Yes;
-          code: Code.GroupMembership;
-          context: {
-            action:
-              | GSClient.ZodCode["JoinGroup"]
-              | GSClient.ZodCode["LeaveGroup"];
-            compressedUser: string;
-            groupName: string;
-          };
-        } & IdField)
-      | ({
+          code: TCode;
+          context: TContext;
+          id: string;
+        }
+      | {
           ok: No;
-          code: Code.GroupMembership;
-          error: GroupJoinErrorMessage | GroupLeaveErrorMessage;
-        } & IdField &
-          WillSyncField);
+          code: TCode;
+          error: TError;
+          id: string;
+          willSync: boolean;
+        };
 
-    /**
-     * Payload sent in response to the members of one or all groups being cleared.
-     */
-    export type GroupMembersClear =
-      | ({
-          ok: Yes;
-          code: Code.GroupMembersClear;
-          context:
-            | { action: GSClient.ZodCode["ClearAllGroupMembers"] }
-            | {
-                action: GSClient.ZodCode["ClearGroupMembers"];
-                groupName: string;
-              };
-        } & IdField)
-      | ({
-          ok: No;
-          code: Code.GroupMembersClear;
-          error: GroupMembersClearErrorMessage;
-        } & IdField &
-          WillSyncField);
+    export type GroupMembership = DynamicRelayableAction<
+      Code.GroupMembership,
+      {
+        action:
+          | GSClient.CodeEnumType["JoinGroup"]
+          | GSClient.CodeEnumType["LeaveGroup"];
+        compressedUser: string;
+        groupName: string;
+      },
+      GroupMembershipErrorMessage
+    >;
 
-    /**
-     * Payload sent in response to a group being added/deleted
-     */
-    export type GroupMutation =
-      | ({
-          ok: Yes;
-          code: Code.GroupMutation;
-          context:
-            | {
-                action: GSClient.ZodCode["AddGroup"];
-                group: Omit<GroupSessionGroupData, "members">;
-              }
-            | { action: GSClient.ZodCode["RemoveGroup"]; groupName: string };
-        } & IdField)
-      | ({
-          ok: No;
-          code: Code.GroupMutation;
-          error: GroupMutationErrorMessage;
-        } & IdField &
-          WillSyncField);
+    export type GroupMembersClear = DynamicRelayableAction<
+      Code.GroupMembersClear,
+      | { action: GSClient.CodeEnumType["ClearAllGroupMembers"] }
+      | {
+          action: GSClient.CodeEnumType["ClearGroupMembers"];
+          groupName: string;
+        },
+      GroupMembersClearErrorMessage
+    >;
+
+    export type GroupMutation = DynamicRelayableAction<
+      Code.GroupMutation,
+      | {
+          action: GSClient.CodeEnumType["AddGroup"];
+          group: Omit<GroupSessionGroupData, "members">;
+        }
+      | { action: GSClient.CodeEnumType["RemoveGroup"]; groupName: string },
+      GroupMutationErrorMessage
+    >;
 
     /**
      * Payload sent to the client to fully update its state when:
@@ -172,7 +163,8 @@ export namespace GSServer {
     export type MessageRateLimit = {
       code: Code.MessageRateLimit;
       retryAfter: number;
-    } & IdField;
+      id: string;
+    };
   }
 
   export type Payload =
