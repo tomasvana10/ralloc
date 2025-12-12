@@ -6,7 +6,7 @@ import type { Room } from "./room";
 export function updateCache(
   cache: Room["cache"],
   args: Partial<Room["cache"]>,
-): void {
+) {
   for (const [key, value] of Object.entries(args)) {
     if (value !== undefined) {
       (cache as Record<string, unknown>)[key] = value;
@@ -61,7 +61,7 @@ export function send(ws: WebSocket, payload: GSServer.Payload) {
   }
 }
 
-export function sendPreStringified(ws: WebSocket, payload: string): void {
+export function sendPreStringified(ws: WebSocket, payload: string) {
   if (ws.readyState === ws.OPEN) {
     ws.send(payload);
   }

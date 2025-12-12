@@ -32,10 +32,7 @@ type GroupSessionUpdateAction =
   | { type: "Rollback"; payload: { data?: GroupSessionData } }
   | { type: "Freeze" | "ClearAllGroupMem" };
 
-function _findGroupIndex(
-  groups: GroupSessionGroupData[],
-  groupName: string,
-): number {
+function _findGroupIndex(groups: GroupSessionGroupData[], groupName: string) {
   return groups.findIndex((g) => g.name === groupName);
 }
 
@@ -63,7 +60,7 @@ function _updateGroup(
   state: GroupSessionData,
   groupName: string,
   updater: _GroupUpdater,
-): GroupSessionState {
+) {
   const iGroup = _findGroupIndex(state.groups, groupName);
   if (iGroup === -1) return state;
 
@@ -73,7 +70,7 @@ function _updateGroup(
 function groupSessionReducer(
   state: GroupSessionState,
   action: GroupSessionUpdateAction,
-): GroupSessionState {
+) {
   switch (action.type) {
     case "Sync":
       return action.payload.data;

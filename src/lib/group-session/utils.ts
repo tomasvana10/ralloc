@@ -3,7 +3,7 @@ import {
   SESSION_CODE_LENGTH,
 } from "@/lib/group-session";
 
-export function generateSessionCode(): string {
+export function generateSessionCode() {
   const n = SESSION_CODE_LENGTH;
 
   let result = "";

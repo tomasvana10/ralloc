@@ -18,7 +18,7 @@ async function applyRateLimit(
   refillsPerSecond: number,
   burst: number,
   cost: number = 1,
-) {
+): Promise<AppliedRateLimitDetails> {
   const now = Math.floor(Date.now() / 1000);
 
   const sha = await getLuaScriptSha(tokenBucketScript);
@@ -33,13 +33,12 @@ async function applyRateLimit(
     ],
   })) as [number, number, number, number];
 
-  const result: AppliedRateLimitDetails = {
+  return {
     allowed: allowed === 1,
     remaining: Math.floor(tokens),
     limit,
     reset,
   };
-  return result;
 }
 
 /**
