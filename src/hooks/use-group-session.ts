@@ -3,6 +3,7 @@ import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import type z from "zod";
 import type { GroupSessionData } from "@/db/group-session";
 import type { SessionCreateSchemaType } from "@/features/forms/group-session/create";
+import type { SessionEditSchemaType } from "@/features/forms/group-session/edit";
 import { checkResponse } from "@/lib/utils";
 
 export function useGetGroupSessionsSWR(
@@ -74,7 +75,7 @@ export function usePatchGroupSessionSWRMutation(
       {
         arg,
       }: {
-        arg: { code: string; data: Partial<z.output<SessionCreateSchemaType>> };
+        arg: { code: string; data: Partial<z.output<SessionEditSchemaType>> };
       },
     ) => {
       const res = await fetch(`${url}/${arg.code}`, {
