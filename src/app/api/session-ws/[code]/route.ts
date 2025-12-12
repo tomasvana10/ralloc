@@ -179,7 +179,7 @@ export async function UPGRADE(
             userId: userRepresentation.userId,
             compressedUser: received.compressedUser,
             groupSize: cache.groupSize,
-            frozen: cache.frozen,
+            frozen: isHost ? false : cache.frozen,
           });
 
           if (result.status === ActionStatus.Success) {
@@ -208,7 +208,7 @@ export async function UPGRADE(
             code,
             hostId,
             userId: userRepresentation.userId,
-            frozen: cache.frozen,
+            frozen: isHost ? false : cache.frozen,
           });
 
           if (result.status === ActionStatus.Success) {
