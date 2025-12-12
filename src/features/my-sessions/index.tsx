@@ -98,7 +98,7 @@ export function MySessions({ userId }: { userId: string }) {
         ) : null}
       </AnimatePresence>
       <ScrollArea className="rounded-sm border border-border">
-        <div className={cn("flex flex-col max-h-[70vh] min-h-[110px]")}>
+        <div className={cn("flex flex-col max-h-[70vh] min-h-[70px]")}>
           {getter.data
             .sort((a, b) => b.createdOn - a.createdOn)
             .map((session) => (
