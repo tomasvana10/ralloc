@@ -53,6 +53,7 @@ export function SessionGroupAddForm({
                 <UsersIcon />
               </InputGroupAddon>
               <InputGroupButton
+                disabled={!form.getValues("groupName").length}
                 size="icon-sm"
                 aria-label="Add group"
                 type="submit">

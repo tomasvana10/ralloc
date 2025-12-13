@@ -286,6 +286,7 @@ export function SessionViewer({
           <InputGroupButton
             aria-label="Clear group search query"
             size="icon-sm"
+            disabled={!groupQuery}
             onClick={() => setGroupQuery("")}>
             <XIcon />
           </InputGroupButton>
