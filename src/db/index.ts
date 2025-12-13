@@ -1,4 +1,7 @@
 import { createClient } from "redis";
+import type { Version } from "@/types";
+
+export const VERSION: Version = "v1";
 
 const redisClientSingleton = () => {
   const url = process.env.REDIS_URL;
@@ -41,13 +44,12 @@ const redisPub = globalThis.redisPub ?? createPubClient(redis);
 
 export const REDIS = {
   NAMESPACE: "rlc",
-  VERSION: "v1",
   SEP: ":",
-  PREFIX_PARTS: 2,
+  PREFIX_PARTS: 1,
 };
 
 export const redisKey = (...parts: (string | number)[]) =>
-  [REDIS.NAMESPACE, REDIS.VERSION, ...parts].join(REDIS.SEP);
+  [REDIS.NAMESPACE, ...parts].join(REDIS.SEP);
 
 export default redis;
 export { redisPub, createSubClient };
