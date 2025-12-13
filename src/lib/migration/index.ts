@@ -42,6 +42,11 @@ async function applyMigrations(
 
   log(`Version for '${scope}' is ${currentVersion}`);
 
+  if (currentVersion === latestVersion)
+    return log(
+      chalk.green(`No migrations required for '${scope}' as it is up to date.`),
+    );
+
   if (!Object.keys(migrations).length)
     return log(
       chalk.cyan(`No migrations present for '${scope}'.`),
@@ -60,6 +65,13 @@ async function applyMigrations(
 
     const previousVersion = getPreviousVersionNumber(newVersion);
     const data = migrations[newVersion];
+    if (data === undefined) {
+      log(
+        chalk.red(`'${scope}' is missing migration data. Stopping.`),
+        console.error,
+      );
+      throw new Error(`Missing migration data for '${scope}@${newVersion}'`);
+    }
 
     log(`Migrating '${scope}@${previousVersion}' to ${newVersion}`);
 
