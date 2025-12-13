@@ -1,5 +1,6 @@
+import { EventEmitter } from "node:events";
 import type WebSocket from "ws";
-import redis, { createSubClient } from "@/db";
+import { redisSub } from "@/db";
 import { type GroupSessionData, getHostId, paths } from "@/db/group-session";
 import type { GSServer } from "@/lib/group-session/proto";
 import { closeDeleted, sendPreStringified, updateCache } from "./utils";
@@ -10,7 +11,6 @@ export interface Room {
   ready: boolean;
   stale: boolean;
   hostId: string | null;
-  subClient: Awaited<ReturnType<typeof createSubClient>> | null;
   clients: Set<Client>;
   cache: Pick<GroupSessionData, "groupSize" | "frozen">;
 }
@@ -18,9 +18,9 @@ export interface Room {
 export class RoomManager {
   private static rooms = new Map<string, Room>();
   private static locks = new Map<string, Promise<Room | null>>();
+  private static roomCreationEmitter = new EventEmitter();
 
-  private static WAIT_TIMEOUT = 1000;
-  private static WAIT_POLLING_INTERVAL = 2;
+  private static ROOM_WAIT_TIMEOUT = 1000;
 
   public code: string;
   private client: Client | null = null;
@@ -34,7 +34,7 @@ export class RoomManager {
     return this.room;
   }
 
-  static async get(code: string) {
+  public static async get(code: string) {
     const manager = new RoomManager(code);
 
     const existingRoom = RoomManager.rooms.get(code);
@@ -54,7 +54,9 @@ export class RoomManager {
 
     // room exists but lock isn't created
     if (existingRoom) {
-      console.log(`[room:${code}] room exists but no lock - waiting for ready`);
+      console.log(
+        `[room:${code}] room exists but no lock - waiting until ready`,
+      );
       return manager.acquire();
     }
 
@@ -74,16 +76,16 @@ export class RoomManager {
     }
   }
 
-  static markAsStale(code: string) {
+  public static markAsStale(code: string) {
     const room = RoomManager.rooms.get(code);
     if (room) room.stale = true;
   }
 
-  setClient(client: Client) {
+  public setClient(client: Client) {
     this.client = client;
   }
 
-  registerClient() {
+  public registerClient() {
     if (!this.client || !this.room) return;
     this.room.clients.add(this.client);
     console.log(
@@ -91,7 +93,7 @@ export class RoomManager {
     );
   }
 
-  unregisterClient() {
+  public unregisterClient() {
     if (!this.client || !this.room) return;
     this.room.clients.delete(this.client);
     console.log(
@@ -99,7 +101,7 @@ export class RoomManager {
     );
   }
 
-  async deleteIfEmpty() {
+  public async deleteIfEmpty() {
     const room = RoomManager.rooms.get(this.code);
     if (!room || room.clients.size !== 0) return;
 
@@ -109,8 +111,10 @@ export class RoomManager {
     RoomManager.rooms.delete(this.code);
 
     try {
-      await room.subClient?.unsubscribe();
-      await room.subClient?.quit();
+      await Promise.all([
+        redisSub.unsubscribe(paths.pubsub.partialData(this.code)),
+        redisSub.unsubscribe(paths.pubsub.deleted(this.code)),
+      ]);
     } catch {}
   }
 
@@ -134,19 +138,21 @@ export class RoomManager {
 
   private waitForRoom() {
     return new Promise<void>((resolve, reject) => {
-      const startTime = Date.now();
+      const current = RoomManager.rooms.get(this.code);
+      if (!current || current.stale) return reject();
+      if (current.ready) return resolve();
 
-      const check = () => {
-        const current = RoomManager.rooms.get(this.code);
+      const timeout = setTimeout(() => {
+        RoomManager.roomCreationEmitter.off(this.code, onReady);
+        reject();
+      }, RoomManager.ROOM_WAIT_TIMEOUT);
 
-        if (!current || current.stale) return reject();
-        if (current.ready) return resolve();
-        if (Date.now() - startTime > RoomManager.WAIT_TIMEOUT) return reject();
-
-        setTimeout(check, RoomManager.WAIT_POLLING_INTERVAL);
+      const onReady = () => {
+        clearTimeout(timeout);
+        resolve();
       };
 
-      check();
+      RoomManager.roomCreationEmitter.once(this.code, onReady);
     });
   }
 
@@ -155,8 +161,7 @@ export class RoomManager {
       ready: false,
       stale: false,
       hostId: null,
-      subClient: null,
-      clients: new Set<Client>(),
+      clients: new Set(),
       cache: {
         frozen: false,
         groupSize: 0,
@@ -165,7 +170,10 @@ export class RoomManager {
     RoomManager.rooms.set(this.code, room);
 
     const initialised = await this.prepareAsyncComponents(room);
-    if (initialised) return room;
+    if (initialised) {
+      RoomManager.roomCreationEmitter.emit(this.code);
+      return room;
+    }
 
     await this.deleteIfEmpty();
     if (this.client) closeDeleted(this.client);
@@ -173,22 +181,27 @@ export class RoomManager {
   }
 
   private async prepareAsyncComponents(room: Room) {
-    const hostId = await getHostId(this.code);
-    if (!hostId || room.stale) return false;
-    room.hostId = hostId;
+    try {
+      const hostId = await getHostId(this.code);
+      if (!hostId || room.stale) return false;
+      room.hostId = hostId;
 
-    room.subClient = await createSubClient(redis);
-    if (room.stale) return false;
+      await this.registerSubscriptions(room);
+      if (room.stale) return false;
 
-    await this.registerSubscriptions(room);
-    if (room.stale) return false;
-
-    room.ready = true;
-    return true;
+      room.ready = true;
+      return true;
+    } catch (e) {
+      console.error(
+        `[room:${this.code}] failed to prepare async components`,
+        e,
+      );
+      return false;
+    }
   }
 
   private async registerSubscriptions(room: Room) {
-    await room.subClient?.subscribe(
+    await redisSub.subscribe(
       paths.pubsub.partialData(this.code),
       (msg: string) => {
         if (!RoomManager.rooms.has(this.code) || room.stale) return;
@@ -205,7 +218,7 @@ export class RoomManager {
       },
     );
 
-    await room.subClient?.subscribe(paths.pubsub.deleted(this.code), () => {
+    await redisSub.subscribe(paths.pubsub.deleted(this.code), () => {
       if (!RoomManager.rooms.has(this.code) || room.stale) return;
 
       for (const client of room.clients) {

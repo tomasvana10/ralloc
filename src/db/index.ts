@@ -37,10 +37,12 @@ const createSubClient = async (client: Client) => {
 declare const globalThis: {
   redisGlobal: Client;
   redisPub: Client;
+  redisSub: Client;
 } & typeof global;
 
 const redis = globalThis.redisGlobal ?? redisClientSingleton();
 const redisPub = globalThis.redisPub ?? createPubClient(redis);
+const redisSub = globalThis.redisSub ?? (await createSubClient(redis));
 
 export const REDIS = {
   NAMESPACE: "rlc",
@@ -52,9 +54,10 @@ export const redisKey = (...parts: (string | number)[]) =>
   [REDIS.NAMESPACE, ...parts].join(REDIS.SEP);
 
 export default redis;
-export { redisPub, createSubClient };
+export { redisPub, redisSub, createSubClient };
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.redisGlobal = redis;
   globalThis.redisPub = redisPub;
+  globalThis.redisSub = redisSub;
 }
