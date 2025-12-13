@@ -8,6 +8,8 @@ services:
       - ../.env.production
       - ../.env.local
     restart: "no"
+    environment:
+      - FORCE_COLOR=1
     ports:
       - 3000:3000
     networks:

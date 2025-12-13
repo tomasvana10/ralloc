@@ -13,6 +13,7 @@ services:
     # restart: unless-stopped
     environment:
       - PORT=3001
+      - FORCE_COLOR=1
     ports:
       - 3001:3001
     networks:
