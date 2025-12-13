@@ -22,7 +22,7 @@ local groupMembersKey = string.gsub(groupMembersKeyTemplate, "<groupName>", orig
 local members = redis.call("SMEMBERS", groupMembersKey)
 local toRemove = nil
 
--- kind of a repeat implementation of UserRepresentation.is() but it must be done for atomicity
+-- kind of a repeat implementation of UserRepresentation.areSameCompressedUser() but it must be done for atomicity
 local userIdSearchPrefixLength = #userIdSearchPrefix
 for _, member in ipairs(members) do
   -- locate the matching user

@@ -1,15 +1,14 @@
 import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
 import type { SupportedProvider } from "@/auth/data";
+import type { Version } from "@/types";
+
+export const VERSION: Version = "v1";
 
 /**
  * Utility class that supports the storage of users in the Redis
  * database as a set of fields, allowing other clients to reconstruct
  * information such as their name and avatar URL.
- *
- * An alternative to the functionality this class provides would be
- * persistently storing user details on session creation, and having
- * other clients fetch this information from an API.
  */
 export class UserRepresentation {
   public userId: string;
@@ -20,13 +19,27 @@ export class UserRepresentation {
   private avatarId: string;
 
   /**
-   * Uses ASCII Information Separator One
+   * ASCII Information Separator One
    */
   public static UNIT_SEPARATOR = "\u001f";
   /**
-   * Uses ASCII Information Separator Two
+   * ASCII Information Separator Two
    */
   public static UNIT_EMPTY = "\u001e";
+
+  private static SERIALISATION_ORDER = [
+    /**
+     * WARNING: userId must always be the first field of the user representation
+     * If it must be changed, you will have to refactor these parts of the code:
+     *   1. user-representation.ts#areSameCompressedUser()
+     *   2. leave-group.lua:29  (removing groupMembers set item; comparing raw id to compressed)
+     *   3. remove-group.lua:28 (removing userGroup mappings   ; comparing compressed to raw id)
+     */
+    "userId",
+    "name",
+    "provider",
+    "avatarId",
+  ] as const;
 
   private static AVATAR_CONFIG: Record<
     SupportedProvider,
@@ -45,13 +58,11 @@ export class UserRepresentation {
   };
 
   private static DECOMPRESSION_MATCHER = new RegExp(
-    `^([^${this.UNIT_SEPARATOR}]+)` + // userId
-      `${this.UNIT_SEPARATOR}` +
-      `([^${this.UNIT_SEPARATOR}]+)` + // name
-      `${this.UNIT_SEPARATOR}` +
-      `([^${this.UNIT_SEPARATOR}]+)` + // provider
-      `${this.UNIT_SEPARATOR}` +
-      `([^${this.UNIT_SEPARATOR}]+)$`, // avatarId
+    "^" +
+      this.SERIALISATION_ORDER.map(() => `([^${this.UNIT_SEPARATOR}]+)`).join(
+        this.UNIT_SEPARATOR,
+      ) +
+      "$",
   );
 
   private static DEFAULT_IMAGE_URL = "https://ui-avatars.com/api/?name=";
@@ -103,27 +114,46 @@ export class UserRepresentation {
     });
   }
 
+  /**
+   * Deserialise a compressed string to a {@link UserRepresentation}.
+   */
   public static fromCompressedString(compressedString: string) {
-    const [, userId, name, provider, avatarId] = compressedString.match(
+    const matches = compressedString.match(
       UserRepresentation.DECOMPRESSION_MATCHER,
-    ) as string[];
+    );
+    if (!matches) throw new Error("Invalid compressed string format");
+
+    const data = UserRepresentation.SERIALISATION_ORDER.reduce(
+      (acc, field, index) => {
+        acc[field] = matches[index + 1];
+        return acc;
+      },
+      {} as Record<
+        (typeof UserRepresentation.SERIALISATION_ORDER)[number],
+        string
+      >,
+    );
 
     return new UserRepresentation({
-      userId,
-      name,
-      provider: provider as SupportedProvider,
-      avatar: { id: avatarId },
+      userId: data.userId,
+      name: data.name,
+      provider: data.provider as SupportedProvider,
+      avatar: { id: data.avatarId },
     });
   }
 
+  /**
+   * Serialise this {@link UserRepresentation} to a compressed string.
+   */
   public toCompressedString() {
-    return [this.userId, this.name, this.provider, this.avatarId].join(
-      UserRepresentation.UNIT_SEPARATOR,
-    );
+    return UserRepresentation.SERIALISATION_ORDER.map(
+      (field) => this[field],
+    ).join(UserRepresentation.UNIT_SEPARATOR);
   }
 
   /**
-   * Compare two compressed strings to see if their ids match
+   * Compare two compressed strings to see if their ids match (and thus
+   * are the same user)
    */
   public static areSameCompressedUser(
     aCompressed: string,
