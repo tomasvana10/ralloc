@@ -1,5 +1,5 @@
 export { GuestSignInForm } from "./form";
 export {
-  type GuestSignInSchemaType,
+  type GuestSignInSchema,
   guestSignInSchema,
 } from "./schema";

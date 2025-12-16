@@ -1,7 +1,7 @@
 import { create } from "zustand";
-import type { SessionCreateSchemaType } from ".";
+import type { SessionCreateSchema } from ".";
 
-export const defaultSessionCreateData: SessionCreateSchemaType = {
+export const defaultSessionCreateData: SessionCreateSchema = {
   groupSeed: "",
   groupSize: 2,
   name: "",
@@ -10,10 +10,10 @@ export const defaultSessionCreateData: SessionCreateSchemaType = {
 };
 
 export const useSessionCreateStore = create<{
-  data: SessionCreateSchemaType;
-  setData: (data: Partial<SessionCreateSchemaType>) => void;
+  data: SessionCreateSchema;
+  setData: (data: Partial<SessionCreateSchema>) => void;
   reset: () => void;
-  defaultData: SessionCreateSchemaType;
+  defaultData: SessionCreateSchema;
 }>((set) => ({
   data: defaultSessionCreateData,
   setData: (update) => set((state) => ({ data: { ...state.data, ...update } })),

@@ -43,7 +43,7 @@ import { useIsBelowBreakpoint } from "@/hooks/use-is-below-breakpoint";
 import { expandGroupSeed } from "@/lib/group-session";
 import { cn } from "@/lib/utils";
 import {
-  type SessionCreateSchemaType,
+  type SessionCreateSchema,
   sessionCreateSchema,
   useSessionCreateStore,
 } from ".";
@@ -88,7 +88,7 @@ export function SessionCreateForm() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: intended usage
   React.useEffect(() => {
     const sub = form.watch((data) => {
-      state.setData(data as Partial<SessionCreateSchemaType>);
+      state.setData(data as Partial<SessionCreateSchema>);
       setReactMarkdown(data?.description ?? "");
     });
     return () => sub.unsubscribe();

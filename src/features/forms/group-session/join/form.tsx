@@ -22,7 +22,7 @@ import {
   SESSION_CODE_LENGTH,
 } from "@/lib/group-session";
 import {
-  type SessionJoinSchemaType,
+  type SessionJoinSchema,
   sessionJoinSchema,
   useSessionJoinStore,
 } from ".";
@@ -45,12 +45,12 @@ export function SessionJoinForm() {
   // sync form to zustand store
   React.useEffect(() => {
     const sub = form.watch((data) =>
-      state.setData(data as Partial<SessionJoinSchemaType>),
+      state.setData(data as Partial<SessionJoinSchema>),
     );
     return () => sub.unsubscribe();
   }, [form, state.setData]);
 
-  async function onSubmit(data: SessionJoinSchemaType) {
+  async function onSubmit(data: SessionJoinSchema) {
     // TODO: prevent flicker that occurs when you resubmit with the error below already
     // present (zod clears errors on submission then reapplies them)
     const exists = await fetch(`/api/sessions/${data.code}`, {

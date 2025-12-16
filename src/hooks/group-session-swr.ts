@@ -2,8 +2,8 @@ import useSWR, { type SWRConfiguration } from "swr";
 import useSWRMutation, { type SWRMutationConfiguration } from "swr/mutation";
 import type z from "zod";
 import type { GroupSessionData } from "@/db/group-session";
-import type { SessionCreateSchemaType } from "@/features/forms/group-session/create";
-import type { SessionEditSchemaType } from "@/features/forms/group-session/edit";
+import type { SessionCreateSchema } from "@/features/forms/group-session/create";
+import type { SessionEditSchema } from "@/features/forms/group-session/edit";
 import { checkResponse } from "@/lib/utils";
 
 export function useGetGroupSessionsSWR(
@@ -34,10 +34,7 @@ export function useCreateGroupSessionSWRMutation(
 ) {
   return useSWRMutation(
     "/api/sessions",
-    async (
-      url: string,
-      { arg }: { arg: z.output<SessionCreateSchemaType> },
-    ) => {
+    async (url: string, { arg }: { arg: z.output<SessionCreateSchema> }) => {
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -75,7 +72,7 @@ export function usePatchGroupSessionSWRMutation(
       {
         arg,
       }: {
-        arg: { code: string; data: Partial<z.output<SessionEditSchemaType>> };
+        arg: { code: string; data: Partial<z.output<SessionEditSchema>> };
       },
     ) => {
       const res = await fetch(`${url}/${arg.code}`, {

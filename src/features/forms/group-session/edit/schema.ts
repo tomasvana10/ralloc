@@ -27,4 +27,4 @@ export const sessionEditSchemaFactory = (
   );
 };
 
-export type SessionEditSchemaType = z.infer<typeof baseSessionEditSchema>;
+export type SessionEditSchema = z.infer<typeof baseSessionEditSchema>;

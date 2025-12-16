@@ -5,4 +5,4 @@ export const sessionGroupAddSchema = z.object({
   groupName,
 });
 
-export type SessionGroupAddSchemaType = z.infer<typeof sessionGroupAddSchema>;
+export type SessionGroupAddSchema = z.infer<typeof sessionGroupAddSchema>;

@@ -1,6 +1,6 @@
 export { SessionEditForm } from "./form";
 export {
   baseSessionEditSchema,
-  type SessionEditSchemaType,
+  type SessionEditSchema,
   sessionEditSchemaFactory,
 } from "./schema";

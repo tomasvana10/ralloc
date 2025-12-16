@@ -1,4 +1,4 @@
-import type { SessionCreateSchemaType } from "@/features/forms/group-session/create";
+import type { SessionCreateSchema } from "@/features/forms/group-session/create";
 import { redisKey } from "..";
 
 export type GroupSessionMetadata = {
@@ -6,7 +6,7 @@ export type GroupSessionMetadata = {
   frozen: boolean;
   compressedHost: string;
   groupCount: number;
-} & Omit<SessionCreateSchemaType, "groupSeed">;
+} & Omit<SessionCreateSchema, "groupSeed">;
 
 export type GroupSessionData = {
   code: string;

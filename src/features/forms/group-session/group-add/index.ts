@@ -1,5 +1,5 @@
 export { SessionGroupAddForm } from "./form";
 export {
-  type SessionGroupAddSchemaType,
+  type SessionGroupAddSchema,
   sessionGroupAddSchema,
 } from "./schema";

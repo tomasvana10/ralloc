@@ -76,4 +76,4 @@ export const sessionCreateSchema = z.object({
   frozen: z.boolean(),
 });
 
-export type SessionCreateSchemaType = z.infer<typeof sessionCreateSchema>;
+export type SessionCreateSchema = z.infer<typeof sessionCreateSchema>;

@@ -1,15 +1,15 @@
 import { create } from "zustand";
-import type { SessionJoinSchemaType } from ".";
+import type { SessionJoinSchema } from ".";
 
-const defaultSessionJoinData: SessionJoinSchemaType = {
+const defaultSessionJoinData: SessionJoinSchema = {
   code: "",
 };
 
 export const useSessionJoinStore = create<{
-  data: SessionJoinSchemaType;
-  setData: (data: Partial<SessionJoinSchemaType>) => void;
+  data: SessionJoinSchema;
+  setData: (data: Partial<SessionJoinSchema>) => void;
   reset: () => void;
-  defaultData: SessionJoinSchemaType;
+  defaultData: SessionJoinSchema;
 }>((set) => ({
   data: defaultSessionJoinData,
   setData: (update) => set((state) => ({ data: { ...state.data, ...update } })),

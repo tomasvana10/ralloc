@@ -22,4 +22,4 @@ export const sessionJoinSchema = z.object({
     ),
 });
 
-export type SessionJoinSchemaType = z.infer<typeof sessionJoinSchema>;
+export type SessionJoinSchema = z.infer<typeof sessionJoinSchema>;
