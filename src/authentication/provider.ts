@@ -3,6 +3,10 @@ import type { ProviderId } from "next-auth/providers";
 export const GUEST_PROVIDER = "guest";
 export type GuestProvider = typeof GUEST_PROVIDER;
 
+/**
+ * @remarks
+ * Declare your providers here.
+ */
 export const OFFICIAL_PROVIDERS = {
   google: true,
   github: true,

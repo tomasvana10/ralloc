@@ -13,6 +13,23 @@ export interface ProviderIconData {
   darkIcon: ProviderSVG | null;
 }
 
+/**
+ * @remarks
+ * Declare your provider icons here.
+ *
+ * @example
+ * ```ts
+ * import * as AppleIcon from "./apple"
+ *
+ * export const PROVIDER_ICON_DATA = {
+ *   // ...
+ *   apple: {
+ *     defaultIcon: AppleIcon.Default,
+ *     darkIcon: AppleIcon.Dark
+ *   }
+ * }
+ * ```
+ */
 export const PROVIDER_ICON_DATA = {
   google: {
     defaultIcon: GoogleIcon.Default,

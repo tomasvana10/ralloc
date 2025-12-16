@@ -10,6 +10,10 @@ import { UserRepresentation } from "@/lib/group-session";
 import { guestSignInSchema } from "./guest-sign-in-form";
 import { GUEST_PROVIDER, type OfficialProvider } from "./provider";
 
+/**
+ * @remarks
+ * Declare your `next-auth` providers here.
+ */
 const providers: Provider[] = [Google, GitHub];
 
 if (config.isGuestAuthEnabled) {
