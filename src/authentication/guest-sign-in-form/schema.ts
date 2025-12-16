@@ -8,4 +8,4 @@ export const guestSignInSchema = z.object({
     .max(40, "Nickname must be at most 40 characters"),
 });
 
-export type GuestSIgnInSchemaType = z.infer<typeof guestSignInSchema>;
+export type GuestSignInSchemaType = z.infer<typeof guestSignInSchema>;

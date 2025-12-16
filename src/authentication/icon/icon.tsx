@@ -1,12 +1,15 @@
+"use client";
+
 import { useTheme } from "next-themes";
 import React from "react";
-import type { ProviderIconData, ProviderIconProps } from ".";
+import type { OfficialProvider } from "../provider";
+import { PROVIDER_ICON_DATA, type ProviderIconProps } from ".";
 
 export function ProviderIcon({
-  data,
+  provider,
   props,
 }: {
-  data: ProviderIconData;
+  provider: OfficialProvider;
   props?: ProviderIconProps;
 }) {
   const { resolvedTheme } = useTheme();
@@ -15,6 +18,8 @@ export function ProviderIcon({
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  const data = PROVIDER_ICON_DATA[provider];
 
   if (!data.defaultIcon) return null;
   if (!mounted) return <data.defaultIcon {...props} />;

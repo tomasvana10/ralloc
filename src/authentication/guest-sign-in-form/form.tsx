@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { type GuestSIgnInSchemaType, guestSignInSchema } from ".";
+import { type GuestSignInSchemaType, guestSignInSchema } from ".";
 
 export function GuestSignInForm({ callbackUrl }: { callbackUrl?: string }) {
-  const form = useForm<GuestSIgnInSchemaType>({
+  const form = useForm<GuestSignInSchemaType>({
     resolver: zodResolver(guestSignInSchema),
     mode: "all",
     defaultValues: {
@@ -19,7 +19,7 @@ export function GuestSignInForm({ callbackUrl }: { callbackUrl?: string }) {
     },
   });
 
-  async function onSubmit(values: GuestSIgnInSchemaType) {
+  async function onSubmit(values: GuestSignInSchemaType) {
     await signIn(GUEST_PROVIDER, {
       nickname: values.nickname,
       callbackUrl: callbackUrl ?? "/",

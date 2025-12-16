@@ -1,17 +1,16 @@
 "use server";
 
-import { LogOutIcon } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "../ui/button";
 import { ClientAvatar } from "./avatar";
+import { SignOutItem } from "./sign-out-item";
 
 async function handleSignOut() {
   "use server";
@@ -36,13 +35,7 @@ export async function Profile() {
       <DropdownMenuContent>
         <DropdownMenuLabel>{session.user?.name}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <form action={handleSignOut}>
-          <button type="submit" className="w-full">
-            <DropdownMenuItem>
-              Sign out <LogOutIcon />
-            </DropdownMenuItem>
-          </button>
-        </form>
+        <SignOutItem signOut={handleSignOut} isGuest={session.user.isGuest} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
