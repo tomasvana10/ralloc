@@ -7,7 +7,7 @@
 [![Release version](https://img.shields.io/github/v/release/tomasvana10/ralloc?sort=semver)](https://github.com/tomasvana10/ralloc/releases)
 [![MIT license](https://img.shields.io/github/license/tomasvana10/ralloc)](https://github.com/tomasvana10/ralloc/blob/main/LICENSE)
 
-Ralloc is a web-based tool designed for fast, ephemeral group allocation.
+`Ralloc` is a web-based tool designed for fast, ephemeral group allocation.
 
 - [Issues](https://github.com/tomasvana10/ralloc/issues)
 - [Wiki](https://github.com/tomasvana10/ralloc/wiki)
