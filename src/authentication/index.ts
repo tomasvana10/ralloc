@@ -6,30 +6,37 @@ import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { deleteAllHostData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
+import { guestSignInSchema } from "./guest-sign-in-form";
 import { GUEST_PROVIDER, type OfficialProvider } from "./provider";
 
 const providers: Provider[] = [Google, GitHub];
 
-export const nextAuth = NextAuth({
-  providers: [
-    Google,
-    GitHub,
+export const IS_GUEST_SIGNIN_ENABLED = !!+(process.env.ENABLE_GUEST_AUTH ?? 1);
+
+if (IS_GUEST_SIGNIN_ENABLED) {
+  providers.push(
     Credentials({
       id: GUEST_PROVIDER,
       credentials: {
         nickname: { label: "Nickname", type: "text" },
       },
       authorize: (credentials) => {
-        const nickname = credentials?.nickname as string;
-        if (!nickname) return null;
+        const parseResult = guestSignInSchema.safeParse(credentials);
+        if (!parseResult.success) return null;
+
+        const { nickname } = parseResult.data;
 
         return {
-          id: randomBytes(12).toString("base64"),
+          id: randomBytes(12).toString("base64url"),
           name: nickname,
         };
       },
     }),
-  ],
+  );
+}
+
+export const nextAuth = NextAuth({
+  providers,
   events: {
     signOut: async (message) => {
       // delete all user data if they didn't use an official authentication
@@ -74,6 +81,7 @@ export const nextAuth = NextAuth({
       session.provider = token.provider;
       session.user.name = token.name;
       session.user.imageId = token.imageId ?? null;
+      session.user.isGuest = token.provider === GUEST_PROVIDER;
 
       return session;
     },
