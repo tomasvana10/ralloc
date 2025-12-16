@@ -1,7 +1,7 @@
 import type { ProviderId } from "next-auth/providers";
 
-export const EPHEMERAL_PROVIDER = "ephemeral";
-export type EphemeralProvider = typeof EPHEMERAL_PROVIDER;
+export const GUEST_PROVIDER = "guest";
+export type GuestProvider = typeof GUEST_PROVIDER;
 
 export const OFFICIAL_PROVIDERS = {
   google: true,
@@ -9,4 +9,4 @@ export const OFFICIAL_PROVIDERS = {
 } as const satisfies Partial<Record<ProviderId, true>>;
 
 export type OfficialProvider = keyof typeof OFFICIAL_PROVIDERS;
-export type SupportedProvider = OfficialProvider | EphemeralProvider;
+export type SupportedProvider = OfficialProvider | GuestProvider;

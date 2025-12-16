@@ -3,24 +3,24 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { Controller, useForm } from "react-hook-form";
-import { EPHEMERAL_PROVIDER } from "@/authentication/provider";
+import { GUEST_PROVIDER } from "@/authentication/provider";
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { type EphemeralSignInSchemaType, ephemeralSignInSchema } from ".";
+import { type GuestSIgnInSchemaType, guestSignInSchema } from ".";
 
-export function EphemeralSignInForm({ callbackUrl }: { callbackUrl?: string }) {
-  const form = useForm<EphemeralSignInSchemaType>({
-    resolver: zodResolver(ephemeralSignInSchema),
+export function GuestSignInForm({ callbackUrl }: { callbackUrl?: string }) {
+  const form = useForm<GuestSIgnInSchemaType>({
+    resolver: zodResolver(guestSignInSchema),
     mode: "all",
     defaultValues: {
       nickname: "",
     },
   });
 
-  async function onSubmit(values: EphemeralSignInSchemaType) {
-    await signIn(EPHEMERAL_PROVIDER, {
+  async function onSubmit(values: GuestSIgnInSchemaType) {
+    await signIn(GUEST_PROVIDER, {
       nickname: values.nickname,
       callbackUrl: callbackUrl ?? "/",
       redirect: true,

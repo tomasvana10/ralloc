@@ -1,18 +1,21 @@
 import { randomBytes } from "node:crypto";
 import NextAuth from "next-auth";
+import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { deleteAllHostData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
-import { EPHEMERAL_PROVIDER, type OfficialProvider } from "./provider";
+import { GUEST_PROVIDER, type OfficialProvider } from "./provider";
+
+const providers: Provider[] = [Google, GitHub];
 
 export const nextAuth = NextAuth({
   providers: [
     Google,
     GitHub,
     Credentials({
-      id: EPHEMERAL_PROVIDER,
+      id: GUEST_PROVIDER,
       credentials: {
         nickname: { label: "Nickname", type: "text" },
       },
@@ -31,11 +34,8 @@ export const nextAuth = NextAuth({
     signOut: async (message) => {
       // delete all user data if they didn't use an official authentication
       // method. this prevents users from clogging up the database by repeatedly
-      // creating ephemeral sessions
-      if (
-        "token" in message &&
-        message.token?.provider === EPHEMERAL_PROVIDER
-      ) {
+      // creating guest sessions
+      if ("token" in message && message.token?.provider === GUEST_PROVIDER) {
         await deleteAllHostData(message.token.id);
       }
     },
@@ -51,7 +51,7 @@ export const nextAuth = NextAuth({
         token.provider = account.provider;
         token.name = user.name;
 
-        if (account.provider === EPHEMERAL_PROVIDER) {
+        if (account.provider === GUEST_PROVIDER) {
           token.id = user.id;
         } else {
           const provider = account.provider as OfficialProvider;

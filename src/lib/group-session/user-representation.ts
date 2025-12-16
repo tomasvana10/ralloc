@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
 import {
-  EPHEMERAL_PROVIDER,
+  GUEST_PROVIDER,
   type OfficialProvider,
   type SupportedProvider,
 } from "@/authentication/provider";
@@ -133,7 +133,7 @@ export class UserRepresentation {
 
     let image: string | null = null;
 
-    if (provider !== EPHEMERAL_PROVIDER && imageId) {
+    if (provider !== GUEST_PROVIDER && imageId) {
       image = UserRepresentation.getImageUrl(imageId, provider);
     }
 

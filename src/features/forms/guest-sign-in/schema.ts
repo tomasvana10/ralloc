@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const ephemeralSignInSchema = z.object({
+export const guestSignInSchema = z.object({
   nickname: z
     .string()
     .trim()
@@ -8,4 +8,4 @@ export const ephemeralSignInSchema = z.object({
     .max(40, "Nickname must be at most 40 characters"),
 });
 
-export type EphemeralSignInSchemaType = z.infer<typeof ephemeralSignInSchema>;
+export type GuestSIgnInSchemaType = z.infer<typeof guestSignInSchema>;

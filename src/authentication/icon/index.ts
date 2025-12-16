@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { EPHEMERAL_PROVIDER, type SupportedProvider } from "../provider";
+import { GUEST_PROVIDER, type SupportedProvider } from "../provider";
 import * as GitHubIcon from "./github";
 import * as GoogleIcon from "./google";
 
@@ -22,7 +22,7 @@ export const PROVIDER_ICON_DATA = {
     defaultIcon: GitHubIcon.Default,
     darkIcon: GitHubIcon.Dark,
   },
-  [EPHEMERAL_PROVIDER]: { defaultIcon: null, darkIcon: null },
+  [GUEST_PROVIDER]: { defaultIcon: null, darkIcon: null },
 } as const satisfies Partial<Record<SupportedProvider, ProviderIconData>>;
 
 export { ProviderIcon } from "./icon";

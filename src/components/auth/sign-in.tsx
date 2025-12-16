@@ -5,7 +5,7 @@ import {
   type ProviderIconData,
 } from "@/authentication/icon";
 import {
-  EPHEMERAL_PROVIDER,
+  GUEST_PROVIDER,
   type OfficialProvider,
 } from "@/authentication/provider";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { EphemeralSignInForm } from "@/features/forms/ephemeral-signin";
+import { GuestSignInForm } from "@/features/forms/guest-sign-in";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (
@@ -31,7 +31,7 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
         <div className="flex flex-wrap gap-2 [&>form]:flex-1 [&>form>button]:w-full [&>form>button]:whitespace-nowrap">
           {Object.entries(PROVIDER_ICON_DATA).map(
             ([provider, data]) =>
-              provider !== EPHEMERAL_PROVIDER && (
+              provider !== GUEST_PROVIDER && (
                 <OfficialSignInForm
                   key={provider}
                   callbackUrl={callbackUrl}
@@ -49,7 +49,7 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
             </strong>
           </p>
         </div>
-        <EphemeralSignInForm callbackUrl={callbackUrl} />
+        <GuestSignInForm callbackUrl={callbackUrl} />
       </CardContent>
     </Card>
   );
