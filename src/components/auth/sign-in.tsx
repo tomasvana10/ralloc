@@ -1,6 +1,13 @@
 import { signIn } from "@/auth";
-import { PROVIDER_DATA, type SupportedProvider } from "@/auth/data";
-import { ProviderIcon } from "@/auth/svgs";
+import {
+  PROVIDER_ICON_DATA,
+  ProviderIcon,
+  type ProviderIconData,
+} from "@/authentication/icon";
+import {
+  EPHEMERAL_PROVIDER,
+  type OfficialProvider,
+} from "@/authentication/provider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,40 +16,53 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { EphemeralSignInForm } from "@/features/forms/ephemeral-signin";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (
-    <Card>
+    <Card className="gap-4">
       <CardHeader>
         <CardTitle>Sign In</CardTitle>
         <CardDescription>
-          Please use one of the authentication methods listed below.
+          Use one of the authentication providers listed below.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2 [&>form]:flex-1 [&>form>button]:w-full [&>form>button]:whitespace-nowrap">
-          {Object.entries(PROVIDER_DATA).map(([provider, data]) => (
-            <SignInForm
-              key={provider}
-              callbackUrl={callbackUrl}
-              provider={provider as SupportedProvider}
-              data={data}
-            />
-          ))}
+          {Object.entries(PROVIDER_ICON_DATA).map(
+            ([provider, data]) =>
+              provider !== EPHEMERAL_PROVIDER && (
+                <OfficialSignInForm
+                  key={provider}
+                  callbackUrl={callbackUrl}
+                  provider={provider as OfficialProvider}
+                  data={data}
+                />
+              ),
+          )}
         </div>
+        <div className="text-sm text-muted-foreground my-6 gap-2">
+          <p>
+            Or, sign in to a one-time session.{" "}
+            <strong>
+              Your data will be permanently lost when you sign out.
+            </strong>
+          </p>
+        </div>
+        <EphemeralSignInForm callbackUrl={callbackUrl} />
       </CardContent>
     </Card>
   );
 }
 
-export function SignInForm({
+export function OfficialSignInForm({
   callbackUrl,
   provider,
   data,
 }: {
   callbackUrl?: string;
-  provider: SupportedProvider;
-  data: (typeof PROVIDER_DATA)[keyof typeof PROVIDER_DATA];
+  provider: OfficialProvider;
+  data: ProviderIconData;
 }) {
   return (
     <form

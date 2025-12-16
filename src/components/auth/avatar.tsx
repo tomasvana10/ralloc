@@ -10,7 +10,7 @@ export function ClientAvatar({
   className,
   ...props
 }: {
-  image?: string;
+  image?: string | null;
   name?: string | null;
   imageProps?: React.ComponentProps<typeof AvatarPrimitive.Image>;
 } & React.ComponentProps<typeof AvatarPrimitive.Root>) {
@@ -24,7 +24,7 @@ export function ClientAvatar({
   return (
     <Avatar className={className} {...props}>
       <AvatarImage
-        src={image}
+        src={image ?? undefined}
         referrerPolicy="no-referrer"
         alt={`${name}'s avatar`}
         {...imageProps}

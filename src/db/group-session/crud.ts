@@ -59,6 +59,22 @@ export async function createGroupSession(
 }
 
 //#region read
+export async function getGroupSessionCodesOfHost(hostId: string) {
+  const metadataKeys = await getKeys(
+    paths.patterns.allHostMetadataKeys(hostId),
+    MAX_USER_SESSIONS,
+  );
+
+  if (metadataKeys.size === 0) return [];
+  const codes: string[] = [];
+
+  for (const key of metadataKeys) {
+    codes.push(key.split(REDIS.SEP)[REDIS.PREFIX_PARTS + 3]);
+  }
+
+  return codes;
+}
+
 export async function getGroupSessionsOfHost(hostId: string) {
   const metadataKeys = await getKeys(
     paths.patterns.allHostMetadataKeys(hostId),
@@ -72,9 +88,9 @@ export async function getGroupSessionsOfHost(hostId: string) {
   // important, as it reduces network and processing overhead
   const pipeline = redis.multi();
 
-  for (const batch of metadataKeys) {
-    codes.push(batch.split(REDIS.SEP)[REDIS.PREFIX_PARTS + 3]);
-    pipeline.hGetAll(batch);
+  for (const key of metadataKeys) {
+    codes.push(key.split(REDIS.SEP)[REDIS.PREFIX_PARTS + 3]);
+    pipeline.hGetAll(key);
   }
   const sessions: GroupSessionData[] = [];
   const pipelinedMetadata = await pipeline.execAsPipeline();
@@ -144,6 +160,11 @@ export async function deleteGroupSession(hostId: string, code: string) {
     redis.del([...sessionKeys]),
     redis.del(paths.sessionHost(code)),
   ]);
+}
+
+export async function deleteAllHostData(hostId: string) {
+  const codes = await getGroupSessionCodesOfHost(hostId);
+  await Promise.all(codes.map((code) => deleteGroupSession(hostId, code)));
 }
 
 //#region helpers

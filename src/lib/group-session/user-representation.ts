@@ -1,6 +1,10 @@
 import { randomBytes } from "node:crypto";
 import type { Session } from "next-auth";
-import type { SupportedProvider } from "@/auth/data";
+import {
+  EPHEMERAL_PROVIDER,
+  type OfficialProvider,
+  type SupportedProvider,
+} from "@/authentication/provider";
 import type { Version } from "@/types";
 
 export const VERSION: Version = "v1";
@@ -11,21 +15,25 @@ export const VERSION: Version = "v1";
  * information such as their name and avatar URL.
  */
 export class UserRepresentation {
-  public userId: string;
-  public name: string;
-  public avatarUrl: string;
-  public provider: SupportedProvider;
-
-  private avatarId: string;
-
   /**
    * ASCII Information Separator One
+   *
+   * Used to separate serialised units.
    */
-  public static UNIT_SEPARATOR = "\u001f";
+  public static UNIT_SEPARATOR = "\u001f" as const;
   /**
    * ASCII Information Separator Two
+   *
+   * Use to indicate an empty unit.
    */
-  public static UNIT_EMPTY = "\u001e";
+  public static UNIT_EMPTY = "\u001e" as const;
+
+  public userId: string;
+  public name: string;
+  public imageId: string | null;
+  public provider: SupportedProvider;
+
+  public image: string | null;
 
   private static SERIALISATION_ORDER = [
     /**
@@ -38,11 +46,12 @@ export class UserRepresentation {
     "userId",
     "name",
     "provider",
-    "avatarId",
-  ] as const;
+    "imageId",
+  ] as const satisfies readonly (keyof UserRepresentation)[];
+  private static SERIALISED_FIELD_COUNT = this.SERIALISATION_ORDER.length;
 
-  private static AVATAR_CONFIG: Record<
-    SupportedProvider,
+  private static PROVIDER_IMAGE_CONFIG: Record<
+    OfficialProvider,
     { urlPrefix: string; urlSuffix: string; matcher: RegExp }
   > = {
     github: {
@@ -53,92 +62,87 @@ export class UserRepresentation {
     google: {
       urlPrefix: "https://lh3.googleusercontent.com/a/",
       urlSuffix: "=s96-c",
-      matcher: /^https?:\/\/lh3\.googleusercontent\.com\/a\/(.+)=s96-c$/,
+      matcher:
+        /^https?:\/\/lh\d+\.googleusercontent\.com\/(?:a|iA)\/(.+)=s96-c$/,
     },
   };
-
-  private static DECOMPRESSION_MATCHER = new RegExp(
-    "^" +
-      this.SERIALISATION_ORDER.map(() => `([^${this.UNIT_SEPARATOR}]+)`).join(
-        this.UNIT_SEPARATOR,
-      ) +
-      "$",
-  );
-
-  private static DEFAULT_IMAGE_URL = "https://ui-avatars.com/api/?name=";
 
   private constructor({
     userId,
     name,
     provider,
-    avatar,
+    imageId,
+    image,
   }: {
     userId: string;
-    name?: string | null;
+    name: string;
     provider: SupportedProvider;
-    avatar: {
-      url?: string | null;
-      id?: string;
-    };
+    imageId: string | null;
+    image: string | null;
   }) {
     this.userId = userId;
-    this.name = name ?? `User ${randomBytes(4).toString("hex")}`;
+    this.name = name;
     this.provider = provider;
-
-    const { url: avatarUrl, id: avatarId } = avatar;
-
-    if (avatarUrl === UserRepresentation.UNIT_EMPTY) {
-      this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + this.name;
-      this.avatarId = UserRepresentation.UNIT_EMPTY;
-      return;
-    }
-    if (avatarId === UserRepresentation.UNIT_EMPTY) {
-      this.avatarUrl = UserRepresentation.DEFAULT_IMAGE_URL + this.name;
-      this.avatarId = avatarId;
-      return;
-    }
-
-    this.avatarUrl = avatarUrl ?? this.getAvatarUrl(avatarId!, this.provider);
-    this.avatarId = avatarId ?? this.getAvatarId(avatarUrl!, this.provider);
+    this.imageId = imageId;
+    this.image = image;
   }
 
   /**
    * Create a new {@link UserRepresentation} from a {@link Session}
    */
   public static from(session: Session) {
+    const provider = session.provider as SupportedProvider;
+    const name =
+      session.user.name || UserRepresentation.generateRandomUsername();
+    const { image: _image, imageId: _imageId } = session.user;
+
+    // assume this session doesn't support an image
+    let imageId: string | null = null;
+    let image: string | null = null;
+
+    // this session supports an image
+    if (_image && _imageId) {
+      image = _image;
+      imageId = _imageId;
+    }
+
     return new UserRepresentation({
       userId: session.user.id,
-      name: session.user.name,
-      provider: session.provider as SupportedProvider,
-      avatar: { url: session.user?.image },
+      name,
+      provider,
+      imageId,
+      image,
     });
   }
 
   /**
-   * Deserialise a compressed string to a {@link UserRepresentation}.
+   * Create a new {@link UserRepresentation} by deserialising a compressed string.
    */
   public static fromCompressedString(compressedString: string) {
-    const matches = compressedString.match(
-      UserRepresentation.DECOMPRESSION_MATCHER,
-    );
-    if (!matches) throw new Error("Invalid compressed string format");
+    const parts = compressedString.split(UserRepresentation.UNIT_SEPARATOR);
 
-    const data = UserRepresentation.SERIALISATION_ORDER.reduce(
-      (acc, field, index) => {
-        acc[field] = matches[index + 1];
-        return acc;
-      },
-      {} as Record<
-        (typeof UserRepresentation.SERIALISATION_ORDER)[number],
-        string
-      >,
-    );
+    if (parts.length !== UserRepresentation.SERIALISED_FIELD_COUNT) {
+      throw new Error(
+        `compressed string fields must equal ${UserRepresentation.SERIALISED_FIELD_COUNT}`,
+      );
+    }
+
+    const [userId, name, _provider, _imageId] = parts;
+    const provider = _provider as SupportedProvider;
+    const imageId = UserRepresentation.parsePossiblyEmptyUnitvalue(_imageId);
+
+    let image: string | null = null;
+
+    if (provider !== EPHEMERAL_PROVIDER && imageId) {
+      image = UserRepresentation.getImageUrl(imageId, provider);
+    }
 
     return new UserRepresentation({
-      userId: data.userId,
-      name: data.name,
-      provider: data.provider as SupportedProvider,
-      avatar: { id: data.avatarId },
+      userId,
+      name,
+      provider,
+      imageId,
+      image,
     });
   }
 
@@ -147,43 +151,55 @@ export class UserRepresentation {
    */
   public toCompressedString() {
     return UserRepresentation.SERIALISATION_ORDER.map(
-      (field) => this[field],
+      (field) => this[field] ?? UserRepresentation.UNIT_EMPTY,
     ).join(UserRepresentation.UNIT_SEPARATOR);
+  }
+
+  public toJSONSummary() {
+    return {
+      image: this.image,
+      name: this.name,
+      userId: this.userId,
+      compressedUser: this.toCompressedString(),
+    };
   }
 
   /**
    * Compare two compressed strings to see if their ids match (and thus
    * are the same user)
    */
-  public static areSameCompressedUser(
-    aCompressed: string,
-    bCompressed: string,
-  ) {
-    const indexA = aCompressed.indexOf(UserRepresentation.UNIT_SEPARATOR);
-    const indexB = bCompressed.indexOf(UserRepresentation.UNIT_SEPARATOR);
+  public static areSameCompressedUser(a: string, b: string) {
+    const [idA] = a.split(UserRepresentation.UNIT_SEPARATOR, 1);
+    const [idB] = b.split(UserRepresentation.UNIT_SEPARATOR, 1);
 
-    if (indexA === -1 || indexB === -1) return false;
-
-    return (
-      aCompressed.substring(0, indexA) === bCompressed.substring(0, indexB)
-    );
+    return idA === idB;
   }
 
   /**
    * Extract the avatar ID/discriminator from an avatar URL.
    */
-  private getAvatarId(avatarUrl: string, provider: SupportedProvider) {
-    const { matcher } = UserRepresentation.AVATAR_CONFIG[provider];
+  public static getImageId(image: string, provider: OfficialProvider) {
+    const config = UserRepresentation.PROVIDER_IMAGE_CONFIG[provider];
 
-    return avatarUrl.match(matcher)?.[1] ?? UserRepresentation.UNIT_EMPTY;
+    return image.match(config.matcher)?.[1] ?? null;
   }
 
   /**
    * Compose an avatar URL from an avatar ID/discriminator and provider.
    */
-  private getAvatarUrl(avatarId: string, provider: SupportedProvider) {
-    const { urlPrefix, urlSuffix } = UserRepresentation.AVATAR_CONFIG[provider];
+  private static getImageUrl(imageId: string, provider: OfficialProvider) {
+    const { urlPrefix, urlSuffix } =
+      UserRepresentation.PROVIDER_IMAGE_CONFIG[provider];
 
-    return urlPrefix.concat(avatarId, urlSuffix);
+    return `${urlPrefix}${imageId}${urlSuffix}`;
+  }
+
+  private static generateRandomUsername() {
+    return `User ${randomBytes(4).toString("hex")}`;
+  }
+
+  private static parsePossiblyEmptyUnitvalue(value: string) {
+    if (value === UserRepresentation.UNIT_EMPTY) return null;
+    return value;
   }
 }

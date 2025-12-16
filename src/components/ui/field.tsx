@@ -111,8 +111,12 @@ function FieldLabel({
   className,
   required,
   children,
+  disableAsterisk = false,
   ...props
-}: React.ComponentProps<typeof Label> & { required?: boolean }) {
+}: React.ComponentProps<typeof Label> & {
+  required?: boolean;
+  disableAsterisk?: boolean;
+}) {
   return (
     <Label
       data-slot="field-label"
@@ -124,7 +128,7 @@ function FieldLabel({
       )}
       {...props}>
       {children}
-      {required && (
+      {required && !disableAsterisk && (
         <span className="text-destructive">
           <Asterisk className="size-3" />
         </span>

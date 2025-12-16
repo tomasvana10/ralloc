@@ -134,12 +134,7 @@ export function SessionViewer({
   userRepresentation,
 }: {
   code: string;
-  userRepresentation: {
-    avatarUrl: string;
-    name: string;
-    userId: string;
-    compressedUser: string;
-  };
+  userRepresentation: ReturnType<UserRepresentation["toJSONSummary"]>;
 }) {
   const router = useRouter();
   const isMobile = useIsBelowBreakpoint(640);
@@ -404,9 +399,9 @@ function SessionHeader({
       <div className="flex flex-row sm:items-center items-start sm:gap-4 gap-2 min-h-[70px]">
         {!isMobile && (
           <ClientAvatar
-            image={repr.avatarUrl}
+            image={repr.image}
             name={repr.name}
-            className="size-16 bg-card border border-accent"
+            className="size-16 bg-card border border-accent text-2xl"
           />
         )}
         <div className="flex flex-col gap-2">
@@ -414,7 +409,7 @@ function SessionHeader({
             <div className="flex flex-row gap-2">
               {isMobile && (
                 <ClientAvatar
-                  image={repr.avatarUrl}
+                  image={repr.image}
                   name={repr.name}
                   className="size-8 bg-card border border-accent"
                 />

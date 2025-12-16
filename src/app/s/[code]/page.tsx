@@ -32,7 +32,6 @@ export async function generateMetadata(
 export default async function GroupSessionPage({ params }: Props) {
   const { code } = await params;
   const session = (await auth())!;
-  const rep = UserRepresentation.from(session);
 
   if (!(await doesGroupSessionExist(code))) notFound();
   const hostId = await getHostId(code);
@@ -44,12 +43,7 @@ export default async function GroupSessionPage({ params }: Props) {
     <BasePage returnTo={isHost ? "/sessions" : "/"}>
       <SessionViewer
         code={code}
-        userRepresentation={{
-          avatarUrl: rep.avatarUrl,
-          name: rep.name,
-          userId: rep.userId,
-          compressedUser: rep.toCompressedString(),
-        }}
+        userRepresentation={UserRepresentation.from(session).toJSONSummary()}
       />
     </BasePage>
   );

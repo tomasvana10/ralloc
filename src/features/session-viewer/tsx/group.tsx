@@ -385,7 +385,7 @@ export function GroupMembersDialog({
                     zIndex: i,
                   }}>
                   <ClientAvatar
-                    image={repr.avatarUrl}
+                    image={repr.image}
                     name={repr.name}
                     imageProps={{
                       draggable: false,
@@ -424,7 +424,7 @@ export function GroupMembersDialog({
                   key={repr.userId}
                   className="py-1 flex items-center gap-2 min-w-0">
                   <ClientAvatar
-                    image={repr.avatarUrl}
+                    image={repr.image}
                     name={repr.name}
                     imageProps={{
                       draggable: false,
