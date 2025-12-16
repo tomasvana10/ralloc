@@ -41,6 +41,15 @@ function writeRedisConf(filename, password) {
   console.log(chalk.green(`Updated ${filename}`));
 }
 
+export function isHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 async function getPassword(asConfirmation, firstPassword = null, mask = "*") {
   if (asConfirmation && !firstPassword)
     throw new Error(
@@ -70,7 +79,7 @@ async function main() {
 
   //#region 1. does user want to use docker
   const useDocker = await confirm({
-    message: "Do you want to use Docker?",
+    message: "Use Docker?",
     default: true,
   });
 
@@ -91,7 +100,7 @@ async function main() {
   );
 
   const devPort = await input({
-    message: "Development port:",
+    message: "NextJS Development port:",
     default: DEFAULT_PORT.toString(),
     validate: (val) => {
       const num = parseInt(val, 10);
@@ -142,7 +151,7 @@ async function main() {
   }
 
   const devOpenRedis = await confirm({
-    message: "Do you want to open the Redis database to your local network?",
+    message: "Open the Redis database to your local network?",
     default: false,
   });
 
@@ -153,12 +162,21 @@ async function main() {
   }
 
   const devEnableRatelimiting = await confirm({
-    message: "Enable rate limiting in development?",
+    message: "Enable NextJS API rate limiting?",
     default: false,
   });
   devEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
 
+  const devEnableGuestAuth = await confirm({
+    message:
+      "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
+    default: false,
+  });
+  devEnv.ENABLE_GUEST_AUTH = devEnableGuestAuth ? "1" : "0";
+
+  console.log();
   writeEnvFile(".env.development", devEnv);
+  console.log();
   if (devOpenRedis) writeRedisConf("redis.dev.conf", devEnv.REDIS_PASSWORD);
 
   // production
@@ -168,12 +186,7 @@ async function main() {
 
   const prodUrl = await input({
     message: "App hostname:",
-    validate: (val) => {
-      if (!val.startsWith("http://") && !val.startsWith("https://")) {
-        return "URL must start with http:// or https://";
-      }
-      return true;
-    },
+    validate: isHttpUrl,
   });
 
   const prodEnv = {
@@ -208,7 +221,7 @@ async function main() {
   }
 
   const prodOpenRedis = await confirm({
-    message: "Do you want to open the Redis database to your local network?",
+    message: "Open the Redis database to your local network?",
     default: false,
   });
 
@@ -219,12 +232,21 @@ async function main() {
   }
 
   const prodEnableRatelimiting = await confirm({
-    message: "Enable rate limiting in production?",
+    message: "Enable NextJS API rate limiting?",
     default: true,
   });
   prodEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
 
+  const prodEnableGuestAuth = await confirm({
+    message:
+      "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
+    default: false,
+  });
+  prodEnv.ENABLE_GUEST_AUTH = prodEnableGuestAuth ? "1" : "0";
+
+  console.log();
   writeEnvFile(".env.production", prodEnv);
+  console.log();
   if (prodOpenRedis) writeRedisConf("redis.prod.conf", prodEnv.REDIS_PASSWORD);
 
   //#region 3. docker network
@@ -255,27 +277,27 @@ async function main() {
   //#region 4. next steps
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
-  console.log(`1. generate an auth secret:\n`);
+  console.log(`1. Generate an auth secret:\n`);
   console.log(`   ${chalk.green("pnpm dlx auth secret")}\n`);
 
-  console.log(`2. add OAuth providers using the provider script:\n`);
+  console.log(`2. Add OAuth providers to your environment using the add-provider script:\n`);
   console.log(`   ${chalk.green("./scripts/add-provider")}\n`);
 
   if (!useDocker) {
-    console.log(`3. since you aren't using Docker:\n`);
+    console.log(`3. Since you aren't using Docker:\n`);
     console.log(
       `   - remove ${chalk.yellow('output: "standalone"')} from ${chalk.cyan("next.config.ts")}`,
     );
-    console.log(`   - run in dev:  ${chalk.green("pnpm run dev")}`);
-    console.log(`   - run in prod: ${chalk.green("pnpm run deploy")}\n`);
+    console.log(`   - Run in dev:  ${chalk.green("pnpm run dev")}`);
+    console.log(`   - Run in prod: ${chalk.green("pnpm run deploy")}\n`);
   } else {
-    console.log(`3. since you're using Docker:\n`);
-    console.log(`   - run in dev:          ${chalk.green("pnpm run d:dev")}`);
+    console.log(`3. Since you're using Docker:\n`);
+    console.log(`   - Run in dev:          ${chalk.green("pnpm run d:dev")}`);
     console.log(
-      `   - run in prod (local): ${chalk.green("pnpm run d:prod-local")}`,
+      `   - Run in prod (local): ${chalk.green("pnpm run d:prod-local")}`,
     );
     console.log(
-      `   - run in prod (CI/CD): ${chalk.green("pnpm run d:prod-ci")}\n`,
+      `   - Run in prod (CI/CD): ${chalk.green("pnpm run d:prod-ci")}\n`,
     );
   }
 

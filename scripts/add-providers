@@ -29,7 +29,7 @@ function updateEnvFile(filename, vars) {
   writeFileSync(filename, `${content}\n`);
 
   if (added > 0)
-    console.log(chalk.green(`  Added ${added} variable(s) to ${filename}`));
+    console.log(chalk.green(`Added ${added} variable(s) to ${filename}`));
 }
 
 async function addProvider() {
@@ -54,7 +54,10 @@ async function addProvider() {
     message: "How do you want to configure credentials?",
     choices: [
       { name: "Scoped (separate credentials for dev/prod)", value: "scoped" },
-      { name: "Global (same credentials for both environments)", value: "global" },
+      {
+        name: "Global (same credentials for both environments)",
+        value: "global",
+      },
     ],
     default: "scoped",
   });
@@ -123,21 +126,18 @@ async function addProvider() {
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(
-    `1. add SVG icon${isScoped ? "s" : ""} for ${chalk.yellow(providerName)} to ${chalk.cyan("src/auth/svgs.tsx")}`,
+    `1 If you want to add icons for your provider, ${chalk.gray("src/authentication/icon/")}${chalk.blue(` ${providerName}.tsx`)} and ` +
+      `export a component named ${chalk.gray("Default")} (and an optional component named ${chalk.gray("Dark")}).`,
   );
-  console.log(`   you may want separate icons for light/dark themes.\n`);
   console.log(
-    `2. add the provider configuration to ${chalk.cyan("src/auth/data.ts")}\n`,
+    `2. Declare your provider in ${chalk.gray("src/authentication/")}${chalk.blue("provider.ts @OFFICIAL_PROVIDERS")}`,
   );
-
-  // 6. reminder about existing data
   console.log(
-    chalk.yellow(
-      "Reminder: delete any existing auth data/SVGs you don't longer need.\n",
-    ),
+    `3. Declare your provider icons in ${chalk.gray("src/authentication/icon/")}${chalk.blue("index.ts @PROVIDER_ICON_DATA")}`,
   );
-
-  console.log(chalk.green(`Provider ${providerName} added!\n`));
+  console.log(
+    `4. Add your provider to array ${chalk.gray("src/authentication/")}${chalk.blue("index.ts @providers")}\n`,
+  );
 }
 
 async function main() {
@@ -157,8 +157,6 @@ async function main() {
       break;
     }
   }
-
-  console.log(chalk.green(chalk.bold("\nProvider setup complete!\n")));
 }
 
 main().catch((err) => {
