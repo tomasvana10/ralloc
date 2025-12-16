@@ -17,7 +17,7 @@ export async function GET(_: Request, { params }: Context) {
 
   if (res) return res;
 
-  if (session.user.id !== hostId) new Response(null, { status: 403 });
+  if (session.user.id !== hostId) return new Response(null, { status: 403 });
 
   return withRateLimitHeaders(
     Response.json({ data: await getGroupSessionsOfHost(hostId) }),
