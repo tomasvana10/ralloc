@@ -2,9 +2,9 @@ import { auth } from "@/auth";
 import { getGroupSessionsOfHost } from "@/db/group-session";
 import { rateLimit } from "@/db/rate-limit";
 
-type Params = Promise<{ id: string }>;
+type Context = RouteContext<"/api/host/[id]/sessions">;
 
-export async function GET(_: Request, { params }: { params: Params }) {
+export async function GET(_: Request, { params }: Context) {
   const { id: hostId } = await params;
   const session = (await auth())!;
 

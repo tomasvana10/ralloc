@@ -17,9 +17,9 @@ import { GSServer } from "@/lib/group-session/proto";
 import { getZodSafeParseErrorResponse } from "@/lib/utils";
 import { RoomManager } from "../../session-ws/[code]/room";
 
-type Params = Promise<{ code: string }>;
+type Context = RouteContext<"/api/sessions/[code]">;
 
-export async function DELETE(_: Request, { params }: { params: Params }) {
+export async function DELETE(_: Request, { params }: Context) {
   const { code } = await params;
   const session = (await auth())!;
   const userId = session.user.id;
@@ -44,7 +44,7 @@ export async function DELETE(_: Request, { params }: { params: Params }) {
   return withRateLimitHeaders(new Response(null, { status: 204 }));
 }
 
-export async function PATCH(req: Request, { params }: { params: Params }) {
+export async function PATCH(req: Request, { params }: Context) {
   const { code } = await params;
   const session = (await auth())!;
   const userId = session.user.id;
@@ -101,7 +101,7 @@ export async function PATCH(req: Request, { params }: { params: Params }) {
   return withRateLimitHeaders(new Response());
 }
 
-export async function HEAD(_: Request, { params }: { params: Params }) {
+export async function HEAD(_: Request, { params }: Context) {
   const { code } = await params;
   const session = (await auth())!;
 
