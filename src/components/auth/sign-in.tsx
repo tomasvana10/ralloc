@@ -1,5 +1,4 @@
 import { signIn } from "@/auth";
-import { IS_GUEST_SIGNIN_ENABLED } from "@/authentication";
 import { GuestSignInForm } from "@/authentication/guest-sign-in-form";
 import { ProviderIcon } from "@/authentication/icon";
 import {
@@ -14,6 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { config } from "@/config";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (
@@ -34,7 +34,7 @@ export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
             />
           ))}
         </div>
-        {IS_GUEST_SIGNIN_ENABLED && (
+        {config.isGuestAuthEnabled && (
           <>
             <div className="text-sm text-muted-foreground my-6 gap-2">
               <p>

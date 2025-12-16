@@ -4,6 +4,7 @@ import type { Provider } from "next-auth/providers";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+import { config } from "@/config";
 import { deleteAllHostData } from "@/db/group-session";
 import { UserRepresentation } from "@/lib/group-session";
 import { guestSignInSchema } from "./guest-sign-in-form";
@@ -11,9 +12,7 @@ import { GUEST_PROVIDER, type OfficialProvider } from "./provider";
 
 const providers: Provider[] = [Google, GitHub];
 
-export const IS_GUEST_SIGNIN_ENABLED = !!+(process.env.ENABLE_GUEST_AUTH ?? 1);
-
-if (IS_GUEST_SIGNIN_ENABLED) {
+if (config.isGuestAuthEnabled) {
   providers.push(
     Credentials({
       id: GUEST_PROVIDER,

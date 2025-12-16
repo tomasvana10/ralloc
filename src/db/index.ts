@@ -1,4 +1,5 @@
 import { createClient } from "redis";
+import { config } from "@/config";
 import type { Version } from "@/types";
 
 export const VERSION: Version = "v1";
@@ -56,7 +57,7 @@ export const redisKey = (...parts: (string | number)[]) =>
 export default redis;
 export { redisPub, redisSub, createSubClient };
 
-if (process.env.NODE_ENV !== "production") {
+if (config.isDevelopment) {
   globalThis.redisGlobal = redis;
   globalThis.redisPub = redisPub;
   globalThis.redisSub = redisSub;

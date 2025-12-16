@@ -1,9 +1,6 @@
+import { config } from "@/config";
 import redis, { redisKey } from "@/db";
 import { getLuaScriptSha, loadLuaScript } from "../lua-script";
-
-export const IS_RATELIMITING_ENABLED = !!+(
-  process.env.ENABLE_RATELIMITING ?? 1
-);
 
 export interface AppliedRateLimitDetails {
   allowed: boolean;
@@ -66,7 +63,7 @@ export async function rateLimit({
   requestsPerMinute: number;
   burst: number;
 }) {
-  if (!IS_RATELIMITING_ENABLED)
+  if (!config.isRateLimitingEnabled)
     return { withRateLimitHeaders: (res: Response) => res };
 
   const result = await applyRateLimit(
