@@ -12,9 +12,9 @@ Ralloc is a web-based tool designed for fast, ephemeral group allocation.
 - [Issues](https://github.com/tomasvana10/ralloc/issues)
 - [Wiki](https://github.com/tomasvana10/ralloc/wiki)
 
-## Installation and self-hosting
+## Installation and Self-Hosting
 
-If you are interested in self-hosting Ralloc, follow these steps.
+If you are interested in self-hosting `Ralloc`, follow these steps.
 
 Requirements: [`pnpm`](https://pnpm.io/installation)
 
@@ -22,8 +22,21 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 2. `cd ralloc`
 3. If you are using docker, install dev dependencies using `pnpm i --dev`. Otherwise, install all dependencies using `pnpm i`.
 4. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
-6. Set up the environment by running `./scripts/setup`. This script will also inform you how Ralloc can be started in development/production.
+6. Set up the environment by running `./scripts/setup`. This script will also inform you how `Ralloc` can be started in development/production.
 7. Add your OAuth providers by running `./scripts/add-provider`.
+
+## Environment Variable Reference
+
+`.env.local`: 
+- Used solely for global authentication secret/id pairs and the `NextAuth` authentication secret.
+
+`.env.development` and `.env.production`:
+- Authentication secret/id pairs
+- `AUTH_URL`: `NextAuth` base URL for callbacks and redirects.
+- `REDIS_URL`: URL of the redis database.
+- `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
+- `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).
+
 
 ## Todo
 
