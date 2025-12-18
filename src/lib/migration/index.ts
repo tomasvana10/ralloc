@@ -6,7 +6,7 @@ import * as userRepresentations from "./user-representations";
 
 export interface Migration {
   description: string;
-  migrator: (previousVersion: string) => Promise<void>;
+  migrator: () => Promise<void>;
 }
 
 export type Migrations = Record<Version, Migration>;
@@ -76,7 +76,7 @@ async function applyMigrations(
     log(`Migrating '${scope}@${previousVersion}' to ${newVersion}`);
 
     try {
-      await data.migrator(previousVersion);
+      await data.migrator();
       await redis.set(versionKey, newVersion);
       log(
         chalk.green(`Migrated '${scope}@${previousVersion}' to ${newVersion}`),
