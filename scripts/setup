@@ -18,7 +18,8 @@ function commandExists(cmd) {
   }
 }
 
-function writeEnvFile(filename, vars) {
+function writeEnvFile(_filename, vars, prefix = "apps/web") {
+  const filename = `${prefix}/${_filename}`;
   let existing = {};
 
   if (existsSync(filename))
@@ -278,9 +279,12 @@ async function main() {
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(`1. Generate an auth secret:\n`);
+  console.log(`   ${chalk.green("cd apps/web")}`);
   console.log(`   ${chalk.green("pnpm dlx auth secret")}\n`);
 
-  console.log(`2. Add OAuth providers to your environment using the add-provider script:\n`);
+  console.log(
+    `2. Add OAuth providers to your environment using the add-provider script:\n`,
+  );
   console.log(`   ${chalk.green("./scripts/add-provider")}\n`);
 
   if (!useDocker) {
@@ -288,16 +292,16 @@ async function main() {
     console.log(
       `   - remove ${chalk.yellow('output: "standalone"')} from ${chalk.cyan("next.config.ts")}`,
     );
-    console.log(`   - Run in dev:  ${chalk.green("pnpm run dev")}`);
-    console.log(`   - Run in prod: ${chalk.green("pnpm run deploy")}\n`);
+    console.log(`   - Run in dev:  ${chalk.green("pnpm run --filter web dev")}`);
+    console.log(`   - Run in prod: ${chalk.green("pnpm run --filter web deploy")}\n`);
   } else {
     console.log(`3. Since you're using Docker:\n`);
-    console.log(`   - Run in dev:          ${chalk.green("pnpm run d:dev")}`);
+    console.log(`   - Run in dev:          ${chalk.green("pnpm run --filter d:dev")}`);
     console.log(
-      `   - Run in prod (local): ${chalk.green("pnpm run d:prod-local")}`,
+      `   - Run in prod (local): ${chalk.green("pnpm run --filter d:prod-local")}`,
     );
     console.log(
-      `   - Run in prod (CI/CD): ${chalk.green("pnpm run d:prod-ci")}\n`,
+      `   - Run in prod (CI/CD): ${chalk.green("pnpm run --filter d:prod-ci")}\n`,
     );
   }
 

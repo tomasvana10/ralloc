@@ -27,10 +27,10 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 
 ## Environment Variable Reference
 
-`.env.local`: 
+`apps/web/.env.local`: 
 - Used solely for global authentication secret/id pairs and the `NextAuth` authentication secret.
 
-`.env.development` and `.env.production`:
+`apps/web/.env.development` and `apps/web/.env.production`:
 - Authentication secret/id pairs
 - `AUTH_URL`: `NextAuth` base URL for callbacks and redirects.
 - `REDIS_URL`: URL of the redis database.

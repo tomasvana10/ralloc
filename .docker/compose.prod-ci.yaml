@@ -5,8 +5,8 @@ services:
     labels:
       - com.centurylinklabs.watchtower.enable=true
     env_file:
-      - ../.env.production
-      - ../.env.local
+      - ../apps/web/.env.production
+      - ../apps/web/.env.local
     restart: unless-stopped
     environment:
       - FORCE_COLOR=1

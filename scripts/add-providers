@@ -5,7 +5,8 @@ import { confirm, input, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
-function updateEnvFile(filename, vars) {
+function updateEnvFile(_filename, vars, prefix="apps/web") {
+  const filename = `${prefix}/${_filename}`
   const existing = existsSync(filename)
     ? dotenv.parse(readFileSync(filename, "utf-8"))
     : {};
@@ -126,17 +127,17 @@ async function addProvider() {
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(
-    `1 If you want to add icons for your provider, ${chalk.gray("src/authentication/icon/")}${chalk.blue(` ${providerName}.tsx`)} and ` +
+    `1. Add your provider to array ${chalk.gray("apps/web/src/features/auth/")}${chalk.blue("index.ts @providers")}`,
+  );
+  console.log(
+    `2. Declare your provider in ${chalk.gray("packages/core/src/auth/")}${chalk.blue("provider.ts @OFFICIAL_PROVIDERS")}`,
+  );
+  console.log(
+    `3. If you want to add icons for your provider, ${chalk.gray("apps/web/src/features/auth/icon/")}${chalk.blue(` ${providerName}.tsx`)} and ` +
       `export a component named ${chalk.gray("Default")} (and an optional component named ${chalk.gray("Dark")}).`,
   );
   console.log(
-    `2. Declare your provider in ${chalk.gray("src/authentication/")}${chalk.blue("provider.ts @OFFICIAL_PROVIDERS")}`,
-  );
-  console.log(
-    `3. Declare your provider icons in ${chalk.gray("src/authentication/icon/")}${chalk.blue("index.ts @PROVIDER_ICON_DATA")}`,
-  );
-  console.log(
-    `4. Add your provider to array ${chalk.gray("src/authentication/")}${chalk.blue("index.ts @providers")}\n`,
+    `4. If you followed step 3, declare your provider icons in ${chalk.gray("apps/web/src/features/auth/icon/")}${chalk.blue("index.ts @PROVIDER_ICON_DATA")}\n`,
   );
 }
 
