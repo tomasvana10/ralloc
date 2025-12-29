@@ -47,16 +47,5 @@
         "organizeImports": "on"
       }
     }
-  },
-  "overrides": [
-    {
-      "includes": ["src/components/ui/**"],
-      "linter": {
-        "rules": {
-          "a11y": "off",
-          "suspicious": "off"
-        }
-      }
-    }
-  ]
+  }
 }

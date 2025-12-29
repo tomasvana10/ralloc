@@ -1,0 +1,11 @@
+{
+  "extends": ["../../tsconfig.base"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@web/*": ["./src/*"],
+      "@core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "../../packages/core/src/**/*"]
+}

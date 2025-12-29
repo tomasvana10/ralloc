@@ -1,0 +1,16 @@
+**/.next
+**/.cache
+**/node_modules
+**/out
+**/.env*
+**/biome.json
+**/.DS_Store 
+**/.docker
+**/build
+**/dist
+**/*.tsbuildinfo
+**/*.pem
+**/.pnpm-debug.log*
+
+coverage
+.git

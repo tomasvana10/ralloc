@@ -1,0 +1,9 @@
+{
+  "name": "@ralloc/core",
+  "version": "0.26.0",
+  "dependencies": {
+    "redis": "^5.10.0",
+    "zod": "catalog:",
+    "next-auth": "catalog:"
+  }
+}
