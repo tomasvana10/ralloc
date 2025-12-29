@@ -48,10 +48,10 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 - [ ] Create /about and/or /faq
 - [ ] Create support/help page (on the website or on github)
 - [ ] Create privacy and usage related markdown documents
-- [ ] Implement forced group session expiry (and listen to expiring keys potentially?)
 - [ ] Improve page metadata in general and possibly add sitemap
 - [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
 - [X] (!!!) TOKEN BUCKET RATE LIMITS FOR: websocket AND REST api
+- [X] (not planned) Implement forced group session expiry (and listen to expiring keys potentially?)
 - [X] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
 - [X] Create a logo
 - [X] Implement group control - UI, websockets, etc.
