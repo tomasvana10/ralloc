@@ -1,5 +1,5 @@
-![Ralloc logo](public/icon-light.png#gh-light-mode-only)
-![Ralloc logo](public/icon-dark.png#gh-dark-mode-only)
+![Ralloc logo](apps/web/public/icon-light.png#gh-light-mode-only)
+![Ralloc logo](apps/web/public/icon-dark.png#gh-dark-mode-only)
 
 # Ralloc
 
