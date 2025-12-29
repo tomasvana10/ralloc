@@ -3,12 +3,15 @@
   "version": "0.26.0",
   "private": true,
   "scripts": {
+    "cs:add": "changeset",
+    "cs:version": "changeset version",
     "lint": "biome check",
     "format": "biome format --write",
     "prepare": "[ -d .git ] && lefthook install || echo \"no lefthook in container\""
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
+    "@changesets/cli": "^2.29.8",
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "@inquirer/prompts": "^8.1.0",
