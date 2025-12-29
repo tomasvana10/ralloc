@@ -51,7 +51,7 @@ export async function createGroupSession(
   for (const groupName of groupNames) {
     // placeholder (as of now) used to find all group names.
     // NOTE: modify this to add group-specific metadata in the future
-    tx.hSet(paths.groupMetadata(hostId, code, groupName), { _: "_" });
+    tx.hSet(paths.groupMetadata(hostId, code, groupName), { _: "" });
   }
 
   await tx.exec();

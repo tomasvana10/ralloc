@@ -18,5 +18,5 @@ end
 
 redis.call("HINCRBY", sessionMetadataKey, groupCountKeyName, 1)
 
-redis.call("HSET", groupMetadataKey, "_", "_")
+redis.call("HSET", groupMetadataKey, "_", "")
 return {"success", ""}
