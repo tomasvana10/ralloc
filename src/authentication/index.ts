@@ -5,7 +5,7 @@ import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { config } from "@/config";
-import { deleteAllHostData } from "@/db/group-session";
+import { pruneUserData } from "@/db/prune";
 import { UserRepresentation } from "@/lib/group-session";
 import { guestSignInSchema } from "./guest-sign-in-form";
 import { GUEST_PROVIDER, type OfficialProvider } from "./provider";
@@ -46,38 +46,32 @@ export const nextAuth = NextAuth({
       // method. this prevents users from clogging up the database by repeatedly
       // creating guest sessions
       if ("token" in message && message.token?.provider === GUEST_PROVIDER) {
-        await deleteAllHostData(message.token.id);
+        await pruneUserData(message.token.id);
       }
     },
   },
   callbacks: {
     authorized: async ({ auth }) => !!auth,
     jwt: async ({ token, account, profile, user }) => {
-      if (account && user) {
-        if (!account.provider || !user.name) {
-          return null;
-        }
+      if (!account) return token;
 
-        token.provider = account.provider;
-        token.name = user.name;
+      if (!account.provider || !user?.name) return null;
 
-        if (account.provider === GUEST_PROVIDER) {
-          token.id = user.id;
-        } else {
-          const provider = account.provider as OfficialProvider;
-          token.id = String(profile?.sub || profile?.id || token.id);
+      token.provider = account.provider;
+      token.name = user.name;
 
-          if (user.image) {
-            token.imageId = UserRepresentation.getImageId(user.image, provider);
-          }
-        }
+      if (account.provider === GUEST_PROVIDER) {
+        token.id = user.id;
+      } else {
+        const provider = account.provider as OfficialProvider;
+        token.id = String(profile?.sub ?? profile?.id ?? token.id);
 
-        if (!token.id) {
-          return null;
+        if (user.image) {
+          token.imageId = UserRepresentation.getImageId(user.image, provider);
         }
       }
 
-      return token;
+      return token.id ? token : null;
     },
     session: async ({ session, token }) => {
       session.user.id = token.id;
