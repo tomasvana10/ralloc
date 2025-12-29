@@ -1,6 +1,9 @@
-import redis from ".";
+import redis, { REDIS } from ".";
 
-export async function getKeys(match: string, count: number = 10) {
+export async function getKeys(
+  match: string,
+  count: number = REDIS.DEFAULT_BATCH_COUNT,
+) {
   const keys = new Set<string>();
   for await (const batch of redis.scanIterator({
     MATCH: match,

@@ -9,7 +9,7 @@ import {
   type BaseActionSuccess,
 } from "./types";
 
-function parseScriptResult(result: string[]) {
+function _parseScriptResult(result: string[]) {
   const status = result[0] as ActionStatus.Success | ActionStatus.Failure;
   const message = result[1];
   const originalGroupName = result[2] || undefined;
@@ -79,7 +79,7 @@ export async function joinGroup({
   })) as string[];
 
   const { status, message, newGroupName, originalGroupName } =
-    parseScriptResult(result);
+    _parseScriptResult(result);
 
   return status === ActionStatus.Success
     ? {
@@ -117,7 +117,7 @@ export async function leaveGroup({
   })) as string[];
 
   const { status, message, newGroupName, originalGroupName } =
-    parseScriptResult(result);
+    _parseScriptResult(result);
 
   return status === ActionStatus.Success
     ? {

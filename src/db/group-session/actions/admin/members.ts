@@ -1,6 +1,6 @@
 import redis from "@/db";
 import { getKeys } from "@/db/utils";
-import { MAX_GROUPS, UserRepresentation } from "@/lib/group-session";
+import { UserRepresentation } from "@/lib/group-session";
 import { type GroupSessionData, paths } from "../..";
 import {
   ActionErrorMessage,
@@ -8,8 +8,6 @@ import {
   type BaseActionFailure,
   type BaseActionSuccess,
 } from "../types";
-
-const GROUP_MEMBER_SCAN_COUNT = Math.floor(Math.floor(MAX_GROUPS * 0.7) * 1.5);
 
 export type GroupMembersClearErrorMessage = ActionErrorMessage.Nonexistent;
 export type GroupMembersClearResult =
@@ -56,14 +54,8 @@ export async function clearAllGroupMembers({
   "hostId" | "code"
 >): Promise<GroupClearAllMembersResult> {
   const [memberKeys, userGroupKeys] = await Promise.all([
-    getKeys(
-      paths.patterns.allGroupMembers(hostId, code),
-      GROUP_MEMBER_SCAN_COUNT,
-    ),
-    getKeys(
-      paths.patterns.allUserGroups(hostId, code),
-      GROUP_MEMBER_SCAN_COUNT,
-    ),
+    getKeys(paths.patterns.allGroupMembers(hostId, code)),
+    getKeys(paths.patterns.allUserGroups(hostId, code)),
   ]);
 
   const keys = [...memberKeys, ...userGroupKeys];

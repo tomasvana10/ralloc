@@ -5,7 +5,6 @@ import type { baseSessionEditSchema } from "@/features/forms/group-session/edit"
 import {
   expandGroupSeed,
   generateSessionCode,
-  MAX_GROUPS,
   MAX_USER_SESSIONS,
   UserRepresentation,
 } from "@/lib/group-session";
@@ -18,9 +17,6 @@ import {
   getHostId,
   paths,
 } from ".";
-
-const GROUP_SCAN_COUNT = Math.floor(MAX_GROUPS * 0.7);
-const ALL_SESSION_KEYS_SCAN_COUNT = Math.floor(GROUP_SCAN_COUNT * 1.1);
 
 //#region create
 export async function createGroupSession(
@@ -152,7 +148,6 @@ export async function updateGroupSession(
 export async function deleteGroupSession(hostId: string, code: string) {
   const sessionKeys = await getKeys(
     paths.patterns.allHostSessionKeys(hostId, code),
-    ALL_SESSION_KEYS_SCAN_COUNT,
   );
   if (!sessionKeys.size) return;
 
@@ -169,10 +164,7 @@ export async function deleteAllHostData(hostId: string) {
 
 //#region helpers
 async function getGroups(hostId: string, code: string) {
-  const groupKeys = await getKeys(
-    paths.patterns.allGroupNames(hostId, code),
-    GROUP_SCAN_COUNT,
-  );
+  const groupKeys = await getKeys(paths.patterns.allGroupNames(hostId, code));
 
   const tx = redis.multi();
   const groupNames: string[] = [];

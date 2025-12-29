@@ -1,23 +1,38 @@
 import type { SessionCreateSchema } from "@/features/forms/group-session/create";
 import { redisKey } from "..";
 
+/**
+ * Metadata of the group session stored as a redis
+ * hash at {@link paths.metadata}.
+ */
 export type GroupSessionMetadata = {
   createdOn: number;
   compressedHost: string;
   groupCount: number;
 } & Omit<SessionCreateSchema, "groupSeed">;
 
+/**
+ * The complete data of a group session, compiled from
+ * {@link paths.metadata}, {@link paths.groupMetadata}
+ * and a `hostId` and `code`.
+ */
 export type GroupSessionData = {
   code: string;
   hostId: string;
   groups: GroupSessionGroupData[];
 } & GroupSessionMetadata;
 
-/* biome-ignore lint/complexity/noBannedTypes: intended as a placeholder
+/* 
+biome-ignore lint/complexity/noBannedTypes: intended as a placeholder
 since Record<string, never> messes up GroupSessionGroupData
+
+Metadata of a group session's group.
 */
 export type GroupSessionGroupMetadata = {};
 
+/**
+ * The complete data of a group session's group.
+ */
 export type GroupSessionGroupData = {
   name: string;
   members: string[];
@@ -48,7 +63,6 @@ export const paths = {
       redisKey("host", hostId, "session", code, "userGroup", "*"),
   },
   pubsub: {
-    //newData: (code: string) => redisKey("gnewdata", code),
     partialData: (code: string) => redisKey("gpartialdata", code),
     deleted: (code: string) => redisKey("gdeleted", code),
   },

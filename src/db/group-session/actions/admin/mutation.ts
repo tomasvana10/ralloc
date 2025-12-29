@@ -13,7 +13,7 @@ import {
   type BaseActionSuccess,
 } from "../types";
 
-function parseScriptResult(result: string[]) {
+function _parseScriptResult(result: string[]) {
   const status = result[0] as ActionStatus.Success | ActionStatus.Failure;
   const message = result[1];
 
@@ -39,7 +39,7 @@ async function _mutateGroup(
     arguments: argv,
   })) as string[];
 
-  const { status, message } = parseScriptResult(result);
+  const { status, message } = _parseScriptResult(result);
 
   return status === ActionStatus.Failure
     ? {
