@@ -1,11 +1,20 @@
-function numericLiteralToBoolean(literal?: string) {
-  return !!+(literal ?? 1);
+function numericStringToBoolean(
+  literal: string | undefined,
+  defaultValue = false,
+) {
+  if (literal === "1") return true;
+  if (literal === "0") return false;
+  return defaultValue;
 }
 
 export const config = {
-  isGuestAuthEnabled: numericLiteralToBoolean(process.env.ENABLE_GUEST_AUTH),
-  isRateLimitingEnabled: numericLiteralToBoolean(
+  isGuestAuthEnabled: numericStringToBoolean(
+    process.env.ENABLE_GUEST_AUTH,
+    false,
+  ),
+  isRateLimitingEnabled: numericStringToBoolean(
     process.env.ENABLE_RATELIMITING,
+    true,
   ),
   isProduction: process.env.NODE_ENV === "production",
   isDevelopment: process.env.NODE_ENV === "development",
