@@ -10,15 +10,15 @@ RUN corepack enable
 WORKDIR /app
 
 # install dependencies
-COPY package.json pnpm-lock.yaml* .npmrc* ./
+COPY pnpm-workspace.yaml pnpm-lock.yaml* package.json .npmrc* ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/core/package.json ./packages/core/
 RUN pnpm install --frozen-lockfile
 
 # copy required files
-COPY src ./src
-COPY public ./public
-COPY next.config.ts .
-COPY tsconfig.json .
-COPY postcss.config.mjs .
+COPY apps/web ./apps/web
+COPY packages/core ./packages/core
+COPY tsconfig.base.json .
 
 # https://github.com/vercel/next.js/discussions/14030
 # build-time environment variables
@@ -28,7 +28,7 @@ ENV NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
 ARG REDIS_URL=redis://dummy_url:6379
 ENV REDIS_URL=${REDIS_URL}
 
-RUN pnpm run build
+RUN pnpm --filter @ralloc/web build
 
 FROM base AS runner
 
@@ -39,15 +39,14 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/src/assets ./src/assets
+COPY --from=builder /app/apps/web/public ./public
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
 
 # disable telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # run app
-CMD ["node", "server.js"]
+CMD ["node", "apps/web/server.js"]

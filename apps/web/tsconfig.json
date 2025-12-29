@@ -1,0 +1,27 @@
+{
+  "extends": ["../../tsconfig.base"],
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@web/*": ["./src/*"],
+      "@core/*": ["../../packages/core/src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "../../packages/core/src/**/*"
+  ]
+}

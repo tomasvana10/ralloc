@@ -1,0 +1,16 @@
+{
+  "$schema": "https://biomejs.dev/schemas/latest/schema.json",
+  "root": false,
+  "extends": "//",
+  "overrides": [
+    {
+      "includes": ["src/components/ui/**"],
+      "linter": {
+        "rules": {
+          "a11y": "off",
+          "suspicious": "off"
+        }
+      }
+    }
+  ]
+}

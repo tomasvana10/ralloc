@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "declaration": true
+  }
+}

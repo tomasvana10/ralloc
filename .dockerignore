@@ -1,0 +1,13 @@
+**/.next
+**/.cache
+**/node_modules
+**/out
+**/.env*
+**/biome.json
+**/Thumbs.db
+**/.DS_Store 
+**/.docker
+**/build
+**/dist
+
+.git

@@ -4,9 +4,48 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    next-auth:
+      specifier: 5.0.0-beta.30
+      version: 5.0.0-beta.30
+    zod:
+      specifier: ^4.2.1
+      version: 4.2.1
+
 importers:
 
   .:
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 2.3.10
+        version: 2.3.10
+      '@commitlint/cli':
+        specifier: ^20.2.0
+        version: 20.2.0(@types/node@25.0.3)(typescript@5.9.3)
+      '@commitlint/config-conventional':
+        specifier: ^20.2.0
+        version: 20.2.0
+      '@inquirer/prompts':
+        specifier: ^8.1.0
+        version: 8.1.0(@types/node@25.0.3)
+      '@types/node':
+        specifier: ^25.0.3
+        version: 25.0.3
+      chalk:
+        specifier: ^5.6.2
+        version: 5.6.2
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
+      lefthook:
+        specifier: ^2.0.13
+        version: 2.0.13
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  apps/web:
     dependencies:
       '@hookform/resolvers':
         specifier: ^5.2.2
@@ -59,6 +98,9 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: ^1.2.8
         version: 1.2.8(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@ralloc/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -78,8 +120,8 @@ importers:
         specifier: 16.1.0
         version: 16.1.0(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       next-auth:
-        specifier: 5.0.0-beta.30
-        version: 5.0.0-beta.30(next@16.1.0(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+        specifier: 'catalog:'
+        version: 5.0.0-beta.30(next@16.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -107,9 +149,6 @@ importers:
       react-virtuoso:
         specifier: ^4.18.0
         version: 4.18.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      redis:
-        specifier: ^5.10.0
-        version: 5.10.0
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -119,61 +158,40 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.4.0
-      ws:
-        specifier: ^8.18.3
-        version: 8.18.3
       zod:
-        specifier: ^4.2.1
+        specifier: 'catalog:'
         version: 4.2.1
       zustand:
         specifier: ^5.0.9
         version: 5.0.9(@types/react@19.2.7)(react@19.2.3)(use-sync-external-store@1.6.0(react@19.2.3))
     devDependencies:
-      '@biomejs/biome':
-        specifier: 2.3.10
-        version: 2.3.10
-      '@commitlint/cli':
-        specifier: ^20.2.0
-        version: 20.2.0(@types/node@25.0.3)(typescript@5.9.3)
-      '@commitlint/config-conventional':
-        specifier: ^20.2.0
-        version: 20.2.0
-      '@inquirer/prompts':
-        specifier: ^8.1.0
-        version: 8.1.0(@types/node@25.0.3)
       '@tailwindcss/postcss':
         specifier: ^4.1.18
         version: 4.1.18
-      '@types/node':
-        specifier: ^25.0.3
-        version: 25.0.3
       '@types/react':
         specifier: ^19.2.7
         version: 19.2.7
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.7)
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
-      chalk:
-        specifier: ^5.6.2
-        version: 5.6.2
-      dotenv:
-        specifier: ^17.2.3
-        version: 17.2.3
-      lefthook:
-        specifier: ^2.0.13
-        version: 2.0.13
       tailwindcss:
         specifier: ^4.1.18
         version: 4.1.18
       tw-animate-css:
         specifier: ^1.4.0
         version: 1.4.0
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
+
+  packages/core:
+    dependencies:
+      next-auth:
+        specifier: 'catalog:'
+        version: 5.0.0-beta.30(next@16.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
+      redis:
+        specifier: ^5.10.0
+        version: 5.10.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.2.1
 
 packages:
 
@@ -1529,9 +1547,6 @@ packages:
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
-
-  '@types/ws@8.18.1':
-    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   JSONStream@1.3.5:
     resolution: {integrity: sha512-E+iruNOY8VV9s4JEbe1aNEm6MiszPRr/UfcHMz0TQh1BXSxHK+ASV1R6W4HpjBhSeS+54PIsAMCBmwD06LLsqQ==}
@@ -4046,10 +4061,6 @@ snapshots:
 
   '@types/unist@2.0.11': {}
 
-  '@types/ws@8.18.1':
-    dependencies:
-      '@types/node': 25.0.3
-
   JSONStream@1.3.5:
     dependencies:
       jsonparse: 1.3.1
@@ -4601,7 +4612,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  next-auth@5.0.0-beta.30(next@16.1.0(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
+  next-auth@5.0.0-beta.30(next@16.1.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3):
     dependencies:
       '@auth/core': 0.41.0
       next: 16.1.0(@babel/core@7.28.5)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
