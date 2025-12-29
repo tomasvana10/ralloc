@@ -1,6 +1,7 @@
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 import type { Metadata } from "next";
+import { Atkinson_Hyperlegible_Next } from "next/font/google";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 export const metadata: Metadata = {
@@ -25,13 +26,19 @@ export const metadata: Metadata = {
   },
 };
 
+const atkinson = Atkinson_Hyperlegible_Next({
+  subsets: ["latin"],
+  variable: "--font-atkinson",
+  fallback: ["sans-serif"],
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={atkinson.variable}>
       <body>
         <ThemeProvider
           attribute="class"

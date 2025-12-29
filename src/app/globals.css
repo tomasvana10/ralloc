@@ -79,6 +79,7 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
+  --font-atkinson: var(--font-atkinson), sans-serif;
   --font-mono: "Fira Code", monospace;
   --font-sans: "Quicksand", sans-serif;
   --font-serif: "Bitter", serif;

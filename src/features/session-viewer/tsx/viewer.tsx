@@ -2,10 +2,10 @@
 
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import {
-  BrushCleaning,
   EllipsisVertical,
   FlameIcon,
   LockIcon,
+  MegaphoneIcon,
   PenIcon,
   SearchIcon,
   XIcon,
@@ -34,20 +34,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { focusStyles } from "@/constants";
 import type { GroupSessionData } from "@/db/group-session";
@@ -64,6 +56,12 @@ import {
   useGroupSession,
 } from "../use-group-session";
 import { Group } from "./group";
+import {
+  EmptyCurrentGroup,
+  EmptyGroups,
+  SessionAdvertisementDialog,
+  SessionSummarySkeleton,
+} from "./misc";
 import { WebSocketStatus } from "./websocket-status";
 
 const groupGridComponents: VirtuosoGridProps<
@@ -263,7 +261,7 @@ export function SessionViewer({
             />
           </div>
         ) : (
-          <CurrentGroupEmpty isHost={isHost} frozen={data?.frozen ?? false} />
+          <EmptyCurrentGroup isHost={isHost} frozen={data?.frozen ?? false} />
         )}
       </div>
 
@@ -294,7 +292,7 @@ export function SessionViewer({
       {!data ? (
         <Spinner className="size-24 stroke-1 w-full" />
       ) : groupCollection.length === 0 ? (
-        <GroupsEmpty />
+        <EmptyGroups />
       ) : groupCollection.length < MIN_ITEMS_TO_ENABLE_LIST_VIRTUALISATION ? (
         <ScrollArea className="rounded-sm border border-border">
           <div className="max-h-[calc(100vh-33.5rem)] min-h-[90px]">
@@ -463,6 +461,21 @@ function SessionHeader({
                     </DropdownMenuItem>
                   }
                 />
+                {!isMobile && (
+                  <SessionAdvertisementDialog
+                    trigger={
+                      <DropdownMenuItem
+                        onSelect={(e) => e.preventDefault()}
+                        aria-label="Edit group session">
+                        Advertise <MegaphoneIcon />
+                      </DropdownMenuItem>
+                    }
+                    hostName={repr.name}
+                    name={data.name}
+                    code={data.code}
+                  />
+                )}
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   disabled={
@@ -505,60 +518,5 @@ function SessionHeader({
         </Accordion>
       )}
     </div>
-  );
-}
-
-function SessionSummarySkeleton() {
-  return (
-    <div className="flex flex-row items-center sm:gap-4 gap-2 min-h-[70px]">
-      <Skeleton className="size-16 rounded-full" />
-      <div className="flex flex-col gap-2">
-        <Skeleton className="h-6 w-[200px]" />
-        <Skeleton className="h-4 w-[250px]" />
-        <Skeleton className="h-4 w-[150px]" />
-      </div>
-    </div>
-  );
-}
-
-function CurrentGroupEmpty({
-  isHost,
-  frozen,
-}: {
-  isHost: boolean;
-  frozen: boolean;
-}) {
-  return (
-    <Empty className="border border-dashed p-0! min-h-[90px]">
-      <EmptyHeader>
-        <EmptyTitle>You Have No Group</EmptyTitle>
-        <EmptyDescription className="whitespace-nowrap">
-          {isHost ? (
-            <span className="inline-flex items-center">
-              Access group options through the{" "}
-              <EllipsisVertical className="size-4" /> menu.
-            </span>
-          ) : frozen ? (
-            "You can't join a group right now, as the session has been locked by the host."
-          ) : (
-            "Join one below by clicking on a group."
-          )}
-        </EmptyDescription>
-      </EmptyHeader>
-    </Empty>
-  );
-}
-
-function GroupsEmpty() {
-  return (
-    <Empty>
-      <EmptyHeader>
-        <EmptyMedia variant="icon">
-          <BrushCleaning />
-        </EmptyMedia>
-        <EmptyTitle>No Matches Found</EmptyTitle>
-        <EmptyDescription>Try a different query.</EmptyDescription>
-      </EmptyHeader>
-    </Empty>
   );
 }
