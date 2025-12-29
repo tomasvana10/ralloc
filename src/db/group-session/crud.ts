@@ -94,7 +94,7 @@ export async function getGroupSessionsOfHost(hostId: string) {
   let i = 0;
   for (const metadata of pipelinedMetadata) {
     sessions.push(
-      await assembleGroupSession(
+      await assembleGroupSessionData(
         metadata as unknown as Record<string, string>,
         hostId,
         codes[i],
@@ -113,7 +113,7 @@ export async function getGroupSessionByCode(code: string) {
   const metadata = await redis.hGetAll(paths.metadata(hostId, code));
   if (!metadata) return null;
 
-  return await assembleGroupSession(metadata, hostId, code);
+  return await assembleGroupSessionData(metadata, hostId, code);
 }
 
 //#region update
@@ -157,11 +157,6 @@ export async function deleteGroupSession(hostId: string, code: string) {
   ]);
 }
 
-export async function deleteAllHostData(hostId: string) {
-  const codes = await getGroupSessionCodesOfHost(hostId);
-  await Promise.all(codes.map((code) => deleteGroupSession(hostId, code)));
-}
-
 //#region helpers
 async function getGroups(hostId: string, code: string) {
   const groupKeys = await getKeys(paths.patterns.allGroupNames(hostId, code));
@@ -189,12 +184,12 @@ async function getGroups(hostId: string, code: string) {
   return groups;
 }
 
-async function assembleGroupSession(
+async function assembleGroupSessionData(
   metadata: Record<string, string>,
   hostId: string,
   code: string,
-) {
-  const session: GroupSessionData = {
+): Promise<GroupSessionData> {
+  return {
     createdOn: +metadata.createdOn,
     frozen: !!+metadata.frozen,
     groupSize: +metadata.groupSize,
@@ -206,5 +201,4 @@ async function assembleGroupSession(
     compressedHost: metadata.compressedHost,
     groups: await getGroups(hostId, code),
   };
-  return session;
 }
