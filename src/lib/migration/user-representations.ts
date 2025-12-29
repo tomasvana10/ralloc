@@ -1,5 +1,4 @@
-import type { Version } from "@/types";
-import type { Migrations } from ".";
+import type { Migrations, Version } from ".";
 
 export const migrations: Migrations = {};
 export const scope = "user-representations";

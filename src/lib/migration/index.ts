@@ -1,6 +1,5 @@
 import chalk from "chalk";
 import redis from "@/db";
-import type { Version } from "@/types";
 import * as general from "./general";
 import * as userRepresentations from "./user-representations";
 
@@ -8,6 +7,8 @@ export interface Migration {
   description: string;
   migrator: () => Promise<void>;
 }
+
+export type Version = `v${number}`;
 
 export type Migrations = Record<Version, Migration>;
 
