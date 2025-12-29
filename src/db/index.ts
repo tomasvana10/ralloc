@@ -1,8 +1,5 @@
 import { createClient } from "redis";
 import { config } from "@/config";
-import type { Version } from "@/types";
-
-export const VERSION: Version = "v1";
 
 const redisClientSingleton = () => {
   const url = process.env.REDIS_URL;

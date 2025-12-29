@@ -5,9 +5,6 @@ import {
   type OfficialProvider,
   type SupportedProvider,
 } from "@/authentication/provider";
-import type { Version } from "@/types";
-
-export const VERSION: Version = "v1";
 
 /**
  * Utility class that supports the storage of users in the Redis
