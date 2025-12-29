@@ -1,7 +1,7 @@
 import { UserRepresentation } from "@/lib/group-session";
 import redis from "../..";
 import { getLuaScriptSha, loadLuaScript } from "../../lua-script";
-import { paths } from "..";
+import { type GroupSessionData, paths } from "..";
 import {
   type ActionErrorMessage,
   ActionStatus,
@@ -57,14 +57,10 @@ export async function joinGroup({
   compressedUser,
   groupSize,
   frozen,
-}: {
-  code: string;
-  hostId: string;
+}: Pick<GroupSessionData, "code" | "hostId" | "groupSize" | "frozen"> & {
   groupName: string;
   userId: string;
   compressedUser: string;
-  groupSize: number;
-  frozen: boolean;
 }): Promise<GroupJoinSuccess | GroupJoinFailure> {
   const membersKey = paths.groupMembers(hostId, code, groupName);
   const userGroupKey = paths.userGroup(hostId, code, userId);
@@ -105,11 +101,8 @@ export async function leaveGroup({
   hostId,
   userId,
   frozen,
-}: {
-  code: string;
-  hostId: string;
+}: Pick<GroupSessionData, "code" | "hostId" | "frozen"> & {
   userId: string;
-  frozen: boolean;
 }): Promise<GroupLeaveSuccess | GroupLeaveFailure> {
   const userGroupKey = paths.userGroup(hostId, code, userId);
 

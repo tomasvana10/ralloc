@@ -5,7 +5,7 @@ import {
   MIN_GROUPS,
   UserRepresentation,
 } from "@/lib/group-session";
-import { paths } from "../..";
+import { type GroupSessionData, paths } from "../..";
 import {
   type ActionErrorMessage,
   ActionStatus,
@@ -54,9 +54,7 @@ export async function addGroup({
   hostId,
   code,
   groupName,
-}: {
-  hostId: string;
-  code: string;
+}: Pick<GroupSessionData, "hostId" | "code"> & {
   groupName: string;
 }) {
   return await _mutateGroup(
@@ -74,9 +72,7 @@ export async function removeGroup({
   hostId,
   code,
   groupName,
-}: {
-  hostId: string;
-  code: string;
+}: Pick<GroupSessionData, "hostId" | "code"> & {
   groupName: string;
 }): Promise<GroupMutationResult> {
   return await _mutateGroup(

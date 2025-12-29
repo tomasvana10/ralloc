@@ -3,7 +3,6 @@ import { redisKey } from "..";
 
 export type GroupSessionMetadata = {
   createdOn: number;
-  frozen: boolean;
   compressedHost: string;
   groupCount: number;
 } & Omit<SessionCreateSchema, "groupSeed">;
