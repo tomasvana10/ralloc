@@ -7,10 +7,27 @@
 [![Release version](https://img.shields.io/github/v/release/tomasvana10/ralloc?sort=semver)](https://github.com/tomasvana10/ralloc/releases)
 [![MIT license](https://img.shields.io/github/license/tomasvana10/ralloc)](https://github.com/tomasvana10/ralloc/blob/main/LICENSE)
 
-`Ralloc` is a web-based tool designed for fast, ephemeral group allocation.
+`Ralloc` is a web-based tool designed for fast group allocation.
 
 - [Issues](https://github.com/tomasvana10/ralloc/issues)
 - [Wiki](https://github.com/tomasvana10/ralloc/wiki)
+
+## Purpose
+
+`Ralloc` was designed to be a fast, intuitive tool to allow large quantities of people to allocate themselves to groups. 
+
+It orchestrates group allocation sessions similar to Kahoot or Blooket, whereby a host provides some details and the service generates a unique join code, allowing clients to join anonymously (`Ralloc` also provides anonymous authentication on top of `OAuth`).
+
+One issue that `Ralloc` directly solves (which was my inspiration for beginning its development) is the time-consuming process of manually providing cybersecurity students network router IP addresses (and tracking thereof) whenever they finish their theory lab work. Using the web-based tool, students can simply head to `ralloc.xyz`, enter the 6-digit session code (which can be showcased through a dedicated "advertisement" dialog by the host), and select a group, named as an IP address.
+
+## Features
+
+- Easily self-hostable through `Docker`.
+- Supports `OAuth` and anonymous authentication.
+- Rapid group creation through use of a generative expression, aka the "group seed" (e.g. `[group 1-500]`, `group [a-z][1-3]`, `group a, group c, group 67`).
+- Disk-space efficient through utilisation of standalone `NextJS` builds.
+- Supports group creation/deletion and removal of users from groups.
+- Great user experience
 
 ## Installation and Self-Hosting
 
@@ -27,12 +44,29 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 
 ## Environment Variable Reference
 
-`apps/web/.env.local`: 
+### `apps/web`
+
+`.env.local`: 
 - Used solely for global authentication secret/id pairs and the `NextAuth` authentication secret.
 
-`apps/web/.env.development` and `apps/web/.env.production`:
-- Authentication secret/id pairs
-- `AUTH_URL`: `NextAuth` base URL for callbacks and redirects.
+`.env.development` and `.env.production`:
+- Scoped authentication secret/id pairs
+- `URL`: base `NextJS` url.
+- `AUTH_URL`: `NextAuth` base URL for callbacks and redirects (same as `URL`).
+
+`.env.production`:
+- `AUTH_DOMAIN`: optional value for `NextAuth` to ensure cookies are preserved across subdomains.
+
+### `apps/ws`
+
+`.env.development` and `.env.production`:
+- `WS_HOST`: hostname of the WebSocket server (default `0.0.0.0`).
+- `WS_PORT`: port of the WebSocket server (default `6767`).
+- `WS_URL`: URL of the WebSocket server.
+
+### `packages/core`
+
+`.env.development` and `.env.production`:
 - `REDIS_URL`: URL of the redis database.
 - `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
 - `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).

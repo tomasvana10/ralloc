@@ -5,8 +5,8 @@ import { confirm, input, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
-function updateEnvFile(_filename, vars, prefix="apps/web") {
-  const filename = `${prefix}/${_filename}`
+function updateEnvFile(_filename, vars, prefix = "apps/web") {
+  const filename = `${prefix}/${_filename}`;
   const existing = existsSync(filename)
     ? dotenv.parse(readFileSync(filename, "utf-8"))
     : {};
@@ -144,6 +144,13 @@ async function addProvider() {
 async function main() {
   console.log(chalk.bold("\nRalloc AuthJS Provider Setup"));
   console.log("This script will help you add OAuth providers to Ralloc.");
+  console.log(
+    chalk.bold(
+      chalk.yellow(
+        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/add-provider)",
+      ),
+    ),
+  );
   console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
 
   while (true) {

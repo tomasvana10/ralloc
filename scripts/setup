@@ -6,7 +6,9 @@ import { confirm, input, password } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
-const DEFAULT_PORT = 3001;
+const DEFAULT_DEV_WEB_PORT = 3001;
+const DEFAULT_PROD_WEB_PORT = 3000;
+const DEFAULT_WS_PORT = 6767;
 const DOCKER_REDIS_URL = "redis://redis:6379";
 
 function commandExists(cmd) {
@@ -18,7 +20,7 @@ function commandExists(cmd) {
   }
 }
 
-function writeEnvFile(_filename, vars, prefix = "apps/web") {
+function writeEnvFile(_filename, vars, prefix) {
   const filename = `${prefix}/${_filename}`;
   let existing = {};
 
@@ -47,14 +49,23 @@ export function isHttpUrl(value) {
     const url = new URL(value);
     return url.protocol === "http:" || url.protocol === "https:";
   } catch {
-    return false;
+    return "Please enter a full HTTP URL (like https://ralloc.xyz)";
+  }
+}
+
+export function isWSUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "ws:" || url.protocol === "wss:";
+  } catch {
+    return "Please enter a full WebSocket URL (like wss://ws.ralloc.xyz)";
   }
 }
 
 async function getPassword(asConfirmation, firstPassword = null, mask = "*") {
   if (asConfirmation && !firstPassword)
     throw new Error(
-      "must provide first password entry to compare against confirmation",
+      "Must provide first password entry to compare against confirmation",
     );
   return await password({
     message: asConfirmation ? "  Confirm password:" : "  Enter password:",
@@ -68,6 +79,26 @@ async function getPassword(asConfirmation, firstPassword = null, mask = "*") {
   });
 }
 
+async function getPort(message, default_, alertMsg = null) {
+  const port = await input({
+    message,
+    default: default_.toString(),
+    validate: (val) => {
+      const num = parseInt(val, 10);
+      if (Number.isNaN(num) || num < 1 || num > 65535)
+        return "Please enter a valid port number (1-65535)";
+      return true;
+    },
+  });
+  const parsedPort = parseInt(port, 10);
+
+  if (parsedPort !== default_ && alertMsg) {
+    console.log(chalk.yellow(alertMsg));
+  }
+
+  return parsedPort;
+}
+
 async function main() {
   if (!commandExists("pnpm")) {
     console.log(chalk.red("pnpm is not installed."));
@@ -76,79 +107,78 @@ async function main() {
   }
   console.log(chalk.bold("\nSetup Ralloc for Self-Hosting"));
   console.log("This script sets up the Ralloc environment.");
-  console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
+  console.log(
+    chalk.bold(
+      chalk.yellow(
+        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/setup)",
+      ),
+    ),
+  );
+  console.log(chalk.italic("Press Ctrl+C at any time to exit."));
 
-  //#region 1. does user want to use docker
-  const useDocker = await confirm({
-    message: "Use Docker?",
-    default: true,
-  });
-
-  if (useDocker) {
-    if (!commandExists("docker")) {
-      console.log(chalk.red("Docker is not installed."));
-      console.log(
-        `Install it: ${chalk.cyan("https://docs.docker.com/get-docker/")}`,
-      );
-      process.exit(1);
-    }
+  if (!commandExists("docker")) {
+    console.log(chalk.red("Docker is not installed."));
+    console.log(
+      `Install it: ${chalk.cyan("https://docs.docker.com/get-docker/")}`,
+    );
+    process.exit(1);
   }
 
-  //#region 2. base environment setup
-  // development
+  //#region 1. base environment setup
   console.log(
     chalk.bold(chalk.bgGreen("\nDevelopment Environment Configuration")),
   );
 
-  const devPort = await input({
-    message: "NextJS Development port:",
-    default: DEFAULT_PORT.toString(),
-    validate: (val) => {
-      const num = parseInt(val, 10);
-      if (Number.isNaN(num) || num < 1 || num > 65535)
-        return "Please enter a valid port number (1-65535)";
-      return true;
-    },
+  // web env config
+  const devWebPort = await getPort(
+    "Internal NextJS port:",
+    DEFAULT_DEV_WEB_PORT,
+    `Please update the port mappings in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+  );
+
+  const devWebEnv = {
+    URL: `http://localhost:${devWebPort}`,
+    AUTH_URL: `http://localhost:${devWebPort}`,
+  };
+  devWebEnv.PORT = devWebPort;
+  const devWsEnv = { WS_HOST: "0.0.0.0" };
+  const devCoreEnv = {};
+
+  // ws env config
+  const devWsPort = await getPort(
+    "Internal WebSocket Server port:",
+    DEFAULT_WS_PORT,
+    `Please update the port mappings in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+  );
+  devWsEnv.WS_PORT = devWsPort;
+
+  const devWsUrl = await input({
+    message: "WebSocket Server URL:",
+    default: `ws://localhost:${devWsPort}`,
+    validate: isWSUrl,
+  });
+  devWsEnv.WS_URL = devWsUrl;
+
+  // core env config
+  const devUseBuiltinRedis = await confirm({
+    message: "Use the built-in Redis service with Docker Compose?",
+    default: true,
   });
 
-  const devPortNum = parseInt(devPort, 10);
-  if (devPortNum !== DEFAULT_PORT && useDocker) {
-    console.log(
-      chalk.yellow(
-        `\nPlease update the mapped ports in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
-      ),
-    );
-  }
-
-  const devEnv = {
-    URL: `http://localhost:${devPortNum}`,
-    AUTH_URL: `http://localhost:${devPortNum}`,
-  };
-  if (!useDocker) devEnv.PORT = devPort;
-
-  let devUseBuiltinRedis = false;
-  if (useDocker)
-    devUseBuiltinRedis = await confirm({
-      message: "Use the built-in Redis service with Docker Compose?",
-      default: true,
-    });
-
   if (devUseBuiltinRedis) {
-    devEnv.REDIS_URL = DOCKER_REDIS_URL;
+    devCoreEnv.REDIS_URL = DOCKER_REDIS_URL;
   } else {
     const devRedisUrl = await input({
-      message: "Enter your Redis database URL:",
+      message: "Redis database URL:",
       default: "redis://localhost:6379",
     });
-    devEnv.REDIS_URL = devRedisUrl;
+    devCoreEnv.REDIS_URL = devRedisUrl;
 
-    if (useDocker) {
-      console.log(
-        chalk.yellow(
-          `\nPlease remove the redis service in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
-        ),
-      );
-    }
+    console.log(
+      chalk.yellow(
+        `Please remove the redis service in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+      ),
+    );
   }
 
   const devOpenRedis = await confirm({
@@ -159,66 +189,98 @@ async function main() {
   if (devOpenRedis) {
     const passwordA = await getPassword(false);
     await getPassword(true, passwordA);
-    devEnv.REDIS_PASSWORD = passwordA;
+    devCoreEnv.REDIS_PASSWORD = passwordA;
   }
 
   const devEnableRatelimiting = await confirm({
     message: "Enable NextJS API rate limiting?",
     default: false,
   });
-  devEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
+  devCoreEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
 
   const devEnableGuestAuth = await confirm({
     message:
       "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
     default: false,
   });
-  devEnv.ENABLE_GUEST_AUTH = devEnableGuestAuth ? "1" : "0";
+  devCoreEnv.ENABLE_GUEST_AUTH = devEnableGuestAuth ? "1" : "0";
 
   console.log();
-  writeEnvFile(".env.development", devEnv);
+  writeEnvFile(".env.development", devWebEnv, "apps/web");
+  writeEnvFile(".env.development", devWsEnv, "apps/ws");
+  writeEnvFile(".env.development", devCoreEnv, "packages/core");
   console.log();
-  if (devOpenRedis) writeRedisConf("redis.dev.conf", devEnv.REDIS_PASSWORD);
+  if (devOpenRedis) writeRedisConf("redis.dev.conf", devCoreEnv.REDIS_PASSWORD);
 
   // production
   console.log(
-    chalk.bold(chalk.bgMagenta("\nProduction Environment Configuration")),
+    chalk.bold(chalk.bgMagenta("Production Environment Configuration")),
   );
 
   const prodUrl = await input({
-    message: "App hostname:",
+    message: "App URL:",
     validate: isHttpUrl,
   });
 
-  const prodEnv = {
+  const prodWebEnv = {
     URL: prodUrl,
     AUTH_URL: prodUrl,
   };
+  const prodWsEnv = { WS_HOST: "0.0.0.0" };
+  const prodCoreEnv = {};
 
-  let prodUseBuiltinRedis = false;
-  if (useDocker) {
-    prodUseBuiltinRedis = await confirm({
-      message: "Use the built-in Redis service with Docker Compose?",
-      default: true,
-    });
-  }
+  // web env config
+  const prodWebPort = await getPort(
+    "Internal NextJS port:",
+    DEFAULT_PROD_WEB_PORT,
+    `Please update the port mappings in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+  );
+  prodWebEnv.PORT = prodWebPort;
+
+  const prodAuthDomain = await input({
+    message:
+      "Authentication domain (only enter a value if your websocket server is on its own subdomain - " +
+      "for example, enter .ralloc.xyz if you are hosting the app on ralloc.xyz and the websocket server is " +
+      "located at ws.ralloc.xyz):",
+    required: false,
+  });
+  if (prodAuthDomain) prodWebEnv.AUTH_DOMAIN = prodAuthDomain;
+
+  // ws env config
+  const prodWsPort = await getPort(
+    "Internal WebSocket Server port:",
+    DEFAULT_WS_PORT,
+    `Please update the port mappings in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+  );
+  prodWsEnv.WS_PORT = prodWsPort;
+
+  const prodWsUrl = await input({
+    message: "WebSocket Server URL:",
+    required: true,
+    validate: isWSUrl,
+  });
+  prodWsEnv.WS_URL = prodWsUrl;
+
+  // core env config
+  const prodUseBuiltinRedis = await confirm({
+    message: "Use the built-in Redis service with Docker Compose?",
+    default: true,
+  });
 
   if (prodUseBuiltinRedis) {
-    prodEnv.REDIS_URL = DOCKER_REDIS_URL;
+    prodCoreEnv.REDIS_URL = DOCKER_REDIS_URL;
   } else {
     const prodRedisUrl = await input({
       message: "Enter your Redis database URL:",
       default: "redis://localhost:6379",
     });
-    prodEnv.REDIS_URL = prodRedisUrl;
+    prodCoreEnv.REDIS_URL = prodRedisUrl;
 
-    if (useDocker) {
-      console.log(
-        chalk.yellow(
-          `\nPlease remove the redis service in ${chalk.cyan(".docker/compose.prod-local.yaml")} and/or ${chalk.cyan(".docker/compose.prod-ci.yaml")}\n`,
-        ),
-      );
-    }
+    console.log(
+      chalk.yellow(
+        `Please remove the redis service in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+      ),
+    );
   }
 
   const prodOpenRedis = await confirm({
@@ -229,53 +291,53 @@ async function main() {
   if (prodOpenRedis) {
     const passwordA = await getPassword(false);
     await getPassword(true, passwordA);
-    prodEnv.REDIS_PASSWORD = passwordA;
+    prodCoreEnv.REDIS_PASSWORD = passwordA;
   }
 
   const prodEnableRatelimiting = await confirm({
     message: "Enable NextJS API rate limiting?",
     default: true,
   });
-  prodEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
+  prodCoreEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
 
   const prodEnableGuestAuth = await confirm({
     message:
       "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
     default: false,
   });
-  prodEnv.ENABLE_GUEST_AUTH = prodEnableGuestAuth ? "1" : "0";
+  prodCoreEnv.ENABLE_GUEST_AUTH = prodEnableGuestAuth ? "1" : "0";
 
   console.log();
-  writeEnvFile(".env.production", prodEnv);
+  writeEnvFile(".env.production", prodWebEnv, "apps/web");
+  writeEnvFile(".env.production", prodWsEnv, "apps/ws");
+  writeEnvFile(".env.production", prodCoreEnv, "packages/core");
   console.log();
-  if (prodOpenRedis) writeRedisConf("redis.prod.conf", prodEnv.REDIS_PASSWORD);
+  if (prodOpenRedis)
+    writeRedisConf("redis.prod.conf", prodCoreEnv.REDIS_PASSWORD);
 
-  //#region 3. docker network
-  if (useDocker) {
-    console.log("");
-    const createNetwork = await confirm({
-      message: "Create Docker network `ralloc_net`?",
-      default: true,
-    });
+  //#region 2. docker network
+  const createNetwork = await confirm({
+    message: "Create Docker network `ralloc_net`?",
+    default: true,
+  });
 
-    if (createNetwork) {
-      try {
-        execSync("docker network create ralloc_net", { stdio: "pipe" });
-        console.log(chalk.green("Created Docker network `ralloc_net`."));
-      } catch (e) {
-        if (e.stderr?.toString().includes("already exists")) {
-          console.log(
-            chalk.yellow("Docker network `ralloc_net` already exists."),
-          );
-        } else {
-          console.log(chalk.red("Failed to create Docker network."));
-          console.log(e.message);
-        }
+  if (createNetwork) {
+    try {
+      execSync("docker network create ralloc_net", { stdio: "pipe" });
+      console.log(chalk.green("Created Docker network `ralloc_net`."));
+    } catch (e) {
+      if (e.stderr?.toString().includes("already exists")) {
+        console.log(
+          chalk.yellow("Docker network `ralloc_net` already exists."),
+        );
+      } else {
+        console.log(chalk.red("Failed to create Docker network."));
+        console.log(e.message);
       }
     }
   }
 
-  //#region 4. next steps
+  //#region 3. next steps
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(`1. Generate an auth secret:\n`);
@@ -287,29 +349,16 @@ async function main() {
   );
   console.log(`   ${chalk.green("./scripts/add-provider")}\n`);
 
-  if (!useDocker) {
-    console.log(`3. Since you aren't using Docker:\n`);
-    console.log(
-      `   - remove ${chalk.yellow('output: "standalone"')} from ${chalk.cyan("next.config.ts")}`,
-    );
-    console.log(
-      `   - Run in dev:  ${chalk.green("pnpm run --filter web dev")}`,
-    );
-    console.log(
-      `   - Run in prod: ${chalk.green("pnpm run --filter web deploy")}\n`,
-    );
-  } else {
-    console.log(`3. Since you're using Docker:\n`);
-    console.log(
-      `   - Run in dev:          ${chalk.green("pnpm run --filter d:dev")}`,
-    );
-    console.log(
-      `   - Run in prod (local): ${chalk.green("pnpm run --filter d:prod-local")}`,
-    );
-    console.log(
-      `   - Run in prod (CI/CD): ${chalk.green("pnpm run --filter d:prod-ci")}\n`,
-    );
-  }
+  console.log(`3. Run the app:\n`);
+  console.log(
+    `   - Run in dev:          ${chalk.green("pnpm run --filter web d:dev")}`,
+  );
+  console.log(
+    `   - Run in prod (local): ${chalk.green("pnpm run --filter web d:prod-local")}`,
+  );
+  console.log(
+    `   - Run in prod (CI/CD): ${chalk.green("pnpm run --filter web d:prod-ci")}\n`,
+  );
 
   console.log(chalk.green(chalk.bold("Environment setup complete!\n")));
 }
