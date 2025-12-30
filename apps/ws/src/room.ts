@@ -7,6 +7,7 @@ import {
   paths,
 } from "@core/db/group-session";
 import type { GSServer } from "@core/lib/group-session/proto";
+import { getLogger } from "@core/lib/logger";
 import type { UserData } from "./index";
 import { closeDeleted, sendPreStringified, updateCache } from "./utils";
 
@@ -21,6 +22,8 @@ export interface Room {
   clients: Set<Client>;
   cache: Cache;
 }
+
+const logd = getLogger("wsRoomManagerDebugger");
 
 export class RoomManager {
   private static rooms = new Map<string, Room>();
@@ -54,21 +57,21 @@ export class RoomManager {
     // a different client has begun creating this room, so wait for them
     const lock = RoomManager.locks.get(code);
     if (lock) {
-      console.log(`[room:${code}] client waiting for existing lock`);
+      logd.debug(`[room:${code}] client waiting for existing lock`);
       await lock;
       return manager.acquire();
     }
 
     // room exists but lock isn't created
     if (existingRoom) {
-      console.log(
-        `[room:${code}] room exists but no lock - waiting until ready`,
+      logd.debug(
+        `[room:${code}] room exists but has no lock - waiting until ready`,
       );
       return manager.acquire();
     }
 
     // room doesn't exist yet, so create it
-    console.log(`[room:${code}] creating new room`);
+    logd.debug(`[room:${code}] creating new room`);
     const creation = manager.create();
     RoomManager.locks.set(code, creation);
 
@@ -76,7 +79,7 @@ export class RoomManager {
       const room = await creation;
       if (!room) return null;
       manager.room = room;
-      console.log(`[room:${code}] room created successfully`);
+      logd.debug(`[room:${code}] room created successfully`);
       return manager;
     } finally {
       RoomManager.locks.delete(code);
@@ -89,10 +92,10 @@ export class RoomManager {
   }
 
   public static shutdown() {
-    console.log(`[room] shutting down ${RoomManager.rooms.size} rooms`);
+    logd.debug(`[room] shutting down ${RoomManager.rooms.size} rooms`);
 
     for (const [code, room] of RoomManager.rooms) {
-      console.log(
+      logd.debug(
         `[room:${code}] closing ${room.clients.size} client connections`,
       );
 
@@ -114,7 +117,7 @@ export class RoomManager {
   public registerClient() {
     if (!this.client || !this.room) return;
     this.room.clients.add(this.client);
-    console.log(
+    logd.debug(
       `[room:${this.code}] client registered (total: ${this.room.clients.size})`,
     );
   }
@@ -122,7 +125,7 @@ export class RoomManager {
   public unregisterClient() {
     if (!this.client || !this.room) return;
     this.room.clients.delete(this.client);
-    console.log(
+    logd.debug(
       `[room:${this.code}] client unregistered (total:  ${this.room.clients.size})`,
     );
   }
@@ -131,7 +134,7 @@ export class RoomManager {
     const room = RoomManager.rooms.get(this.code);
     if (!room || room.clients.size !== 0) return;
 
-    console.log(`[room:${this.code}] deleting empty room`);
+    logd.debug(`[room:${this.code}] deleting empty room`);
 
     room.stale = true;
     RoomManager.rooms.delete(this.code);
@@ -215,10 +218,7 @@ export class RoomManager {
       room.ready = true;
       return true;
     } catch (e) {
-      console.error(
-        `[room:${this.code}] failed to prepare async components`,
-        e,
-      );
+      logd.error(e, `[room:${this.code}] failed to prepare async components`);
       return false;
     }
   }

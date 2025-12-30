@@ -1,5 +1,5 @@
 import redis from "@core/db";
-import chalk from "chalk";
+import { getLogger } from "../logger";
 import * as general from "./general";
 import * as userRepresentations from "./user-representations";
 
@@ -12,8 +12,7 @@ export type Migrations = Record<Version, Migration>;
 export type Version = `v${number}`;
 
 const getVersionKey = (scope: string) => `__version__:${scope}`;
-const log = (msg: string, func: (...args: any[]) => void = console.log) =>
-  func(`${chalk.magenta("[MIGRATION]:")} ${msg}`);
+const log = getLogger("migration");
 
 export async function migrate() {
   await applyMigrations(
@@ -40,18 +39,15 @@ async function applyMigrations(
     currentVersion = latestVersion;
   }
 
-  log(`Version for '${scope}' is ${currentVersion}`);
+  log.info(`version for '${scope}' is ${currentVersion}`);
 
   if (currentVersion === latestVersion)
-    return log(
-      chalk.green(`No migrations required for '${scope}' as it is up to date.`),
+    return log.info(
+      `no migrations required for '${scope}' as it is up to date.`,
     );
 
   if (!Object.keys(migrations).length)
-    return log(
-      chalk.cyan(`No migrations present for '${scope}'.`),
-      console.warn,
-    );
+    return log.warn(`no migrations present for '${scope}'.`);
 
   const currentVersionNumber = parseVersionNumber(currentVersion);
   const versions = (Object.keys(migrations) as Version[]).sort((a, b) => {
@@ -66,29 +62,22 @@ async function applyMigrations(
     const previousVersion = getPreviousVersionNumber(newVersion);
     const data = migrations[newVersion];
     if (data === undefined) {
-      log(
-        chalk.red(`'${scope}' is missing migration data. Stopping.`),
-        console.error,
-      );
-      throw new Error(`Missing migration data for '${scope}@${newVersion}'`);
+      log.error(`'${scope}' is missing migration data. stopping...`);
+      throw new Error(`missing migration data for '${scope}@${newVersion}'`);
     }
 
-    log(`Migrating '${scope}@${previousVersion}' to ${newVersion}`);
+    log.info(`migrating '${scope}@${previousVersion}' to ${newVersion}`);
 
     try {
       await data.migrator();
       await redis.set(versionKey, newVersion);
-      log(
-        chalk.green(`Migrated '${scope}@${previousVersion}' to ${newVersion}`),
+      log.info(`migrated '${scope}@${previousVersion}' to ${newVersion}`);
+    } catch (e) {
+      log.error(
+        e,
+        `failed to migrate '${scope}@${previousVersion}' to ${newVersion}. stopping...`,
       );
-    } catch (error) {
-      log(
-        chalk.red(
-          `Failed to migrate '${scope}@${previousVersion}' to ${newVersion}. Stopping.`,
-        ),
-        (msg) => console.error(msg, error),
-      );
-      throw error;
+      throw e;
     }
   }
 }

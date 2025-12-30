@@ -1,9 +1,11 @@
 import { config } from "@core/config";
+import { getLogger } from "@core/lib/logger";
 import { createClient, type RedisClientType } from "redis";
 
 type Client = RedisClientType;
 
 const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
+const log = getLogger("db");
 
 const redisClientSingleton = () => {
   if (isBuilding) return null;
@@ -16,8 +18,8 @@ const redisClientSingleton = () => {
     url,
     ...(password ? { password } : {}),
   });
-  client.on("error", console.error);
-  client.connect().catch(console.error);
+  client.on("error", log.error);
+  client.connect().catch(log.error);
   return client;
 };
 
@@ -25,8 +27,8 @@ const createPubClient = (client: Client) => {
   if (isBuilding) return null;
 
   const pubsub = client.duplicate();
-  pubsub.on("error", console.error);
-  pubsub.connect().catch(console.error);
+  pubsub.on("error", log.error);
+  pubsub.connect().catch(log.error);
   return pubsub;
 };
 
@@ -34,7 +36,7 @@ const createSubClient = async (client: Client): Promise<Client> => {
   if (isBuilding) return null as any;
 
   const pubsub = client.duplicate();
-  pubsub.on("error", console.error);
+  pubsub.on("error", log.error);
   await pubsub.connect();
   return pubsub;
 };

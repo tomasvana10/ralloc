@@ -4,8 +4,12 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "next-auth": "catalog:",
+    "pino": "^10.1.0",
     "redis": "^5.10.0",
-    "zod": "catalog:",
-    "next-auth": "catalog:"
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "pino-pretty": "^13.1.3"
   }
 }

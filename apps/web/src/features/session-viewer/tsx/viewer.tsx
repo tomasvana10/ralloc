@@ -168,7 +168,6 @@ export function SessionViewer({
     code,
     compressedUser: userRepresentation.compressedUser,
     onClose: (code, reason) => {
-      console.log(code);
       if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
 
       if (code >= 4000) {

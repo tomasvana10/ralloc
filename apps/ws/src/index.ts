@@ -2,6 +2,7 @@ import uWS from "uWebSockets.js";
 import { getSessionFromCookie } from "@core/auth/utils";
 import { rateLimit } from "@core/db/rate-limit";
 import { GSServer } from "@core/lib/group-session/proto";
+import { getLogger } from "@core/lib/logger";
 import { handleMessage } from "./handlers/message";
 import { RoomManager } from "./room";
 import { doSafeSync } from "./utils.js";
@@ -30,6 +31,9 @@ function createClientState(): ClientState {
     rateLimits: 0,
   };
 }
+
+const log = getLogger("wsServer");
+const logd = getLogger("wsServerDebugger");
 
 const AUTH_SECRET = process.env.AUTH_SECRET;
 if (!AUTH_SECRET) throw new Error("auth secret must be set");
@@ -112,9 +116,7 @@ app.ws<UserData>("/:code", {
 
     const isHost = room.data.hostId === userId;
 
-    console.log(
-      `[${code}] upgrading (host: ${isHost}, user: ${userId.slice(0, 8)}...)`,
-    );
+    logd.debug(`[${code}] upgrading (host: ${isHost}, user: ${userId})`);
 
     const userData: UserData = {
       code,
@@ -144,7 +146,7 @@ app.ws<UserData>("/:code", {
       return;
     }
 
-    console.log(`[${code}] client connected (host: ${userData.isHost})`);
+    logd.debug(`[${code}] client connected (is host: ${userData.isHost})`);
 
     const synced = await doSafeSync(room.data.cache, code, ws);
     if (!synced) return;
@@ -170,7 +172,7 @@ app.ws<UserData>("/:code", {
   close: (ws, code) => {
     const userData = ws.getUserData();
 
-    console.log(`[${userData.code}] client disconnected (code: ${code})`);
+    logd.debug(`[${userData.code}] client disconnected (code: ${code})`);
 
     if (userData.pingInterval) {
       clearInterval(userData.pingInterval);
@@ -184,25 +186,25 @@ app.ws<UserData>("/:code", {
 app.listen(env.HOST, env.PORT, (sock) => {
   if (sock) {
     listenSocket = sock;
-    console.log(`listening on ${env.HOST}:${env.PORT}`);
+    log.info(`listening on ${env.HOST}:${env.PORT}`);
   } else {
-    console.error(`failed to listen on ${env.HOST}:${env.PORT}`);
+    log.error(`failed to listen on ${env.HOST}:${env.PORT}`);
     process.exit(1);
   }
 });
 
 function shutdown() {
-  console.log("shutting down...");
+  log.info("shutting down...");
 
   if (listenSocket) {
     uWS.us_listen_socket_close(listenSocket);
     listenSocket = null;
-    console.log("listen socket closed.");
+    log.info("listen socket closed.");
   }
 
   RoomManager.shutdown();
 
-  console.log("full shutdown complete");
+  log.info("full shutdown complete");
   process.exit(0);
 }
 
