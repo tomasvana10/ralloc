@@ -1,4 +1,4 @@
-# @ralloc/ws
+# @ralloc/web
 
 ## 0.27.0
 
@@ -14,9 +14,3 @@
 - Updated dependencies [66c8b24]
 - Updated dependencies [3b07503]
   - @ralloc/core@0.27.0
-
-## 0.26.1
-
-### Patch Changes
-
-- 4bf48ef: Update package.json and tsconfig.json
