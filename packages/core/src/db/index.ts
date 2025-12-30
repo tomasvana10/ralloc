@@ -3,13 +3,17 @@ import { createClient, type RedisClientType } from "redis";
 
 type Client = RedisClientType;
 
+const isBuilding = process.env.NEXT_PHASE === "phase-production-build";
+
 const redisClientSingleton = () => {
+  if (isBuilding) return null;
+
   const url = process.env.REDIS_URL;
   if (!url) throw new Error("REDIS_URL not set in environment");
   const password = process.env.REDIS_PASSWORD;
 
   const client = createClient({
-    url: process.env.REDIS_URL,
+    url,
     ...(password ? { password } : {}),
   });
   client.on("error", console.error);
@@ -18,6 +22,8 @@ const redisClientSingleton = () => {
 };
 
 const createPubClient = (client: Client) => {
+  if (isBuilding) return null;
+
   const pubsub = client.duplicate();
   pubsub.on("error", console.error);
   pubsub.connect().catch(console.error);
@@ -25,6 +31,8 @@ const createPubClient = (client: Client) => {
 };
 
 const createSubClient = async (client: Client): Promise<Client> => {
+  if (isBuilding) return null as any;
+
   const pubsub = client.duplicate();
   pubsub.on("error", console.error);
   await pubsub.connect();
@@ -40,7 +48,8 @@ declare const globalThis: {
 
 const redis = globalThis.redisGlobal ?? redisClientSingleton();
 const redisPub = globalThis.redisPub ?? createPubClient(redis);
-const redisSub = globalThis.redisSub ?? (await createSubClient(redis));
+const redisSub =
+  globalThis.redisSub ?? (isBuilding ? null : await createSubClient(redis));
 
 const prefixes = ["rlc"];
 

@@ -1,3 +1,4 @@
+import type { WebSocket } from "uWebSockets.js";
 import { EventEmitter } from "node:events";
 import { redisSub } from "@core/db";
 import {
@@ -6,17 +7,19 @@ import {
   paths,
 } from "@core/db/group-session";
 import type { GSServer } from "@core/lib/group-session/proto";
-import type WebSocket from "ws";
+import type { UserData } from "./index";
 import { closeDeleted, sendPreStringified, updateCache } from "./utils";
 
-export type Client = WebSocket;
+export type Client = WebSocket<UserData>;
+
+export type Cache = Pick<GroupSessionData, "groupSize" | "frozen">;
 
 export interface Room {
   ready: boolean;
   stale: boolean;
   hostId: string | null;
   clients: Set<Client>;
-  cache: Pick<GroupSessionData, "groupSize" | "frozen">;
+  cache: Cache;
 }
 
 export class RoomManager {
@@ -85,6 +88,25 @@ export class RoomManager {
     if (room) room.stale = true;
   }
 
+  public static shutdown() {
+    console.log(`[room] shutting down ${RoomManager.rooms.size} rooms`);
+
+    for (const [code, room] of RoomManager.rooms) {
+      console.log(
+        `[room:${code}] closing ${room.clients.size} client connections`,
+      );
+
+      room.clients.forEach((client) => {
+        client.end(1001);
+      });
+
+      room.clients.clear();
+      room.stale = true;
+    }
+
+    RoomManager.rooms.clear();
+  }
+
   public setClient(client: Client) {
     this.client = client;
   }
@@ -101,7 +123,7 @@ export class RoomManager {
     if (!this.client || !this.room) return;
     this.room.clients.delete(this.client);
     console.log(
-      `[room:${this.code}] client unregistered (total: ${this.room.clients.size})`,
+      `[room:${this.code}] client unregistered (total:  ${this.room.clients.size})`,
     );
   }
 
@@ -126,13 +148,11 @@ export class RoomManager {
     try {
       await this.waitForRoom();
     } catch {
-      if (this.client) closeDeleted(this.client);
       return null;
     }
 
     const current = RoomManager.rooms.get(this.code);
     if (!current || current.stale) {
-      if (this.client) closeDeleted(this.client);
       return null;
     }
 
@@ -180,7 +200,6 @@ export class RoomManager {
     }
 
     await this.deleteIfEmpty();
-    if (this.client) closeDeleted(this.client);
     return null;
   }
 

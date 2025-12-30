@@ -15,7 +15,6 @@ import {
 } from "@core/schema/group-session/edit";
 import { auth } from "@web/auth";
 import { getZodSafeParseErrorResponse } from "@web/lib/utils";
-import { RoomManager } from "../../session-ws/[code]/room";
 
 type Context = RouteContext<"/api/sessions/[code]">;
 
@@ -37,7 +36,7 @@ export async function DELETE(_: Request, { params }: Context) {
   if (userId !== hostId)
     return withRateLimitHeaders(new Response(null, { status: 403 }));
 
-  RoomManager.markAsStale(code);
+  //RoomManager.markAsStale(code);
 
   await deleteGroupSession(hostId, code);
   redisPub.publish(paths.pubsub.deleted(code), "");

@@ -1,8 +1,8 @@
 import { ThemeProvider } from "@web/components/providers/theme-provider";
 import "./globals.css";
+import { PublicEnvProvider } from "@web/components/providers/public-env-provider";
 import { ScrollArea, ScrollBar } from "@web/components/ui/scroll-area";
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible_Next } from "next/font/google";
 
 export const metadata: Metadata = {
   title: {
@@ -26,29 +26,27 @@ export const metadata: Metadata = {
   },
 };
 
-const atkinson = Atkinson_Hyperlegible_Next({
-  subsets: ["latin"],
-  variable: "--font-atkinson",
-  fallback: ["sans-serif"],
-});
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className={atkinson.variable}>
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange>
-          <ScrollArea type="scroll" className="h-screen w-full">
-            {children}
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <PublicEnvProvider
+            baseUrl={process.env.URL}
+            baseWsUrl={process.env.WS_URL}>
+            <ScrollArea type="scroll" className="h-screen w-full">
+              {children}
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </PublicEnvProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -127,6 +127,10 @@ const groupNameCollator = new Intl.Collator(undefined, {
   sensitivity: "base",
 });
 
+const noReconnectAttemptCloseCodes = [
+  1001, 1003, 1006, 1007, 1008, 1012, 1013, 1014, 1015,
+];
+
 export function SessionViewer({
   code,
   userRepresentation,
@@ -164,6 +168,7 @@ export function SessionViewer({
     code,
     compressedUser: userRepresentation.compressedUser,
     onClose: (code, reason) => {
+      console.log(code);
       if (code === 1005) return; // likely caused by the user redirecting to a new page, so ignore
 
       if (code >= 4000) {
@@ -194,7 +199,7 @@ export function SessionViewer({
         return setTimeout(() => router.push("/"), 3000);
       }
 
-      if ([1003, 1007, 1008, 1012, 1013, 1014, 1015].includes(code)) {
+      if (noReconnectAttemptCloseCodes.includes(code)) {
         toast.error(
           `Your connection was closed (code ${code}). You'll be redirected in 3 seconds.`,
         );

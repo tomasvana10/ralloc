@@ -121,7 +121,7 @@ async function main() {
   }
 
   const devEnv = {
-    NEXT_PUBLIC_URL: `http://localhost:${devPortNum}`,
+    URL: `http://localhost:${devPortNum}`,
     AUTH_URL: `http://localhost:${devPortNum}`,
   };
   if (!useDocker) devEnv.PORT = devPort;
@@ -191,7 +191,7 @@ async function main() {
   });
 
   const prodEnv = {
-    NEXT_PUBLIC_URL: prodUrl,
+    URL: prodUrl,
     AUTH_URL: prodUrl,
   };
 
@@ -292,11 +292,17 @@ async function main() {
     console.log(
       `   - remove ${chalk.yellow('output: "standalone"')} from ${chalk.cyan("next.config.ts")}`,
     );
-    console.log(`   - Run in dev:  ${chalk.green("pnpm run --filter web dev")}`);
-    console.log(`   - Run in prod: ${chalk.green("pnpm run --filter web deploy")}\n`);
+    console.log(
+      `   - Run in dev:  ${chalk.green("pnpm run --filter web dev")}`,
+    );
+    console.log(
+      `   - Run in prod: ${chalk.green("pnpm run --filter web deploy")}\n`,
+    );
   } else {
     console.log(`3. Since you're using Docker:\n`);
-    console.log(`   - Run in dev:          ${chalk.green("pnpm run --filter d:dev")}`);
+    console.log(
+      `   - Run in dev:          ${chalk.green("pnpm run --filter d:dev")}`,
+    );
     console.log(
       `   - Run in prod (local): ${chalk.green("pnpm run --filter d:prod-local")}`,
     );

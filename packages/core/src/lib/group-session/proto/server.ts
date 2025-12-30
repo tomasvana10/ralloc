@@ -53,12 +53,6 @@ export namespace GSServer {
    */
   export const MIN_RATELIMITS_CONSIDERED_SUSPICIOUS = 20;
 
-  export const UNRESTRICTED_C2S_PAYLOADS: Partial<Record<GSClient.Code, true>> =
-    {
-      Join: true,
-      Leave: true,
-    };
-
   export enum Code {
     GroupMembership = "GMemship",
     GroupMembersClear = "GMemClear",
@@ -174,6 +168,12 @@ export namespace GSServer {
     | Payloads.Synchronise
     | Payloads.PartialSynchronise
     | Payloads.MessageRateLimit;
+
+  export const UNRESTRICTED_C2S_PAYLOADS: Partial<Record<GSClient.Code, true>> =
+    {
+      Join: true,
+      Leave: true,
+    };
 
   export function isAuthorisedToUsePayload(
     isHost: boolean,

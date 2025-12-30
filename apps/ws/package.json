@@ -1,5 +1,19 @@
 {
   "name": "@ralloc/ws",
   "version": "0.26.1",
-  "private": true
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsup",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v20.56.0",
+    "@ralloc/core": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "tsx": "^4.19.4"
+  }
 }

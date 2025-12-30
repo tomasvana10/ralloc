@@ -1,7 +1,6 @@
-# syntax=docker.io/docker/dockerfile:1
+# syntax=docker/dockerfile:1
 
 FROM node:24-alpine AS base
-
 FROM base AS builder
 
 # warning to self: corepack will no longer be included in node >25
@@ -20,21 +19,13 @@ COPY apps/web ./apps/web
 COPY packages/core ./packages/core
 COPY tsconfig.base.json .
 
-# https://github.com/vercel/next.js/discussions/14030
-# build-time environment variables
-ARG NEXT_PUBLIC_URL
-ENV NEXT_PUBLIC_URL=${NEXT_PUBLIC_URL}
-# prevents error during building
-ARG REDIS_URL=redis://dummy_url:6379
-ENV REDIS_URL=${REDIS_URL}
-
-RUN pnpm --filter @ralloc/web build
+RUN NEXT_PHASE=phase-production-build pnpm --filter @ralloc/web build
 
 FROM base AS runner
 
 WORKDIR /app
 
-# Don't run production as root
+# don't run production as root
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 USER nextjs

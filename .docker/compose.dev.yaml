@@ -7,9 +7,12 @@ services:
     env_file:
       - ../apps/web/.env.development
       - ../apps/web/.env.local
+      - ../apps/ws/.env.development
+      - ../packages/core/.env.development
     volumes:
-      - ../src:/app/src
-      - ../public:/app/public
+      - ../apps/web/src:/app/apps/web/src
+      - ../apps/web/public:/app/apps/web/public
+      - ../packages/core/src:/app/packages/core/src
     # restart: unless-stopped
     environment:
       - PORT=3001
@@ -21,6 +24,27 @@ services:
     depends_on:
       redis:
         condition: service_started
+  
+  ralloc-ws-dev:
+    container_name: ralloc-ws-dev
+    build:
+      context: ../
+      dockerfile: .docker/ws.dev.Dockerfile
+    env_file:
+      - ../packages/core/.env.development
+      - ../apps/ws/.env.development
+      - ../apps/web/.env.local
+    environment:
+      - NODE_ENV=development
+    volumes: 
+      - ../apps/ws/src:/app/apps/ws/src
+      - ../packages/core/src:/app/packages/core/src
+    ports:
+      - 6767:6767
+    networks:
+      - ralloc_net
+    depends_on: 
+      - redis
 
   redis:
     image: redis:8-alpine

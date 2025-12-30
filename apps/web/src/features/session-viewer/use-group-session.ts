@@ -5,6 +5,7 @@ import type {
 import { getRateLimitMessage } from "@core/db/rate-limit/utils";
 import { UserRepresentation } from "@core/lib/group-session";
 import { GSClient, GSServer } from "@core/lib/group-session/proto";
+import { usePublicEnv } from "@web/components/providers/public-env-provider";
 import React from "react";
 import useWebSocket, { type Options } from "react-use-websocket-lite";
 import { findCurrentGroup, getErrorMessage } from "./utils";
@@ -186,6 +187,7 @@ export function useGroupSession({
     groupSessionReducer,
     null,
   );
+  const { baseWsUrl } = usePublicEnv();
 
   // id => GroupSessionData
   const rollbacksRef = React.useRef<Rollbacks>(new Map());
@@ -196,7 +198,7 @@ export function useGroupSession({
   }, [data]);
 
   const { sendMessage, readyState } = useWebSocket({
-    url: `/api/session-ws/${code}`,
+    url: `${baseWsUrl}/${code}`,
     shouldReconnect: true,
     reconnectInterval: 5000,
     maxReconnectAttempts: 5,

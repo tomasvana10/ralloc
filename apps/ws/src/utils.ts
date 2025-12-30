@@ -1,7 +1,6 @@
 import { getGroupSessionByCode } from "@core/db/group-session";
 import { GSServer } from "@core/lib/group-session/proto";
-import type WebSocket from "ws";
-import type { Room } from "./room";
+import type { Client, Room } from "./room";
 
 export function updateCache(
   cache: Room["cache"],
@@ -30,7 +29,7 @@ export async function prepareSyncPayload(cache: Room["cache"], code: string) {
 export async function doSafeSync(
   cache: Room["cache"],
   code: string,
-  ws: WebSocket,
+  ws: Client,
 ) {
   const payload = await prepareSyncPayload(cache, code);
   if (payload) {
@@ -41,28 +40,28 @@ export async function doSafeSync(
   return false;
 }
 
-export function closeDeleted(ws: WebSocket) {
-  ws.close(
+export function closeDeleted(ws: Client) {
+  ws.end(
     GSServer.CloseEventCodes.GroupSessionWasDeleted,
     "The group session was deleted",
   );
 }
 
-export function closeForbidden(ws: WebSocket) {
-  ws.close(
+export function closeForbidden(ws: Client) {
+  ws.end(
     GSServer.CloseEventCodes.Forbidden,
     "You are not allowed to perform this action",
   );
 }
 
-export function send(ws: WebSocket, payload: GSServer.Payload) {
-  if (ws.readyState === ws.OPEN) {
+export function send(ws: Client, payload: GSServer.Payload) {
+  try {
     ws.send(JSON.stringify(payload));
-  }
+  } catch {}
 }
 
-export function sendPreStringified(ws: WebSocket, payload: string) {
-  if (ws.readyState === ws.OPEN) {
+export function sendPreStringified(ws: Client, payload: string) {
+  try {
     ws.send(payload);
-  }
+  } catch {}
 }

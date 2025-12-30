@@ -1,11 +1,13 @@
 {
-  "extends": ["../../tsconfig.base"],
+  "extends": "../../tsconfig.base",
   "compilerOptions": {
+    "outDir": "./dist",
     "baseUrl": ".",
     "paths": {
-      "@web/*": ["./src/*"],
+      "@ws/*": ["./src/*"],
       "@core/*": ["../../packages/core/src/*"]
     }
   },
-  "include": ["**/*.ts", "../../packages/core/src/**/*"]
+  "include": ["src/**/*.ts", "../../packages/core/src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

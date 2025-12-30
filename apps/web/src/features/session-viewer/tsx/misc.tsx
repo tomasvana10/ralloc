@@ -1,3 +1,4 @@
+import { usePublicEnv } from "@web/components/providers/public-env-provider";
 import { Button } from "@web/components/ui/button";
 import {
   Dialog,
@@ -82,7 +83,7 @@ export function SessionAdvertisementDialog({
   name: string;
   code: string;
 }) {
-  const baseUrl = process.env.NEXT_PUBLIC_URL;
+  const { baseUrl } = usePublicEnv();
   const directUrl = `${baseUrl}/s/${code}`;
   return (
     <Dialog>

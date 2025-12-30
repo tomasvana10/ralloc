@@ -40,6 +40,15 @@ if (config.isGuestAuthEnabled) {
 
 export const nextAuth = NextAuth({
   providers,
+  cookies: {
+    sessionToken: {
+      options: {
+        sameSite: "lax",
+        secure: config.isProduction,
+        domain: config.isProduction ? process.env.AUTH_DOMAIN : undefined,
+      },
+    },
+  },
   events: {
     signOut: async (message) => {
       // delete all user data if they didn't use an official authentication
