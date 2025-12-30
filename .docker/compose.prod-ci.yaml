@@ -22,7 +22,7 @@ services:
   
   ralloc-ws:
     container_name: ralloc-ws
-    image:  ghcr.io/tomasvana10/ralloc-ws:latest
+    image: ghcr.io/tomasvana10/ralloc-ws:latest
     labels:
       - com.centurylinklabs.watchtower.enable=true
     env_file:

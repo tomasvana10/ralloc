@@ -58,8 +58,8 @@ jobs:
         with:
           context: .
           file: .docker/ws.prod.Dockerfile
-          push:  true
-          tags:  |
+          push: true
+          tags: |
             ghcr.io/${{ github.repository }}-ws:latest
             ghcr.io/${{ github.repository }}-ws:${{ github.ref_name }}
           platforms: linux/amd64,linux/arm64

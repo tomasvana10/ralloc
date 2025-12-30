@@ -126,7 +126,7 @@ export class RoomManager {
     if (!this.client || !this.room) return;
     this.room.clients.delete(this.client);
     logd.debug(
-      `[room:${this.code}] client unregistered (total:  ${this.room.clients.size})`,
+      `[room:${this.code}] client unregistered (total: ${this.room.clients.size})`,
     );
   }
 
