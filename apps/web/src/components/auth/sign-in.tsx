@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@web/components/ui/card";
-import { ProviderIcon } from "@web/features/auth/icon";
 import { GuestSignInForm } from "@web/features/forms/auth/guest-sign-in";
+import { ProviderIcon } from "@web/lib/auth/icon";
 
 export function SignInCard({ callbackUrl }: { callbackUrl?: string }) {
   return (

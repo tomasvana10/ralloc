@@ -1,5 +1,5 @@
 import redis from "@core/db";
-import { getLogger } from "../logger";
+import { getLogger } from "@core/lib/logger";
 import * as general from "./general";
 import * as userRepresentations from "./user-representations";
 
