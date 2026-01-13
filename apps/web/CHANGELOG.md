@@ -1,5 +1,16 @@
 # @ralloc/web
 
+## 0.28.0
+
+### Minor Changes
+
+- a3008d9: Reorganise some folders and files
+
+### Patch Changes
+
+- Updated dependencies [a3008d9]
+  - @ralloc/core@0.28.0
+
 ## 0.27.0
 
 ### Minor Changes
