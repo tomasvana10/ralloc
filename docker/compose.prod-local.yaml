@@ -3,7 +3,7 @@ services:
     container_name: ralloc
     build:
       context: ../
-      dockerfile: .docker/web.prod.Dockerfile
+      dockerfile: ./apps/web/Dockerfile
     env_file:
       - ../apps/web/.env.production
       - ../apps/web/.env.local
@@ -24,7 +24,7 @@ services:
     container_name: ralloc-ws
     build: 
       context: ../
-      dockerfile: .docker/ws.prod.Dockerfile
+      dockerfile: ./apps/ws/Dockerfile
     env_file:
       - ../packages/core/.env.production
       - ../apps/ws/.env.production

@@ -6,10 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "predocker": "next typegen",
-    "d:dev": "pnpm run predocker && docker compose -f ../../.docker/compose.dev.yaml up --build",
-    "d:prod-local": "docker compose -f ../../.docker/compose.prod-local.yaml up --build",
-    "d:prod-ci": "docker compose -f ../../.docker/compose.prod-ci.yaml pull && docker compose -f ../../.docker/compose.prod-ci.yaml up --build -d"
+    "typegen": "next typegen"
   },
   "dependencies": {
     "@ralloc/core": "workspace:*",

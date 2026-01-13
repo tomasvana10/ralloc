@@ -133,7 +133,7 @@ async function main() {
   const devWebPort = await getPort(
     "Internal NextJS port:",
     DEFAULT_DEV_WEB_PORT,
-    `Please update the port mappings in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+    `Please update the port mappings in ${chalk.cyan("docker/compose.dev.yaml")}\n`,
   );
 
   const devWebEnv = {
@@ -148,7 +148,7 @@ async function main() {
   const devWsPort = await getPort(
     "Internal WebSocket Server port:",
     DEFAULT_WS_PORT,
-    `Please update the port mappings in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+    `Please update the port mappings in ${chalk.cyan("docker/compose.dev.yaml")}\n`,
   );
   devWsEnv.WS_PORT = devWsPort;
 
@@ -176,7 +176,7 @@ async function main() {
 
     console.log(
       chalk.yellow(
-        `Please remove the redis service in ${chalk.cyan(".docker/compose.dev.yaml")}\n`,
+        `Please remove the redis service in ${chalk.cyan("docker/compose.dev.yaml")}\n`,
       ),
     );
   }
@@ -233,7 +233,7 @@ async function main() {
   const prodWebPort = await getPort(
     "Internal NextJS port:",
     DEFAULT_PROD_WEB_PORT,
-    `Please update the port mappings in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+    `Please update the port mappings in ${chalk.cyan("docker/compose.prod-*.yaml")}\n`,
   );
   prodWebEnv.PORT = prodWebPort;
 
@@ -250,7 +250,7 @@ async function main() {
   const prodWsPort = await getPort(
     "Internal WebSocket Server port:",
     DEFAULT_WS_PORT,
-    `Please update the port mappings in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+    `Please update the port mappings in ${chalk.cyan("docker/compose.prod-*.yaml")}\n`,
   );
   prodWsEnv.WS_PORT = prodWsPort;
 
@@ -278,7 +278,7 @@ async function main() {
 
     console.log(
       chalk.yellow(
-        `Please remove the redis service in ${chalk.cyan(".docker/compose.prod-*.yaml")}\n`,
+        `Please remove the redis service in ${chalk.cyan("docker/compose.prod-*.yaml")}\n`,
       ),
     );
   }
