@@ -293,7 +293,7 @@ async function setupProdEnvironment() {
   console.log();
   writeEnvFile(".env.production", prodWebEnv, "apps/web");
   writeEnvFile(".env.production", prodWsEnv, "apps/ws");
-  writeEnvFile(".env.production", prodAppsEnv, "packages/core");
+  writeEnvFile(".env.production", prodAppsEnv, "apps");
   console.log();
   if (prodOpenRedis)
     writeRedisConf("redis.prod.conf", prodAppsEnv.REDIS_PASSWORD);
