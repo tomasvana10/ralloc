@@ -1,5 +1,11 @@
 # @ralloc/web
 
+## 0.31.0
+
+### Patch Changes
+
+- 47de2b6: Fix NextJS icon 404
+
 ## 0.30.1
 
 ### Patch Changes

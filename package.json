@@ -1,6 +1,6 @@
 {
   "name": "ralloc",
-  "version": "0.30.1",
+  "version": "0.31.0",
   "private": true,
   "scripts": {
     "cs:add": "changeset",
@@ -10,12 +10,10 @@
     "prepare": "[ -d .git ] && lefthook install || echo \"no lefthook in container\"",
     "predocker": "pnpm run --filter web typegen",
     "dev": "pnpm run predocker && docker compose -f ./docker/compose.dev.yaml up --build",
-
     "deploy": "docker compose -f ./docker/compose.prod-ci.yaml pull && docker compose -f ./docker/compose.prod-ci.yaml up --build -d",
     "logs": "docker compose -f ./docker/compose.prod-ci.yaml logs -f",
     "stop": "docker compose -f ./docker/compose.prod-ci.yaml stop",
     "restart": "docker compose -f ./docker/compose.prod-ci.yaml restart",
-
     "deploy-locally": "docker compose -f ./docker/compose.prod-local.yaml up --build"
   },
   "devDependencies": {

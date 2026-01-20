@@ -1,5 +1,16 @@
 # ralloc
 
+## 0.31.0
+
+### Minor Changes
+
+- 2b5e065: Update workspace scripts
+
+### Patch Changes
+
+- 6345c55: Add 'stop' script
+- 47de2b6: Fix NextJS icon 404
+
 ## 0.30.1
 
 ### Patch Changes
