@@ -1,5 +1,5 @@
-![Ralloc logo](apps/web/public/icon-light.png#gh-light-mode-only)
-![Ralloc logo](apps/web/public/icon-dark.png#gh-dark-mode-only)
+![Ralloc logo](apps/web/src/public/icon-light.png#gh-light-mode-only)
+![Ralloc logo](apps/web/src/public/icon-dark.png#gh-dark-mode-only)
 
 # Ralloc
 
@@ -31,10 +31,13 @@ One issue that `Ralloc` directly solves â€” and which inspired its development â
 
 ## Installation and Self-Hosting
 
-- Package manager: [`pnpm`](https://pnpm.io/installation)
-- Runtime: `Node.js`
+> [!WARNING]
+> `Ralloc` can only be hosted using `Docker` and `Docker Compose`.
 
-If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/download) to install both it and pnpm.
+### Requirements
+- `pnpm`
+- `Docker`
+- `Docker Compose`
 
 ### Preparation
 
@@ -45,8 +48,8 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 ### Set up the development/production environments
 
 1. Install development dependencies to use scripts: `pnpm i --dev`.
-1. Set up the environment by running `./scripts/setup`. This script will also inform you how `Ralloc` can be started in development/production.
-1. Add your OAuth providers: `./scripts/add-auth-providers`.
+2. Set up the environment by running `./scripts/setup`.
+3. Add your OAuth providers: `./scripts/add-auth-providers`.
 
 ### Run
 
@@ -54,39 +57,26 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 - Production (CI/CD): `pnpm run deploy`
 - Production (local): `pnpm run deploy-locally`
 
-## Environment Variable Reference
+## Environment Variables
 
-### `apps`
+> [!NOTE]
+> In `Occurrences`, `prod` refers to the file `.env.production`, `dev` refers to the file `.env.development`, and `local` refers to the file `.env.local`.
 
-`.env.development` and `.env.production`:
+| Directory | Occurrences | Name | Description |
+|----|-----------|---------|-------------|
+| `apps` | prod, dev | `REDIS_URL` | URL of the redis database. |
+| `apps` | prod, dev | `ENABLE_RATELIMITING` | a value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter. |
+| `apps` | prod, dev | `ENABLE_GUEST_AUTH` | a value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted). |
+| `apps/web` | local | `AUTH_SECRET` | `NextAuth` authentication secret |
+| `apps/web` | local | `AUTH_*_ID`, `AUTH_*_SECRET` | OAuth app credentials that aren't scoped to an environment. |
+| `apps/web` | prod, dev | `AUTH_*_ID`, `AUTH_*_SECRET` | OAuth app credentials that are scoped to an environment. |
+| `apps/web` | prod, dev | `URL` | base `NextJS` url. |
+| `apps/web` | prod, dev | `AUTH_URL` | `NextAuth` base URL for callbacks and redirects (same as `URL`). |
+| `apps/web` | prod | `AUTH_DOMAIN` | optional value for `NextAuth` to ensure cookies are preserved across subdomains. |
+| `apps/ws` | prod, dev | `WS_HOST` | hostname of the WebSocket server (default `0.0.0.0`). |
+| `apps/ws` | prod, dev | `WS_PORT` | port of the WebSocket server (default `6767`). |
+| `apps/ws` | prod, dev | `WS_URL` | URL of the WebSocket server. |
 
-- `REDIS_URL`: URL of the redis database.
-- `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
-- `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).
-
-### `apps/web`
-
-`.env.local`:
-
-- Used solely for global authentication secret/id pairs and the `NextAuth` authentication secret.
-
-`.env.development` and `.env.production`:
-
-- Scoped authentication secret/id pairs
-- `URL`: base `NextJS` url.
-- `AUTH_URL`: `NextAuth` base URL for callbacks and redirects (same as `URL`).
-
-`.env.production`:
-
-- `AUTH_DOMAIN`: optional value for `NextAuth` to ensure cookies are preserved across subdomains.
-
-### `apps/ws`
-
-`.env.development` and `.env.production`:
-
-- `WS_HOST`: hostname of the WebSocket server (default `0.0.0.0`).
-- `WS_PORT`: port of the WebSocket server (default `6767`).
-- `WS_URL`: URL of the WebSocket server.
 
 ## Todo
 
