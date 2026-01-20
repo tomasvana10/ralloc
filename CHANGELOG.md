@@ -1,5 +1,19 @@
 # ralloc
 
+## 0.30.0
+
+### Minor Changes
+
+- 972a43a: Use absolute paths for scripts for simplicity
+- 3581a58: Better scripts and README
+
+### Patch Changes
+
+- 02ec7d0: Fix script paths and improve cohesiveness
+- 3092d0f: Update run commands in setup script
+- dcac38b: Rename add-providers to add-auth-providers
+- e90f09b: Update dockerfile paths in workflows, linter config and .dockerignore
+
 ## 0.29.0
 
 ### Minor Changes
