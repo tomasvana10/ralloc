@@ -1,5 +1,11 @@
 # @ralloc/core
 
+## 0.30.1
+
+### Patch Changes
+
+- 1bf09cd: Use Zod superRefine for session edit schema
+
 ## 0.29.0
 
 ### Minor Changes

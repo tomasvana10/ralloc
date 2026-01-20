@@ -1,5 +1,11 @@
 # ralloc
 
+## 0.30.1
+
+### Patch Changes
+
+- 3a00b4d: Fix incorrect path in setup script
+
 ## 0.30.0
 
 ### Minor Changes

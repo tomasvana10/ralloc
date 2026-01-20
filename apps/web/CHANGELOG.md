@@ -1,5 +1,12 @@
 # @ralloc/web
 
+## 0.30.1
+
+### Patch Changes
+
+- Updated dependencies [1bf09cd]
+  - @ralloc/core@0.30.1
+
 ## 0.29.0
 
 ### Minor Changes
