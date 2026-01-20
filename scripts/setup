@@ -142,7 +142,7 @@ async function main() {
   };
   devWebEnv.PORT = devWebPort;
   const devWsEnv = { WS_HOST: "0.0.0.0" };
-  const devCoreEnv = {};
+  const devAppsEnv = {};
 
   // ws env config
   const devWsPort = await getPort(
@@ -166,13 +166,13 @@ async function main() {
   });
 
   if (devUseBuiltinRedis) {
-    devCoreEnv.REDIS_URL = DOCKER_REDIS_URL;
+    devAppsEnv.REDIS_URL = DOCKER_REDIS_URL;
   } else {
     const devRedisUrl = await input({
       message: "Redis database URL:",
       default: "redis://localhost:6379",
     });
-    devCoreEnv.REDIS_URL = devRedisUrl;
+    devAppsEnv.REDIS_URL = devRedisUrl;
 
     console.log(
       chalk.yellow(
@@ -189,28 +189,28 @@ async function main() {
   if (devOpenRedis) {
     const passwordA = await getPassword(false);
     await getPassword(true, passwordA);
-    devCoreEnv.REDIS_PASSWORD = passwordA;
+    devAppsEnv.REDIS_PASSWORD = passwordA;
   }
 
   const devEnableRatelimiting = await confirm({
     message: "Enable NextJS API rate limiting?",
     default: false,
   });
-  devCoreEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
+  devAppsEnv.ENABLE_RATELIMITING = devEnableRatelimiting ? "1" : "0";
 
   const devEnableGuestAuth = await confirm({
     message:
       "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
     default: false,
   });
-  devCoreEnv.ENABLE_GUEST_AUTH = devEnableGuestAuth ? "1" : "0";
+  devAppsEnv.ENABLE_GUEST_AUTH = devEnableGuestAuth ? "1" : "0";
 
   console.log();
   writeEnvFile(".env.development", devWebEnv, "apps/web");
   writeEnvFile(".env.development", devWsEnv, "apps/ws");
-  writeEnvFile(".env.development", devCoreEnv, "packages/core");
+  writeEnvFile(".env.development", devAppsEnv, "apps");
   console.log();
-  if (devOpenRedis) writeRedisConf("redis.dev.conf", devCoreEnv.REDIS_PASSWORD);
+  if (devOpenRedis) writeRedisConf("redis.dev.conf", devAppsEnv.REDIS_PASSWORD);
 
   // production
   console.log(
@@ -227,7 +227,7 @@ async function main() {
     AUTH_URL: prodUrl,
   };
   const prodWsEnv = { WS_HOST: "0.0.0.0" };
-  const prodCoreEnv = {};
+  const prodAppsEnv = {};
 
   // web env config
   const prodWebPort = await getPort(
@@ -268,13 +268,13 @@ async function main() {
   });
 
   if (prodUseBuiltinRedis) {
-    prodCoreEnv.REDIS_URL = DOCKER_REDIS_URL;
+    prodAppsEnv.REDIS_URL = DOCKER_REDIS_URL;
   } else {
     const prodRedisUrl = await input({
       message: "Enter your Redis database URL:",
       default: "redis://localhost:6379",
     });
-    prodCoreEnv.REDIS_URL = prodRedisUrl;
+    prodAppsEnv.REDIS_URL = prodRedisUrl;
 
     console.log(
       chalk.yellow(
@@ -291,29 +291,29 @@ async function main() {
   if (prodOpenRedis) {
     const passwordA = await getPassword(false);
     await getPassword(true, passwordA);
-    prodCoreEnv.REDIS_PASSWORD = passwordA;
+    prodAppsEnv.REDIS_PASSWORD = passwordA;
   }
 
   const prodEnableRatelimiting = await confirm({
     message: "Enable NextJS API rate limiting?",
     default: true,
   });
-  prodCoreEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
+  prodAppsEnv.ENABLE_RATELIMITING = prodEnableRatelimiting ? "1" : "0";
 
   const prodEnableGuestAuth = await confirm({
     message:
       "Allow users to sign in as a guest for a one-time session? (can lead to increased API abuse)",
     default: false,
   });
-  prodCoreEnv.ENABLE_GUEST_AUTH = prodEnableGuestAuth ? "1" : "0";
+  prodAppsEnv.ENABLE_GUEST_AUTH = prodEnableGuestAuth ? "1" : "0";
 
   console.log();
   writeEnvFile(".env.production", prodWebEnv, "apps/web");
   writeEnvFile(".env.production", prodWsEnv, "apps/ws");
-  writeEnvFile(".env.production", prodCoreEnv, "packages/core");
+  writeEnvFile(".env.production", prodAppsEnv, "packages/core");
   console.log();
   if (prodOpenRedis)
-    writeRedisConf("redis.prod.conf", prodCoreEnv.REDIS_PASSWORD);
+    writeRedisConf("redis.prod.conf", prodAppsEnv.REDIS_PASSWORD);
 
   //#region 2. docker network
   const createNetwork = await confirm({

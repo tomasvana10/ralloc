@@ -44,6 +44,13 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 
 ## Environment Variable Reference
 
+### `apps`
+
+`.env.development` and `.env.production`:
+- `REDIS_URL`: URL of the redis database.
+- `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
+- `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).
+
 ### `apps/web`
 
 `.env.local`: 
@@ -63,14 +70,6 @@ Requirements: [`pnpm`](https://pnpm.io/installation)
 - `WS_HOST`: hostname of the WebSocket server (default `0.0.0.0`).
 - `WS_PORT`: port of the WebSocket server (default `6767`).
 - `WS_URL`: URL of the WebSocket server.
-
-### `packages/core`
-
-`.env.development` and `.env.production`:
-- `REDIS_URL`: URL of the redis database.
-- `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
-- `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).
-
 
 ## Todo
 

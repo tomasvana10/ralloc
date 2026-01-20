@@ -8,7 +8,7 @@ services:
       - ../apps/web/.env.development
       - ../apps/web/.env.local
       - ../apps/ws/.env.development
-      - ../packages/core/.env.development
+      - ../apps/.env.development
     volumes:
       - ../apps/web/src:/app/apps/web/src
       - ../apps/web/public:/app/apps/web/public
@@ -31,7 +31,7 @@ services:
       context: ../
       dockerfile: ./apps/ws/dev.Dockerfile
     env_file:
-      - ../packages/core/.env.development
+      - ../apps/.env.development
       - ../apps/ws/.env.development
       - ../apps/web/.env.local
     environment:
