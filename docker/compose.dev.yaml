@@ -11,7 +11,7 @@ services:
       - ../apps/.env.development
     volumes:
       - ../apps/web/src:/app/apps/web/src
-      - ../apps/web/public:/app/apps/web/public
+      - ../apps/web/src/public:/app/apps/web/src/public
       - ../packages/core/src:/app/packages/core/src
     # restart: unless-stopped
     environment:
