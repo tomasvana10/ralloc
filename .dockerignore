@@ -5,7 +5,7 @@
 **/.env*
 **/biome.json
 **/.DS_Store 
-**/.docker
+**/docker
 **/build
 **/dist
 **/*.tsbuildinfo

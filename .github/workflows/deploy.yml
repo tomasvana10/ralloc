@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: .docker/web.prod.Dockerfile
+          file: apps/web/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository }}:latest
@@ -57,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: .docker/ws.prod.Dockerfile
+          file: apps/ws/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository }}-ws:latest
