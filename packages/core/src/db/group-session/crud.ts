@@ -157,7 +157,7 @@ export async function deleteGroupSession(hostId: string, code: string) {
   ]);
 }
 
-//#region helpers
+//#region crud helpers
 async function getGroups(hostId: string, code: string) {
   const groupKeys = await getKeys(paths.patterns.allGroupNames(hostId, code));
 

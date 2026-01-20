@@ -3,20 +3,22 @@
  * into a set of values
  */
 
-import { areSameCase } from "@core/lib/utils";
 import z from "zod";
 import { MAX_GROUPS, MIN_GROUPS } from "./constants";
 
+export enum ExpansionResultIssue {
+  TooBig = "too_big",
+  TooBigPart = "too_big_part",
+  TooShort = "too_short",
+  InvalidRange = "invalid_range",
+  TooManyNumRanges = "too_many_num_ranges",
+  TooManyCharRanges = "too_many_char_ranges",
+  DuplicateValues = "duplicate_values",
+}
+
 export interface ExpansionResult {
   values: string[];
-  issue?:
-    | "too_big"
-    | "too_big_part"
-    | "too_short"
-    | "invalid_range"
-    | "too_many_num_ranges"
-    | "too_many_char_ranges"
-    | "duplicate_values";
+  issue?: ExpansionResultIssue;
 }
 
 export const GROUP_SEED = {
@@ -32,11 +34,22 @@ export const GROUP_SEED = {
 
 export const groupName = z.string().min(1).max(GROUP_SEED.MAX_PART_LENGTH);
 
+function padNumeric(n: number, width: number) {
+  return n.toString().padStart(width, "0");
+}
+
+export function areSameCase(a: string, b: string) {
+  return (
+    (a === a.toLowerCase() && b === b.toLowerCase()) ||
+    (a === a.toUpperCase() && b === b.toUpperCase())
+  );
+}
+
 export function expandGroupSeed(input: string): ExpansionResult {
   // this used to trim and filter out empty strings, but zod
   // takes care of it now
   const filtered = input.split(GROUP_SEED.PART_SEPARATOR);
-  const values = [];
+  const values: string[] = [];
 
   let totalExpandedPartCount = 0;
 
@@ -45,50 +58,49 @@ export function expandGroupSeed(input: string): ExpansionResult {
     if (!Array.isArray(result)) return { values: [], issue: result };
     totalExpandedPartCount += result.length;
     if (totalExpandedPartCount > GROUP_SEED.MAX_PARTS)
-      return { values: [], issue: "too_big" };
+      return { values: [], issue: ExpansionResultIssue.TooBig };
     values.push(...result);
   }
 
   if (values.length < GROUP_SEED.MIN_PARTS)
-    return { values: [], issue: "too_short" };
+    return { values: [], issue: ExpansionResultIssue.TooShort };
   if (new Set(values).size < values.length)
-    return { values: [], issue: "duplicate_values" };
+    return { values: [], issue: ExpansionResultIssue.DuplicateValues };
 
   return { values };
 }
 
-function expandPart(part: string): ExpansionResult["issue"] | string[] {
-  if (part.length > GROUP_SEED.MAX_PART_LENGTH) return "too_big_part";
+function expandPart(part: string) {
+  if (part.length > GROUP_SEED.MAX_PART_LENGTH)
+    return ExpansionResultIssue.TooBigPart;
   let results = [part];
 
-  const numericExpansion = expandNumericRanges(part, results);
-  if (!Array.isArray(numericExpansion)) return numericExpansion;
-  results = numericExpansion;
+  const numericExpansionResult = expandNumericRanges(part, results);
+  // ExpansionResultIssue was returned
+  if (!Array.isArray(numericExpansionResult)) return numericExpansionResult;
+  results = numericExpansionResult;
 
-  const characterExpansion = expandCharacterRanges(part, results);
-  if (!Array.isArray(characterExpansion)) return characterExpansion;
-  results = characterExpansion;
+  const characterExpansionResult = expandCharacterRanges(part, results);
+  // ditto
+  if (!Array.isArray(characterExpansionResult)) return characterExpansionResult;
+  results = characterExpansionResult;
 
-  if (results.length > GROUP_SEED.MAX_PARTS) return "too_big";
+  if (results.length > GROUP_SEED.MAX_PARTS) return ExpansionResultIssue.TooBig;
   return results;
-}
-
-function padNumeric(n: number, width: number) {
-  return n.toString().padStart(width, "0");
 }
 
 function expandNumericRanges(
   part: string,
   results: string[],
-): ExpansionResult["issue"] | string[] {
+): ExpansionResultIssue | string[] {
   const numRanges = [...part.matchAll(GROUP_SEED.NUM_RANGE_REGEX)];
   if (numRanges.length > GROUP_SEED.MAX_NUM_RANGES_PER_PART)
-    return "too_many_num_ranges";
+    return ExpansionResultIssue.TooManyNumRanges;
 
   let current = results;
 
   for (const [full, start, end] of numRanges) {
-    if (start === end) return "invalid_range";
+    if (start === end) return ExpansionResultIssue.InvalidRange;
 
     const [a, b] = [Number(start), Number(end)];
 
@@ -99,7 +111,7 @@ function expandNumericRanges(
         : 0;
 
     if ((Math.abs(a - b) + 1) * current.length > GROUP_SEED.MAX_PARTS)
-      return "too_big";
+      return ExpansionResultIssue.TooBig;
 
     const next: string[] = [];
 
@@ -130,21 +142,21 @@ function expandNumericRanges(
 function expandCharacterRanges(
   part: string,
   results: string[],
-): ExpansionResult["issue"] | string[] {
+): ExpansionResultIssue | string[] {
   const charRanges = [...part.matchAll(GROUP_SEED.CHAR_RANGE_REGEX)];
   if (charRanges.length > GROUP_SEED.MAX_CHAR_RANGES_PER_PART)
-    return "too_many_char_ranges";
+    return ExpansionResultIssue.TooManyCharRanges;
 
   let current = results;
 
   for (const [full, start, end] of charRanges) {
-    if (start === end) return "invalid_range";
-    if (!areSameCase(start, end)) return "invalid_range";
+    if (start === end || !areSameCase(start, end))
+      return ExpansionResultIssue.InvalidRange;
 
     const [a, b] = [start.charCodeAt(0), end.charCodeAt(0)];
 
     if ((Math.abs(b - a) + 1) * current.length > GROUP_SEED.MAX_PARTS)
-      return "too_big";
+      return ExpansionResultIssue.TooBig;
 
     const next: string[] = [];
 

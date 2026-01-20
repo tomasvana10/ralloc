@@ -2,10 +2,10 @@ import uWS from "uWebSockets.js";
 import { getSessionFromCookie } from "@core/auth/utils";
 import { rateLimit } from "@core/db/rate-limit";
 import { GSServer } from "@core/lib/group-session/proto";
-import { getLogger } from "@core/lib/logger";
+import { getLogger } from "@core/logger";
 import { handleMessage } from "./handlers/message";
 import { RoomManager } from "./room";
-import { doSafeSync } from "./utils.js";
+import { doSafeSync } from "./utils";
 
 export interface UserData {
   code: string;
@@ -49,8 +49,6 @@ let listenSocket: uWS.us_listen_socket | null = null;
 
 app.ws<UserData>("/:code", {
   maxPayloadLength: GSServer.MSG_SIZE_LIMIT,
-  idleTimeout: Math.ceil(GSServer.PING_INTERVAL_MS / 1000) + 10,
-
   upgrade: async (res, req, context) => {
     const code = req.getParameter(0);
     const cookie = req.getHeader("cookie");
@@ -174,9 +172,7 @@ app.ws<UserData>("/:code", {
 
     logd.debug(`[${userData.code}] client disconnected (code: ${code})`);
 
-    if (userData.pingInterval) {
-      clearInterval(userData.pingInterval);
-    }
+    if (userData.pingInterval) clearInterval(userData.pingInterval);
 
     userData.room.unregisterClient();
     void userData.room.deleteIfEmpty();

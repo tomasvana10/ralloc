@@ -1,5 +1,5 @@
 import { config } from "@core/config";
-import { getLogger } from "@core/lib/logger";
+import { getLogger } from "@core/logger";
 import { createClient, type RedisClientType } from "redis";
 
 type Client = RedisClientType;

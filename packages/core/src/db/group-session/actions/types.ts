@@ -3,13 +3,6 @@ export enum ActionStatus {
   Failure = "failure",
 }
 
-export type BaseActionSuccess = { status: ActionStatus.Success };
-
-export type BaseActionFailure<T extends ActionErrorMessage> = {
-  status: ActionStatus.Failure;
-  message: T;
-};
-
 export enum ActionErrorMessage {
   Full = "full",
   AlreadyAllocated = "alreadyAllocated",
@@ -20,3 +13,10 @@ export enum ActionErrorMessage {
   MaximumGroupsReached = "maxGroupsReached",
   MinimumGroupsReached = "minGroupsReached",
 }
+
+export type BaseActionSuccess = { status: ActionStatus.Success };
+
+export type BaseActionFailure<T extends ActionErrorMessage> = {
+  status: ActionStatus.Failure;
+  message: T;
+};

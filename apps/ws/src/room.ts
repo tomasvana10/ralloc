@@ -7,7 +7,7 @@ import {
   paths,
 } from "@core/db/group-session";
 import type { GSServer } from "@core/lib/group-session/proto";
-import { getLogger } from "@core/lib/logger";
+import { getLogger } from "@core/logger";
 import type { UserData } from "./index";
 import { closeDeleted, sendPreStringified, updateCache } from "./utils";
 

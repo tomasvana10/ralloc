@@ -1,4 +1,5 @@
 import { expandGroupSeed, GROUP_SEED } from "@core/lib/group-session";
+import { ExpansionResultIssue } from "@core/lib/group-session/group-seed";
 import z from "zod";
 
 export const sessionCreateSchema = z.object({
@@ -12,43 +13,43 @@ export const sessionCreateSchema = z.object({
       if (result.issue === undefined) return;
 
       switch (result.issue) {
-        case "invalid_range":
+        case ExpansionResultIssue.InvalidRange:
           return ctx.addIssue({
             code: "custom",
             message: "Seed has invalid ranges",
           });
-        case "too_big":
+        case ExpansionResultIssue.TooBig:
           return ctx.addIssue({
             code: "too_big",
             maximum: GROUP_SEED.MAX_PARTS,
             origin: "array",
             message: "Seed expansion yields too many values",
           });
-        case "too_big_part":
+        case ExpansionResultIssue.TooBigPart:
           return ctx.addIssue({
             code: "too_big",
             maximum: GROUP_SEED.MAX_PARTS,
             origin: "array",
             message: "One or more parts are too long",
           });
-        case "too_short":
+        case ExpansionResultIssue.TooShort:
           return ctx.addIssue({
             code: "too_small",
             minimum: GROUP_SEED.MIN_PARTS,
             origin: "array",
             message: "Seed expansion yields too little values",
           });
-        case "too_many_char_ranges":
+        case ExpansionResultIssue.TooManyCharRanges:
           return ctx.addIssue({
             code: "custom",
             message: "You provided too many character ranges for a seed part",
           });
-        case "too_many_num_ranges":
+        case ExpansionResultIssue.TooManyNumRanges:
           return ctx.addIssue({
             code: "custom",
             message: "You provided too many numerical ranges for a seed part",
           });
-        case "duplicate_values":
+        case ExpansionResultIssue.DuplicateValues:
           return ctx.addIssue({
             code: "custom",
             message: "Seed expansion yields one or more duplicate values",

@@ -11,7 +11,7 @@ export async function loadLuaScript(name: string): Promise<LuaScript> {
   const filePath = path.join(
     process.cwd(),
     "../../packages/core/src/db/lua",
-    name.concat(".lua"),
+    `${name}.lua`,
   );
   const source = fs.readFileSync(filePath, "utf8");
   return { sha: null, source };

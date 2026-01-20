@@ -18,7 +18,7 @@ export function SimpleTooltip({
         <Tooltip>
           <TooltipTrigger asChild tabIndex={0} className={focusStyles}>
             {children ?? (
-              <CircleQuestionMark className="text-foreground size-4" />
+              <CircleQuestionMark className="text-foreground size-[0.9rem]" />
             )}
           </TooltipTrigger>
           <TooltipContent className="bg-secondary text-secondary-foreground border border-border text-sm">
@@ -32,7 +32,7 @@ export function SimpleTooltip({
         <Popover>
           <PopoverTrigger asChild>
             {children || (
-              <CircleQuestionMark className="text-foreground size-4" />
+              <CircleQuestionMark className="text-foreground size-[0.9rem]" />
             )}
           </PopoverTrigger>
           <PopoverContent>{tip}</PopoverContent>

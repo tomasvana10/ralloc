@@ -7,7 +7,6 @@ import {
 } from "@core/schema/group-session/create";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SimpleTooltip } from "@web/components/tooltip";
-import { Badge } from "@web/components/ui/badge";
 import { Button } from "@web/components/ui/button";
 import {
   Card,
@@ -29,16 +28,10 @@ import { ScrollArea, ScrollBar } from "@web/components/ui/scroll-area";
 import { Spinner } from "@web/components/ui/spinner";
 import { Switch } from "@web/components/ui/switch";
 import { Textarea } from "@web/components/ui/textarea";
-import { focusStyles } from "@web/lib/constants";
 import { useCreateGroupSessionSWRMutation } from "@web/lib/hooks/group-session-swr";
 import { useIsBelowBreakpoint } from "@web/lib/hooks/use-is-below-breakpoint";
 import { cn } from "@web/lib/utils";
-import {
-  BadgeCheckIcon,
-  ChevronRightIcon,
-  InfoIcon,
-  PlusIcon,
-} from "lucide-react";
+import { ChevronRightIcon, InfoIcon, PlusIcon } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import React from "react";
@@ -184,27 +177,42 @@ export function SessionCreateForm() {
               control={form.control}
               render={({ field, fieldState }) => (
                 <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel
-                    htmlFor="form-create-session-description"
-                    className="has-data-[state=checked]:bg-card! max-sm:flex-col max-sm:items-start max-sm:gap-2 flex-row">
-                    <div className="flex gap-1">
-                      <span>Description</span>
-                      <Badge variant="outline" asChild>
-                        <a
-                          className={focusStyles}
-                          href="https://commonmark.org/help/"
-                          target="_blank"
-                          rel="noopener">
-                          <BadgeCheckIcon /> Markdown
-                        </a>
-                      </Badge>
-                    </div>
+                  <div className="flex items-center gap-1">
+                    <SimpleTooltip
+                      tip={
+                        <>
+                          <p>
+                            This field supports Markdown formatting. For
+                            reference, visit{" "}
+                          </p>
+                          <Button
+                            variant="link"
+                            asChild
+                            className="px-0 inline">
+                            <a
+                              href="https://commonmark.org/help/"
+                              target="_blank"
+                              rel="noopener noreferrer">
+                              this page
+                            </a>
+                          </Button>
+                          .
+                        </>
+                      }
+                    />
+                    <FieldLabel
+                      htmlFor="form-create-session-description"
+                      className="has-data-[state=checked]:bg-card! max-sm:flex-col max-sm:items-start max-sm:gap-2 flex-row">
+                      Description
+                    </FieldLabel>
                     {!isMobile && (
-                      <MarkdownPreviewSwitch
-                        setShowMarkdown={setShowMarkdown}
-                      />
+                      <div className="flex gap-1 w-full justify-end">
+                        <MarkdownPreviewSwitch
+                          setShowMarkdown={setShowMarkdown}
+                        />
+                      </div>
                     )}
-                  </FieldLabel>
+                  </div>
                   {showMarkdown ? (
                     <ScrollArea
                       className={cn(
@@ -229,7 +237,11 @@ export function SessionCreateForm() {
                     <FieldError errors={[fieldState.error]} />
                   )}
                   {isMobile && (
-                    <MarkdownPreviewSwitch setShowMarkdown={setShowMarkdown} />
+                    <div className="flex gap-1 w-full justify-end">
+                      <MarkdownPreviewSwitch
+                        setShowMarkdown={setShowMarkdown}
+                      />
+                    </div>
                   )}
                 </Field>
               )}
@@ -337,11 +349,11 @@ function MarkdownPreviewSwitch({
   setShowMarkdown: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   return (
-    <div className="flex gap-1 w-full justify-end">
+    <>
       <Label htmlFor="preview-switch" className="text-card-foreground">
         Preview
       </Label>
       <Switch id="preview-switch" onCheckedChange={setShowMarkdown} />
-    </div>
+    </>
   );
 }

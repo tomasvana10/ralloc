@@ -12,19 +12,6 @@ import type { Session } from "next-auth";
  * information such as their name and avatar URL.
  */
 export class UserRepresentation {
-  /**
-   * ASCII Information Separator One
-   *
-   * Used to separate serialised units.
-   */
-  public static UNIT_SEPARATOR = "\u001f" as const;
-  /**
-   * ASCII Information Separator Two
-   *
-   * Use to indicate an empty unit.
-   */
-  public static UNIT_EMPTY = "\u001e" as const;
-
   public userId: string;
   public name: string;
   public imageId: string | null;
@@ -32,7 +19,20 @@ export class UserRepresentation {
 
   public image: string | null;
 
-  private static SERIALISATION_ORDER = [
+  /**
+   * ASCII Information Separator One
+   *
+   * Used to separate serialised units.
+   */
+  public static readonly UNIT_SEPARATOR = "\u001f";
+  /**
+   * ASCII Information Separator Two
+   *
+   * Use to indicate an empty unit.
+   */
+  public static readonly UNIT_EMPTY = "\u001e";
+
+  private static readonly SERIALISATION_ORDER = [
     /**
      * WARNING: userId must always be the first field of the user representation
      * If it must be changed, you will have to refactor these parts of the code:
@@ -44,10 +44,11 @@ export class UserRepresentation {
     "name",
     "provider",
     "imageId",
-  ] as const satisfies readonly (keyof UserRepresentation)[];
-  private static SERIALISED_FIELD_COUNT = this.SERIALISATION_ORDER.length;
+  ] satisfies (keyof UserRepresentation)[];
+  private static readonly SERIALISED_FIELD_COUNT =
+    this.SERIALISATION_ORDER.length;
 
-  private static PROVIDER_IMAGE_CONFIG: Record<
+  private static readonly PROVIDER_IMAGE_CONFIG: Record<
     OfficialProvider,
     { urlPrefix: string; urlSuffix: string; matcher: RegExp }
   > = {
@@ -126,10 +127,12 @@ export class UserRepresentation {
 
     const [userId, name, _provider, _imageId] = parts;
     const provider = _provider as SupportedProvider;
-    const imageId = UserRepresentation.parsePossiblyEmptyUnitvalue(_imageId);
+    const imageId = UserRepresentation.parseMaybeEmptyUnitValue(_imageId);
 
     let image: string | null = null;
 
+    // guest users or users without image ids will have their avatars rendered through
+    // the shadcn Avatar element
     if (provider !== GUEST_PROVIDER && imageId) {
       image = UserRepresentation.getImageUrl(imageId, provider);
     }
@@ -195,8 +198,7 @@ export class UserRepresentation {
     return `User ${randomBytes(4).toString("hex")}`;
   }
 
-  private static parsePossiblyEmptyUnitvalue(value: string) {
-    if (value === UserRepresentation.UNIT_EMPTY) return null;
-    return value;
+  private static parseMaybeEmptyUnitValue(value: string) {
+    return value === UserRepresentation.UNIT_EMPTY ? null : value;
   }
 }
