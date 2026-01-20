@@ -1,8 +1,8 @@
 packages:
-  - "."
-  - "apps/*"
-  - "packages/*"
+  - .
+  - apps/*
+  - packages/*
 
 catalog:
-  next-auth: "5.0.0-beta.30"
-  zod: "^4.2.1"
+  next-auth: 5.0.0-beta.30
+  zod: ^4.3.5
