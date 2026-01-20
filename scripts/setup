@@ -394,7 +394,7 @@ async function main() {
 
 main().catch((err) => {
   if (err.name === "ExitPromptError") {
-    console.log(chalk.yellow("\nSetup cancelled.\n"));
+    console.log(chalk.yellow("\nEnvironment setup cancelled.\n"));
     process.exit(0);
   }
   console.error(chalk.red("\nAn error occurred:"), err);

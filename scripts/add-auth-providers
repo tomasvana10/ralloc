@@ -70,24 +70,24 @@ async function addProvider() {
     console.log(chalk.cyan("\n  Development credentials:"));
 
     const devClientId = await input({
-      message: `  ${providerName} Client ID (dev):`,
+      message: `  ${providerNameUpper} Client ID:`,
       validate: (val) => (val.trim() ? true : "Client ID is required"),
     });
 
     const devClientSecret = await input({
-      message: `  ${providerName} Client Secret (dev):`,
+      message: `  ${providerNameUpper} Client Secret:`,
       validate: (val) => (val.trim() ? true : "Client Secret is required"),
     });
 
     console.log(chalk.cyan("\n  Production credentials:"));
 
     const prodClientId = await input({
-      message: `  ${providerName} Client ID (prod):`,
+      message: `  ${providerNameUpper} Client ID:`,
       validate: (val) => (val.trim() ? true : "Client ID is required"),
     });
 
     const prodClientSecret = await input({
-      message: `  ${providerName} Client Secret (prod):`,
+      message: `  ${providerNameUpper} Client Secret:`,
       validate: (val) => (val.trim() ? true : "Client Secret is required"),
     });
 
@@ -127,17 +127,17 @@ async function addProvider() {
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(
-    `1. Add your provider to array ${chalk.gray("apps/web/src/features/auth/")}${chalk.blue("index.ts @providers")}`,
+    `1. Add your provider to array ${chalk.gray("apps/web/src/lib/auth/")}${chalk.blue("index.ts @providers")}`,
   );
   console.log(
     `2. Declare your provider in ${chalk.gray("packages/core/src/auth/")}${chalk.blue("provider.ts @OFFICIAL_PROVIDERS")}`,
   );
   console.log(
-    `3. If you want to add icons for your provider, ${chalk.gray("apps/web/src/features/auth/icon/")}${chalk.blue(` ${providerName}.tsx`)} and ` +
+    `3. If you want to add icons for your provider, ${chalk.gray("apps/web/src/lib/auth/icon/")}${chalk.blue(` ${providerName}.tsx`)} and ` +
       `export a component named ${chalk.gray("Default")} (and an optional component named ${chalk.gray("Dark")}).`,
   );
   console.log(
-    `4. If you followed step 3, declare your provider icons in ${chalk.gray("apps/web/src/features/auth/icon/")}${chalk.blue("index.ts @PROVIDER_ICON_DATA")}\n`,
+    `4. If you followed step 3, declare your provider icons in ${chalk.gray("apps/web/src/lib/auth/icon/")}${chalk.blue("index.ts @PROVIDER_ICON_DATA")}\n`,
   );
 }
 
