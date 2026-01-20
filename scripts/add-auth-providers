@@ -147,7 +147,7 @@ async function main() {
   console.log(
     chalk.bold(
       chalk.yellow(
-        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/add-provider)",
+        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/add-auth-providers)",
       ),
     ),
   );

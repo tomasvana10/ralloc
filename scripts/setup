@@ -323,9 +323,9 @@ function displayNextSteps() {
   console.log(`   ${chalk.green("pnpm dlx auth secret")}\n`);
 
   console.log(
-    `2. Add OAuth providers to your environment using the add-provider script:\n`,
+    `2. Add OAuth providers to your environment using the add-auth-providers script:\n`,
   );
-  console.log(`   ${chalk.green("./scripts/add-provider")}\n`);
+  console.log(`   ${chalk.green("./scripts/add-auth-providers")}\n`);
 
   console.log(`3. Run the app:\n`);
   console.log(

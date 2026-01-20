@@ -14,7 +14,7 @@
 
 ## Purpose
 
-`Ralloc` is a fast, intuitive tool that allows large quantities of people to allocate themselves to groups. 
+`Ralloc` is a fast, intuitive tool that allows large quantities of people to allocate themselves to groups.
 
 It orchestrates group allocation sessions similar to Kahoot or Blooket, whereby a host provides some details and the server generates a unique join code, allowing clients to join anonymously (`Ralloc` also provides anonymous authentication on top of `OAuth`).
 
@@ -37,16 +37,19 @@ One issue that `Ralloc` directly solves â€” and which inspired its development â
 If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/download) to install both it and pnpm.
 
 ### Preparation
+
 1. Clone the repository: `git clone https://github.com/tomasvana10/ralloc`
 2. `cd ralloc`
 3. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
 
 ### Set up the development/production environments
+
 1. Install development dependencies to use scripts: `pnpm i --dev`.
 1. Set up the environment by running `./scripts/setup`. This script will also inform you how `Ralloc` can be started in development/production.
-2. Add your OAuth providers: `./scripts/add-provider`.
+1. Add your OAuth providers: `./scripts/add-auth-providers`.
 
 ### Run
+
 - Development: `pnpm run dev`
 - Production (CI/CD): `pnpm run prod-ci`
 - Production (local): `pnpm run prod-local`
@@ -56,26 +59,31 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 ### `apps`
 
 `.env.development` and `.env.production`:
+
 - `REDIS_URL`: URL of the redis database.
 - `ENABLE_RATELIMITING`: A value of either `0` or `1` which determines if `next` API routes are protected by a token-bucket rate limiter.
 - `ENABLE_GUEST_AUTH`: A value of either `0` or `1` which determines if the signing in as a "guest" is enabled. Signing in as a guest generates a random user ID, meaning the user cannot access their data once they sign out (and so it is deleted).
 
 ### `apps/web`
 
-`.env.local`: 
+`.env.local`:
+
 - Used solely for global authentication secret/id pairs and the `NextAuth` authentication secret.
 
 `.env.development` and `.env.production`:
+
 - Scoped authentication secret/id pairs
 - `URL`: base `NextJS` url.
 - `AUTH_URL`: `NextAuth` base URL for callbacks and redirects (same as `URL`).
 
 `.env.production`:
+
 - `AUTH_DOMAIN`: optional value for `NextAuth` to ensure cookies are preserved across subdomains.
 
 ### `apps/ws`
 
 `.env.development` and `.env.production`:
+
 - `WS_HOST`: hostname of the WebSocket server (default `0.0.0.0`).
 - `WS_PORT`: port of the WebSocket server (default `6767`).
 - `WS_URL`: URL of the WebSocket server.
@@ -92,17 +100,17 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 - [ ] Create privacy and usage related markdown documents
 - [ ] Improve page metadata in general and possibly add sitemap
 - [ ] `generateMetadata` for group sessions (potentially a custom opengraph/twitter image?)
-- [X] (!!!) TOKEN BUCKET RATE LIMITS FOR: websocket AND REST api
-- [X] (not planned) Implement forced group session expiry (and listen to expiring keys potentially?)
-- [X] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
-- [X] Create a logo
-- [X] Implement group control - UI, websockets, etc.
-- [X] Document info for installation and usage on `README.md`
-- [X] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
-- [X] Lua scripting to ensure atomicity when joining/leaving a group
-- [X] Revise Redis DB structure for optimisations and removal of redundant keys
-- [X] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
-- [X] Add alternative authentication methods (`GitHub`)
+- [x] (!!!) TOKEN BUCKET RATE LIMITS FOR: websocket AND REST api
+- [x] (not planned) Implement forced group session expiry (and listen to expiring keys potentially?)
+- [x] Implement UI features for adding, removing and clearing group members (server-side + hook related stuff is already done)
+- [x] Create a logo
+- [x] Implement group control - UI, websockets, etc.
+- [x] Document info for installation and usage on `README.md`
+- [x] Add redis publishers in REST api for **deletion** and **patching**, and redis subscribers in ws UPGRADE() (and send new sync payloads to all clients)
+- [x] Lua scripting to ensure atomicity when joining/leaving a group
+- [x] Revise Redis DB structure for optimisations and removal of redundant keys
+- [x] Add reverse mapping for the group a user is in (probably like `host:<hostId>:session:<code>:user:<userId>:<groupName>`)
+- [x] Add alternative authentication methods (`GitHub`)
 - [x] [Containerise](https://github.com/vercel/next.js/tree/canary/examples/with-docker-compose) - include redis image
 - [x] Configure Cloudflare tunnel and security
 - [x] Buy domain `ralloc.xyz`
@@ -111,8 +119,9 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 - [x] Add basic Google authentication
 
 ### To consider
+
 - [ ] i18n through `next-intl` (probably - consider using POEditor from the github education pack. aim to support japanese, czech, french and korean)
 - [ ] Make a wiki
 - [ ] Support joining multiple groups (probably not)
 - [ ] Individual group freezing (should be pretty easy if I need to do it)
-- [X] Support for deleting and adding groups
+- [x] Support for deleting and adding groups
