@@ -329,13 +329,13 @@ function displayNextSteps() {
 
   console.log(`3. Run the app:\n`);
   console.log(
-    `   - Run in dev:          ${chalk.green("pnpm run --filter web d:dev")}`,
+    `   - Run in dev:          ${chalk.green("pnpm run dev")}`,
   );
   console.log(
-    `   - Run in prod (local): ${chalk.green("pnpm run --filter web d:prod-local")}`,
+    `   - Run in prod (local): ${chalk.green("pnpm run prod-local")}`,
   );
   console.log(
-    `   - Run in prod (CI/CD): ${chalk.green("pnpm run --filter web d:prod-ci")}\n`,
+    `   - Run in prod (CI/CD): ${chalk.green("pnpm run prod-ci")}\n`,
   );
 
   console.log(chalk.green(chalk.bold("Environment setup complete!\n")));
