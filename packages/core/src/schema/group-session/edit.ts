@@ -15,16 +15,15 @@ export const sessionEditSchemaFactory = (
   const schema = forServerSideValidation
     ? baseSessionEditSchema.partial().strict()
     : baseSessionEditSchema;
-  return schema.refine(
-    (data) => {
-      if (data.groupSize === undefined) return true;
-      return data.groupSize >= currentGroupSize;
-    },
-    {
-      message: "You can't decrease the group size below its current value.",
-      path: ["groupSize"],
-    },
-  );
+  return schema.superRefine((data, ctx) => {
+    if (data.groupSize !== undefined && data.groupSize < currentGroupSize) {
+      ctx.addIssue({
+        code: "custom",
+        message: "You can't decrease the group size below its current value.",
+        path: ["groupSize"],
+      });
+    }
+  });
 };
 
 export type SessionEditSchema = z.infer<typeof baseSessionEditSchema>;
