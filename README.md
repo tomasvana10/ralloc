@@ -51,8 +51,8 @@ If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/d
 ### Run
 
 - Development: `pnpm run dev`
-- Production (CI/CD): `pnpm run prod-ci`
-- Production (local): `pnpm run prod-local`
+- Production (CI/CD): `pnpm run deploy`
+- Production (local): `pnpm run deploy-locally`
 
 ## Environment Variable Reference
 

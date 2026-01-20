@@ -10,8 +10,12 @@
     "prepare": "[ -d .git ] && lefthook install || echo \"no lefthook in container\"",
     "predocker": "pnpm run --filter web typegen",
     "dev": "pnpm run predocker && docker compose -f ./docker/compose.dev.yaml up --build",
-    "prod-local": "docker compose -f ./docker/compose.prod-local.yaml up --build",
-    "prod-ci": "docker compose -f ./docker/compose.prod-ci.yaml pull && docker compose -f ./docker/compose.prod-ci.yaml up --build -d"
+
+    "deploy": "docker compose -f ./docker/compose.prod-ci.yaml pull && docker compose -f ./docker/compose.prod-ci.yaml up --build -d",
+    "logs": "docker compose -f ./docker/compose.prod-ci.yaml logs -f",
+    "restart": "docker compose -f ./docker/compose.prod-ci.yaml restart",
+
+    "deploy-locally": "docker compose -f ./docker/compose.prod-local.yaml up --build"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",
