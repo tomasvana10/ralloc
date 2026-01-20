@@ -1,5 +1,13 @@
 # ralloc
 
+## 0.29.0
+
+### Minor Changes
+
+- e979652: Organise Dockerfiles and scripts more cohesively
+- 0e1d6bd: Move core env files to apps/
+- efabf5d: Update dependencies
+
 ## 0.28.0
 
 ### Minor Changes

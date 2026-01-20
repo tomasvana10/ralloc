@@ -1,5 +1,12 @@
 # @ralloc/core
 
+## 0.29.0
+
+### Minor Changes
+
+- d21b831: Minor refactors and code improvements
+- efabf5d: Update dependencies
+
 ## 0.28.0
 
 ### Minor Changes

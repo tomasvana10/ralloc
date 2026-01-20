@@ -1,5 +1,19 @@
 # @ralloc/web
 
+## 0.29.0
+
+### Minor Changes
+
+- e979652: Organise Dockerfiles and scripts more cohesively
+- d21b831: Minor refactors and code improvements
+- efabf5d: Update dependencies
+
+### Patch Changes
+
+- Updated dependencies [d21b831]
+- Updated dependencies [efabf5d]
+  - @ralloc/core@0.29.0
+
 ## 0.28.0
 
 ### Minor Changes
