@@ -13,6 +13,7 @@
 
     "deploy": "docker compose -f ./docker/compose.prod-ci.yaml pull && docker compose -f ./docker/compose.prod-ci.yaml up --build -d",
     "logs": "docker compose -f ./docker/compose.prod-ci.yaml logs -f",
+    "stop": "docker compose -f ./docker/compose.prod-ci.yaml stop",
     "restart": "docker compose -f ./docker/compose.prod-ci.yaml restart",
 
     "deploy-locally": "docker compose -f ./docker/compose.prod-local.yaml up --build"
