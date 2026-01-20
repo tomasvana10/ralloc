@@ -99,32 +99,7 @@ async function getPort(message, default_, alertMsg = null) {
   return parsedPort;
 }
 
-async function main() {
-  if (!commandExists("pnpm")) {
-    console.log(chalk.red("pnpm is not installed."));
-    console.log(`Install it: ${chalk.cyan("https://pnpm.io/installation")}`);
-    process.exit(1);
-  }
-  console.log(chalk.bold("\nSetup Ralloc for Self-Hosting"));
-  console.log("This script sets up the Ralloc environment.");
-  console.log(
-    chalk.bold(
-      chalk.yellow(
-        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/setup)",
-      ),
-    ),
-  );
-  console.log(chalk.italic("Press Ctrl+C at any time to exit."));
-
-  if (!commandExists("docker")) {
-    console.log(chalk.red("Docker is not installed."));
-    console.log(
-      `Install it: ${chalk.cyan("https://docs.docker.com/get-docker/")}`,
-    );
-    process.exit(1);
-  }
-
-  //#region 1. base environment setup
+async function setupDevEnvironment() {
   console.log(
     chalk.bold(chalk.bgGreen("\nDevelopment Environment Configuration")),
   );
@@ -211,8 +186,9 @@ async function main() {
   writeEnvFile(".env.development", devAppsEnv, "apps");
   console.log();
   if (devOpenRedis) writeRedisConf("redis.dev.conf", devAppsEnv.REDIS_PASSWORD);
+}
 
-  // production
+async function setupProdEnvironment() {
   console.log(
     chalk.bold(chalk.bgMagenta("Production Environment Configuration")),
   );
@@ -314,8 +290,9 @@ async function main() {
   console.log();
   if (prodOpenRedis)
     writeRedisConf("redis.prod.conf", prodAppsEnv.REDIS_PASSWORD);
+}
 
-  //#region 2. docker network
+async function setupDocker() {
   const createNetwork = await confirm({
     message: "Create Docker network `ralloc_net`?",
     default: true,
@@ -336,8 +313,9 @@ async function main() {
       }
     }
   }
+}
 
-  //#region 3. next steps
+function displayNextSteps() {
   console.log(chalk.bold(chalk.bgCyan("\nNext Steps")));
 
   console.log(`1. Generate an auth secret:\n`);
@@ -361,6 +339,57 @@ async function main() {
   );
 
   console.log(chalk.green(chalk.bold("Environment setup complete!\n")));
+}
+
+async function main() {
+  if (!commandExists("pnpm")) {
+    console.log(chalk.red("pnpm is not installed."));
+    console.log(`Install it: ${chalk.cyan("https://pnpm.io/installation")}`);
+    process.exit(1);
+  }
+  console.log(chalk.bold("\nSetup Ralloc for Self-Hosting"));
+  console.log("This script sets up the Ralloc environment.");
+  console.log(
+    chalk.bold(
+      chalk.yellow(
+        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/setup)",
+      ),
+    ),
+  );
+  console.log(chalk.italic("Press Ctrl+C at any time to exit."));
+
+  if (!commandExists("docker")) {
+    console.log(chalk.red("Docker is not installed."));
+    console.log(
+      `Install it: ${chalk.cyan("https://docs.docker.com/get-docker/")}`,
+    );
+    process.exit(1);
+  }
+
+  console.log();
+  const setupDev = await confirm({
+    message: "Would you like to set up the development environment?",
+    default: true,
+  });
+  if (setupDev) {
+    await setupDevEnvironment();
+  } else {
+    console.log();
+  }
+
+  let setupProd = true;
+  if (setupDev) {
+    setupProd = await confirm({
+      message: "Would you like to set up the production environment?",
+      default: true,
+    });
+  }
+  if (setupProd) {
+    await setupProdEnvironment();
+  }
+
+  await setupDocker();
+  displayNextSteps();
 }
 
 main().catch((err) => {

@@ -14,11 +14,11 @@
 
 ## Purpose
 
-`Ralloc` was designed to be a fast, intuitive tool to allow large quantities of people to allocate themselves to groups. 
+`Ralloc` is a fast, intuitive tool that allows large quantities of people to allocate themselves to groups. 
 
-It orchestrates group allocation sessions similar to Kahoot or Blooket, whereby a host provides some details and the service generates a unique join code, allowing clients to join anonymously (`Ralloc` also provides anonymous authentication on top of `OAuth`).
+It orchestrates group allocation sessions similar to Kahoot or Blooket, whereby a host provides some details and the server generates a unique join code, allowing clients to join anonymously (`Ralloc` also provides anonymous authentication on top of `OAuth`).
 
-One issue that `Ralloc` directly solves (which was my inspiration for beginning its development) is the time-consuming process of manually providing cybersecurity students network router IP addresses (and tracking thereof) whenever they finish their theory lab work. Using the web-based tool, students can simply head to `ralloc.xyz`, enter the 6-digit session code (which can be showcased through a dedicated "advertisement" dialog by the host), and select a group, named as an IP address.
+One issue that `Ralloc` directly solves — and which inspired its development — is the time-consuming process of manually providing cybersecurity students network router IP addresses (and tracking thereof) whenever they finish their theory lab work. Using the web-based tool, students can simply head to `ralloc.xyz`, enter the 6-digit session code (which can be showcased through a dedicated "advertisement" dialog by the host), and select a group named as an IP address.
 
 ## Features
 
@@ -31,16 +31,25 @@ One issue that `Ralloc` directly solves (which was my inspiration for beginning 
 
 ## Installation and Self-Hosting
 
-If you are interested in self-hosting `Ralloc`, follow these steps.
+- Package manager: [`pnpm`](https://pnpm.io/installation)
+- Runtime: `Node.js`
 
-Requirements: [`pnpm`](https://pnpm.io/installation)
+If you don't already have `Node.js`, follow [this guide](https://nodejs.org/en/download) to install both it and pnpm.
 
-1. Clone the repository using `git clone https://github.com/tomasvana10/ralloc`
+### Preparation
+1. Clone the repository: `git clone https://github.com/tomasvana10/ralloc`
 2. `cd ralloc`
-3. If you are using docker, install dev dependencies using `pnpm i --dev`. Otherwise, install all dependencies using `pnpm i`.
-4. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
-6. Set up the environment by running `./scripts/setup`. This script will also inform you how `Ralloc` can be started in development/production.
-7. Add your OAuth providers by running `./scripts/add-provider`.
+3. Prevent `redis` background replications from failling under low memory conditions by running `sysctl vm.overcommit_memory=1`.
+
+### Set up the development/production environments
+1. Install development dependencies to use scripts: `pnpm i --dev`.
+1. Set up the environment by running `./scripts/setup`. This script will also inform you how `Ralloc` can be started in development/production.
+2. Add your OAuth providers: `./scripts/add-provider`.
+
+### Run
+- Development: `pnpm run dev`
+- Production (CI/CD): `pnpm run prod-ci`
+- Production (local): `pnpm run prod-local`
 
 ## Environment Variable Reference
 
