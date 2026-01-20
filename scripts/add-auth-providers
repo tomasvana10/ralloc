@@ -1,21 +1,28 @@
 #!/usr/bin/env node
 
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { confirm, input, select } from "@inquirer/prompts";
 import chalk from "chalk";
 import * as dotenv from "dotenv";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.resolve(__dirname, "..");
+
 function updateEnvFile(_filename, vars, prefix = "apps/web") {
-  const filename = `${prefix}/${_filename}`;
-  const existing = existsSync(filename)
-    ? dotenv.parse(readFileSync(filename, "utf-8"))
+  const absPath = path.join(ROOT_DIR, prefix, _filename);
+
+  const existing = existsSync(absPath)
+    ? dotenv.parse(readFileSync(absPath, "utf-8"))
     : {};
 
   let added = 0;
   for (const [key, value] of Object.entries(vars)) {
     if (key in existing) {
       console.log(
-        chalk.yellow(`  ${key} already exists in ${filename}, skipping.`),
+        chalk.yellow(`  ${key} already exists in ${absPath}, skipping.`),
       );
     } else {
       existing[key] = value;
@@ -27,10 +34,10 @@ function updateEnvFile(_filename, vars, prefix = "apps/web") {
     .map(([key, value]) => `${key}=${value}`)
     .join("\n");
 
-  writeFileSync(filename, `${content}\n`);
+  writeFileSync(absPath, `${content}\n`);
 
   if (added > 0)
-    console.log(chalk.green(`Added ${added} variable(s) to ${filename}`));
+    console.log(chalk.green(`Added ${added} variable(s) to ${absPath}`));
 }
 
 async function addProvider() {
@@ -144,13 +151,6 @@ async function addProvider() {
 async function main() {
   console.log(chalk.bold("\nRalloc AuthJS Provider Setup"));
   console.log("This script will help you add OAuth providers to Ralloc.");
-  console.log(
-    chalk.bold(
-      chalk.yellow(
-        "You MUST run this script at the root level of the codebase (meaning you ran this script using ./scripts/add-auth-providers)",
-      ),
-    ),
-  );
   console.log(chalk.italic("Press Ctrl+C at any time to exit.\n"));
 
   while (true) {
