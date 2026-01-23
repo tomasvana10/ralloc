@@ -223,6 +223,8 @@ export function useGroupSession({
       createPayload: (id: string) => T,
       dispatchAction: GroupSessionUpdateAction,
     ) => {
+      if (!dataRef.current || dataRef.current.frozen) return;
+
       const id = GSClient.createPayloadId();
       const payload = createPayload(id);
       if (dataRef.current) rollbacksRef.current.set(id, dataRef.current);
