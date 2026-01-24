@@ -50,22 +50,24 @@ export const paths = {
     redisKey("host", hostId, "session", code, "userGroup", userId),
   userGroupTemplate: (hostId: string, code: string) =>
     redisKey("host", hostId, "session", code, "userGroup"),
-  patterns: {
-    allHostMetadataKeys: (hostId: string) =>
-      redisKey("host", hostId, "session", "*", "metadata"),
-    allHostSessionKeys: (hostId: string, code: string) =>
-      redisKey("host", hostId, "session", code, "*"),
-    allGroupNames: (hostId: string, code: string) =>
-      redisKey("host", hostId, "session", code, "group", "*", "gmetadata"),
-    allGroupMembers: (hostId: string, code: string) =>
-      redisKey("host", hostId, "session", code, "group", "*", "members"),
-    allUserGroups: (hostId: string, code: string) =>
-      redisKey("host", hostId, "session", code, "userGroup", "*"),
-  },
-  pubsub: {
-    partialData: (code: string) => redisKey("gpartialdata", code),
-    deleted: (code: string) => redisKey("gdeleted", code),
-  },
+};
+
+export const patterns = {
+  allHostMetadataKeys: (hostId: string) =>
+    redisKey("host", hostId, "session", "*", "metadata"),
+  allHostSessionKeys: (hostId: string, code: string) =>
+    redisKey("host", hostId, "session", code, "*"),
+  allGroupNames: (hostId: string, code: string) =>
+    redisKey("host", hostId, "session", code, "group", "*", "gmetadata"),
+  allGroupMembers: (hostId: string, code: string) =>
+    redisKey("host", hostId, "session", code, "group", "*", "members"),
+  allUserGroups: (hostId: string, code: string) =>
+    redisKey("host", hostId, "session", code, "userGroup", "*"),
+};
+
+export const pubsub = {
+  partialData: (code: string) => redisKey("groupSession", code, "partialData"),
+  deleted: (code: string) => redisKey("groupSession", code, "deleted"),
 };
 
 export * from "./crud";

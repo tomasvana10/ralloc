@@ -16,6 +16,7 @@ import {
   type GroupSessionMetadata,
   getHostId,
   paths,
+  patterns,
 } from ".";
 
 //#region create
@@ -57,7 +58,7 @@ export async function createGroupSession(
 //#region read
 export async function getGroupSessionCodesOfHost(hostId: string) {
   const metadataKeys = await getKeys(
-    paths.patterns.allHostMetadataKeys(hostId),
+    patterns.allHostMetadataKeys(hostId),
     MAX_USER_SESSIONS,
   );
 
@@ -73,7 +74,7 @@ export async function getGroupSessionCodesOfHost(hostId: string) {
 
 export async function getGroupSessionsOfHost(hostId: string) {
   const metadataKeys = await getKeys(
-    paths.patterns.allHostMetadataKeys(hostId),
+    patterns.allHostMetadataKeys(hostId),
     MAX_USER_SESSIONS,
   );
   if (metadataKeys.size === 0) return [];
@@ -146,9 +147,7 @@ export async function updateGroupSession(
 
 //#region delete
 export async function deleteGroupSession(hostId: string, code: string) {
-  const sessionKeys = await getKeys(
-    paths.patterns.allHostSessionKeys(hostId, code),
-  );
+  const sessionKeys = await getKeys(patterns.allHostSessionKeys(hostId, code));
   if (!sessionKeys.size) return;
 
   await Promise.all([
@@ -159,7 +158,7 @@ export async function deleteGroupSession(hostId: string, code: string) {
 
 //#region crud helpers
 async function getGroups(hostId: string, code: string) {
-  const groupKeys = await getKeys(paths.patterns.allGroupNames(hostId, code));
+  const groupKeys = await getKeys(patterns.allGroupNames(hostId, code));
 
   const tx = redis.multi();
   const groupNames: string[] = [];

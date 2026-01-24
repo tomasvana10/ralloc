@@ -4,7 +4,7 @@ import {
   doesGroupSessionExist,
   getGroupSessionGroupSize,
   getHostId,
-  paths,
+  pubsub,
   updateGroupSession,
 } from "@core/db/group-session";
 import { rateLimit } from "@core/db/rate-limit";
@@ -36,10 +36,8 @@ export async function DELETE(_: Request, { params }: Context) {
   if (!hostId) return rlHeaders(new Response(null, { status: 404 }));
   if (userId !== hostId) return rlHeaders(new Response(null, { status: 403 }));
 
-  //RoomManager.markAsStale(code);
-
   await deleteGroupSession(hostId, code);
-  redisPub.publish(paths.pubsub.deleted(code), "");
+  redisPub.publish(pubsub.deleted(code), "");
   return rlHeaders(new Response(null, { status: 204 }));
 }
 
@@ -93,7 +91,7 @@ export async function PATCH(req: Request, { params }: Context) {
     data: parseResult.data,
   };
   redisPub.publish(
-    paths.pubsub.partialData(code),
+    pubsub.partialData(code),
     JSON.stringify(partialSyncPayload),
   );
   return rlHeaders(new Response());

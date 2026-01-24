@@ -1,7 +1,7 @@
 import redis from "@core/db";
 import { getKeys } from "@core/db/utils";
 import { UserRepresentation } from "@core/lib/group-session";
-import { type GroupSessionData, paths } from "../..";
+import { type GroupSessionData, paths, patterns } from "../..";
 import {
   ActionErrorMessage,
   ActionStatus,
@@ -54,8 +54,8 @@ export async function clearAllGroupMembers({
   "hostId" | "code"
 >): Promise<GroupClearAllMembersResult> {
   const [memberKeys, userGroupKeys] = await Promise.all([
-    getKeys(paths.patterns.allGroupMembers(hostId, code)),
-    getKeys(paths.patterns.allUserGroups(hostId, code)),
+    getKeys(patterns.allGroupMembers(hostId, code)),
+    getKeys(patterns.allUserGroups(hostId, code)),
   ]);
 
   const keys = [...memberKeys, ...userGroupKeys];

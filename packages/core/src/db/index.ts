@@ -53,12 +53,13 @@ const redisPub = globalThis.redisPub ?? createPubClient(redis);
 const redisSub =
   globalThis.redisSub ?? (isBuilding ? null : await createSubClient(redis));
 
-const prefixes = ["rlc"];
+const _prefixes = ["rlc"];
+const _sep = ":";
 
 export const REDIS = {
-  NAMESPACE: prefixes[0],
-  SEP: ":",
-  PREFIX_PARTS: prefixes.length,
+  NAMESPACE: _prefixes.join(_sep),
+  SEP: _sep,
+  PREFIX_PARTS: _prefixes.length,
   DEFAULT_BATCH_COUNT: 1000,
 };
 
