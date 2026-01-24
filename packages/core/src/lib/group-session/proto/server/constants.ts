@@ -1,10 +1,8 @@
 /**
  * How many successful responses the server must send to a client before it sends
- * a precautionary {@link Payloads.Synchronise} payload. These responses are generally
- * payloads of {@link Payloads.GroupMembershipStatus}, and since they do not provide the full
- * data, this variable is useful.
+ * a Synchronise payload to ensure the client's data is fully in sync with the server.
  */
-export const SUCCESSFUL_RESPONSES_BEFORE_RESYNC = 13;
+export const SUCCESSFUL_RESPONSES_BEFORE_RESYNC = 15;
 
 /**
  * The minimum time in miliseconds between two unsuccessful responses for the server
@@ -26,7 +24,7 @@ export const PING_INTERVAL_MS = 45000;
 export const MSG_SIZE_LIMIT = 1024;
 
 /**
- * How many {@link Payloads.MessageRateLimit} payloads within one websocket session is considered
+ * How many MessageRateLimit payloads within one websocket session is considered
  * suspicious/abusive.
  */
 export const MIN_RATELIMITS_CONSIDERED_SUSPICIOUS = 20;

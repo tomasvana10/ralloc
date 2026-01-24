@@ -76,12 +76,12 @@ export type GroupMutation = DynamicRelayableAction<
 /**
  * Payload sent to the client to fully update its state when:
  *  1. They connect to the websocket.
- *  2. They have sent a payload which resulted in a {@link BroadcastedPayload}
+ *  2. They have sent a payload which resulted in a DynamicRelayableAction
  *     assignable to `ok: Yes` being sent in return at least
- *     {@link SUCCESSFUL_RESPONSES_BEFORE_RESYNC} times.
- *  3. They have sent a payload which resulted in a {@link BroadcastedPayload}
- *     assignable to `ok: No`, OR, a {@link MessageRateLimit} payload being
- *     sent in return, and it has been at least {@link FAILURE_RESYNC_TIMEOUT}
+ *     SUCCESSFUL_RESPONSES_BEFORE_RESYNC times.
+ *  3. They have sent a payload which resulted in a DynamicRelayableAction
+ *     assignable to `ok: No`, OR, a MessageRateLimit payload being
+ *     sent in return, and it has been at least FAILURE_RESYNC_TIMEOUT
  *     miliseconds since the last such payload of that nature.
  */
 export type Synchronise = {
