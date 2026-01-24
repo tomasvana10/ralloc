@@ -1,252 +1,165 @@
 import type { WebSocket } from "uWebSockets.js";
-import { EventEmitter } from "node:events";
-import { redisSub } from "@core/db";
+import { redisPub, redisSub } from "@core/db";
 import {
+  doesGroupSessionExist,
   type GroupSessionData,
   getHostId,
-  paths,
+  pubsub as groupSessionPubsub,
 } from "@core/db/group-session";
+import { pubsub as roomPubsub } from "@core/db/group-session-room";
+import {
+  addTenant,
+  getTenantCount,
+  removeTenant,
+} from "@core/db/group-session-room/helpers";
 import type * as GSServer from "@core/lib/group-session/proto/server";
-import { getLogger } from "@core/logger";
-import type { UserData } from "./index";
-import { closeDeleted, sendPreStringified, updateCache } from "./utils";
+import type { UserData } from ".";
+import { closeDeleted, sendPreStringified } from "./utils";
 
+const rooms = new Map<string, Promise<Room | null> | Room | null>();
+const killers = new Map<string, Promise<any>>();
+
+export type Cache = Pick<GroupSessionData, "frozen" | "groupSize">;
 export type Client = WebSocket<UserData>;
 
-export type Cache = Pick<GroupSessionData, "groupSize" | "frozen">;
-
-export interface Room {
-  ready: boolean;
-  stale: boolean;
-  hostId: string | null;
-  clients: Set<Client>;
-  cache: Cache;
-}
-
-const logd = getLogger("wsRoomManagerDebugger");
-
-export class RoomManager {
-  private static rooms = new Map<string, Room>();
-  private static locks = new Map<string, Promise<Room | null>>();
-  private static roomCreationEmitter = new EventEmitter();
-
-  private static ROOM_WAIT_TIMEOUT = 1000;
-
+export class Room {
+  public hostId: string;
   public code: string;
-  private client: Client | null = null;
-  private room: Room | null = null;
+  public tenants: number;
+  public cache: Cache;
+  public clients: Set<Client>;
 
-  private constructor(code: string) {
+  private constructor(
+    hostId: string,
+    code: string,
+    tenants: number,
+    cache: Cache,
+  ) {
+    this.hostId = hostId;
     this.code = code;
-  }
-
-  get data() {
-    return this.room;
+    this.tenants = tenants;
+    this.cache = cache;
+    this.clients = new Set<Client>();
   }
 
   public static async get(code: string) {
-    const manager = new RoomManager(code);
+    const resolving = rooms.get(code);
+    if (resolving) return resolving;
 
-    const existingRoom = RoomManager.rooms.get(code);
-    if (existingRoom?.ready && !existingRoom.stale) {
-      manager.room = existingRoom;
-      return manager;
-    }
-    if (existingRoom?.stale) return null;
+    const toResolve = Room.resolve(code);
+    toResolve.catch(() => rooms.delete(code));
+    rooms.set(code, toResolve);
 
-    // a different client has begun creating this room, so wait for them
-    const lock = RoomManager.locks.get(code);
-    if (lock) {
-      logd.debug(`[room:${code}] client waiting for existing lock`);
-      await lock;
-      return manager.acquire();
-    }
+    const room = await toResolve;
+    if (room) rooms.set(code, room);
 
-    // room exists but lock isn't created
-    if (existingRoom) {
-      logd.debug(
-        `[room:${code}] room exists but has no lock - waiting until ready`,
-      );
-      return manager.acquire();
-    }
-
-    // room doesn't exist yet, so create it
-    logd.debug(`[room:${code}] creating new room`);
-    const creation = manager.create();
-    RoomManager.locks.set(code, creation);
-
-    try {
-      const room = await creation;
-      if (!room) return null;
-      manager.room = room;
-      logd.debug(`[room:${code}] room created successfully`);
-      return manager;
-    } finally {
-      RoomManager.locks.delete(code);
-    }
+    return room;
   }
 
-  public static markAsStale(code: string) {
-    const room = RoomManager.rooms.get(code);
-    if (room) room.stale = true;
+  public updateCache(delta: Partial<Cache>) {
+    if (delta.frozen !== undefined) this.cache.frozen = delta.frozen;
+    if (delta.groupSize !== undefined) this.cache.groupSize = delta.groupSize;
   }
 
-  public static shutdown() {
-    logd.debug(`[room] shutting down ${RoomManager.rooms.size} rooms`);
+  public broadcastToAllClients(data: string | GSServer.Payload.PayloadType) {
+    const message = typeof data === "string" ? data : JSON.stringify(data);
 
-    for (const [code, room] of RoomManager.rooms) {
-      logd.debug(
-        `[room:${code}] closing ${room.clients.size} client connections`,
-      );
-
-      room.clients.forEach((client) => {
-        client.end(1001);
-      });
-
-      room.clients.clear();
-      room.stale = true;
-    }
-
-    RoomManager.rooms.clear();
+    redisPub.publish(roomPubsub.message(this.code), message);
   }
 
-  public setClient(client: Client) {
-    this.client = client;
+  public kill() {
+    rooms.delete(this.code);
+
+    const toKill = Promise.all([
+      redisSub.unsubscribe(groupSessionPubsub.partialData(this.code)),
+      redisSub.unsubscribe(groupSessionPubsub.deleted(this.code)),
+      redisSub.unsubscribe(roomPubsub.message(this.code)),
+      redisSub.unsubscribe(roomPubsub.tenantCount(this.code)),
+    ]).finally(() => killers.delete(this.code));
+    killers.set(this.code, toKill);
   }
 
-  public registerClient() {
-    if (!this.client || !this.room) return;
-    this.room.clients.add(this.client);
-    logd.debug(
-      `[room:${this.code}] client registered (total: ${this.room.clients.size})`,
-    );
+  public async onClientClose(client: Client) {
+    this.clients.delete(client);
+    const tenants = await removeTenant(this.code);
+    redisPub.publish(roomPubsub.tenantCount(this.code), tenants.toString());
   }
 
-  public unregisterClient() {
-    if (!this.client || !this.room) return;
-    this.room.clients.delete(this.client);
-    logd.debug(
-      `[room:${this.code}] client unregistered (total: ${this.room.clients.size})`,
-    );
+  public async onClientOpen(client: Client) {
+    this.clients.add(client);
+    const tenants = await addTenant(this.code);
+    redisPub.publish(roomPubsub.tenantCount(this.code), tenants.toString());
   }
 
-  public async deleteIfEmpty() {
-    const room = RoomManager.rooms.get(this.code);
-    if (!room || room.clients.size !== 0) return;
-
-    logd.debug(`[room:${this.code}] deleting empty room`);
-
-    room.stale = true;
-    RoomManager.rooms.delete(this.code);
-
-    try {
-      await Promise.all([
-        redisSub.unsubscribe(paths.pubsub.partialData(this.code)),
-        redisSub.unsubscribe(paths.pubsub.deleted(this.code)),
-      ]);
-    } catch {}
+  public isEmpty() {
+    return this.tenants === 0;
   }
 
-  private async acquire() {
-    try {
-      await this.waitForRoom();
-    } catch {
-      return null;
-    }
+  // idk
+  private static async resolve(code: string) {
+    const killing = killers.get(code);
+    if (killing) await killing;
 
-    const current = RoomManager.rooms.get(this.code);
-    if (!current || current.stale) {
-      return null;
-    }
+    const hostId = await getHostId(code);
+    if (!hostId) return null;
 
-    this.room = current;
-    return this;
-  }
+    const tenants = await getTenantCount(code);
 
-  private waitForRoom() {
-    return new Promise<void>((resolve, reject) => {
-      const current = RoomManager.rooms.get(this.code);
-      if (!current || current.stale) return reject();
-      if (current.ready) return resolve();
-
-      const timeout = setTimeout(() => {
-        RoomManager.roomCreationEmitter.off(this.code, onReady);
-        reject();
-      }, RoomManager.ROOM_WAIT_TIMEOUT);
-
-      const onReady = () => {
-        clearTimeout(timeout);
-        resolve();
-      };
-
-      RoomManager.roomCreationEmitter.once(this.code, onReady);
+    const room = new Room(hostId, code, tenants ?? 0, {
+      frozen: true,
+      groupSize: 1,
     });
-  }
+    await Room.registerSubscriptions(room);
 
-  private async create() {
-    const room: Room = {
-      ready: false,
-      stale: false,
-      hostId: null,
-      clients: new Set(),
-      cache: {
-        frozen: false,
-        groupSize: 0,
-      },
-    };
-    RoomManager.rooms.set(this.code, room);
-
-    const initialised = await this.prepareAsyncComponents(room);
-    if (initialised) {
-      RoomManager.roomCreationEmitter.emit(this.code);
-      return room;
+    if (!(await doesGroupSessionExist(code))) {
+      room.kill();
+      return null;
     }
 
-    await this.deleteIfEmpty();
-    return null;
+    return room;
   }
 
-  private async prepareAsyncComponents(room: Room) {
-    try {
-      const hostId = await getHostId(this.code);
-      if (!hostId || room.stale) return false;
-      room.hostId = hostId;
-
-      await this.registerSubscriptions(room);
-      if (room.stale) return false;
-
-      room.ready = true;
-      return true;
-    } catch (e) {
-      logd.error(e, `[room:${this.code}] failed to prepare async components`);
-      return false;
-    }
-  }
-
-  private async registerSubscriptions(room: Room) {
+  private static async registerSubscriptions(room: Room) {
     await redisSub.subscribe(
-      paths.pubsub.partialData(this.code),
-      (msg: string) => {
-        if (!RoomManager.rooms.has(this.code) || room.stale) return;
-
-        const payload: GSServer.Payload.PartialSynchronise = JSON.parse(msg);
-        updateCache(room.cache, {
+      groupSessionPubsub.partialData(room.code),
+      (message: string) => {
+        const payload: GSServer.Payload.PartialSynchronise =
+          JSON.parse(message);
+        room.updateCache({
           frozen: payload.data?.frozen,
           groupSize: payload.data?.groupSize,
         });
 
         for (const client of room.clients) {
-          sendPreStringified(client, msg);
+          sendPreStringified(client, message);
         }
       },
     );
 
-    await redisSub.subscribe(paths.pubsub.deleted(this.code), () => {
-      if (!RoomManager.rooms.has(this.code) || room.stale) return;
-
+    await redisSub.subscribe(groupSessionPubsub.deleted(room.code), () => {
       for (const client of room.clients) {
         closeDeleted(client);
       }
     });
+
+    await redisSub.subscribe(
+      roomPubsub.message(room.code),
+      (message: string) => {
+        for (const client of room.clients) {
+          sendPreStringified(client, message);
+        }
+      },
+    );
+
+    await redisSub.subscribe(
+      roomPubsub.tenantCount(room.code),
+      (message: string) => {
+        room.tenants = parseInt(message, 10);
+
+        if (room.isEmpty()) {
+          room.kill();
+        }
+      },
+    );
   }
 }

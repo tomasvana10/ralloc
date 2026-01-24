@@ -4,14 +4,14 @@ import { rateLimit } from "@core/db/rate-limit";
 import * as GSServer from "@core/lib/group-session/proto/server";
 import { getLogger } from "@core/logger";
 import { handleMessage } from "./handlers/message";
-import { RoomManager } from "./room";
+import { Room } from "./room";
 import { doSafeSync } from "./utils";
 
 export interface UserData {
   code: string;
   userId: string;
   isHost: boolean;
-  room: RoomManager;
+  room: Room;
   state: ClientState;
   pingInterval: ReturnType<typeof setInterval> | null;
 }
@@ -99,9 +99,9 @@ app.ws<UserData>("/:code", {
       return;
     }
 
-    const room = await RoomManager.get(code);
+    const room = await Room.get(code);
 
-    if (!room || !room.data || !room.data.hostId) {
+    if (!room) {
       if (!aborted) {
         res.cork(() => {
           res.writeStatus("404 Not Found").end("Room not found");
@@ -112,7 +112,7 @@ app.ws<UserData>("/:code", {
 
     if (aborted) return;
 
-    const isHost = room.data.hostId === userId;
+    const isHost = room.hostId === userId;
 
     logd.debug(`[${code}] upgrading (host: ${isHost}, user: ${userId})`);
 
@@ -139,18 +139,12 @@ app.ws<UserData>("/:code", {
     const userData = ws.getUserData();
     const { code, room } = userData;
 
-    if (!room.data) {
-      ws.close();
-      return;
-    }
-
     logd.debug(`[${code}] client connected (is host: ${userData.isHost})`);
 
-    const synced = await doSafeSync(room.data.cache, code, ws);
+    const synced = await doSafeSync(room, code, ws);
     if (!synced) return;
 
-    room.setClient(ws);
-    room.registerClient();
+    room.onClientOpen(ws);
 
     userData.pingInterval = setInterval(() => {
       if (!userData.state.isPonging) {
@@ -174,8 +168,7 @@ app.ws<UserData>("/:code", {
 
     if (userData.pingInterval) clearInterval(userData.pingInterval);
 
-    userData.room.unregisterClient();
-    void userData.room.deleteIfEmpty();
+    userData.room.onClientClose(ws);
   },
 });
 
@@ -197,8 +190,6 @@ function shutdown() {
     listenSocket = null;
     log.info("listen socket closed.");
   }
-
-  RoomManager.shutdown();
 
   log.info("full shutdown complete");
   process.exit(0);

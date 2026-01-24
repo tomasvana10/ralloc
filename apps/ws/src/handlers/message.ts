@@ -14,8 +14,8 @@ import { rateLimit } from "@core/db/rate-limit";
 import { UserRepresentation } from "@core/lib/group-session";
 import * as GSClient from "@core/lib/group-session/proto/client";
 import * as GSServer from "@core/lib/group-session/proto/server";
-import type { Cache, Client } from "@ws/room";
 import type { UserData } from "../index";
+import type { Cache, Client } from "../room";
 import { closeForbidden, doSafeSync, send, sendPreStringified } from "../utils";
 
 export async function handleMessage(
@@ -25,12 +25,7 @@ export async function handleMessage(
   const userData = ws.getUserData();
   const { code, userId, isHost, room, state } = userData;
 
-  if (!room || !room.data) {
-    ws.close();
-    return;
-  }
-
-  const { hostId, clients, cache } = room.data;
+  const { hostId, clients, cache } = room;
   if (!hostId) return;
 
   let serialisedData: Record<string, any>;
@@ -99,7 +94,7 @@ export async function handleMessage(
       // that we can send another synchronise payload
       reply.willSync = true;
       state.lastSync = now;
-      if (!(await doSafeSync(cache, code, ws))) return;
+      if (!(await doSafeSync(room, code, ws))) return;
     }
   } else {
     // successful response will be sent, thus increment the counter
@@ -113,7 +108,7 @@ export async function handleMessage(
       // the client has received enough group update responses that
       // a full re-synchronisation should occur to ensure the client's data
       // is up to date
-      if (!(await doSafeSync(cache, code, ws))) return;
+      if (!(await doSafeSync(room, code, ws))) return;
       state.successfulResponses = 0;
       resynced = true;
     }
