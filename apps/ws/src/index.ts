@@ -1,7 +1,7 @@
 import uWS from "uWebSockets.js";
 import { getSessionFromCookie } from "@core/auth/utils";
 import { rateLimit } from "@core/db/rate-limit";
-import { GSServer } from "@core/lib/group-session/proto";
+import * as GSServer from "@core/lib/group-session/proto/server";
 import { getLogger } from "@core/logger";
 import { handleMessage } from "./handlers/message";
 import { RoomManager } from "./room";

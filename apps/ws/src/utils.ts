@@ -1,5 +1,5 @@
 import { getGroupSessionByCode } from "@core/db/group-session";
-import { GSServer } from "@core/lib/group-session/proto";
+import * as GSServer from "@core/lib/group-session/proto/server";
 import type { Client, Room } from "./room";
 
 export function updateCache(
@@ -19,7 +19,7 @@ export async function prepareSyncPayload(cache: Room["cache"], code: string) {
 
   updateCache(cache, { groupSize: data.groupSize, frozen: data.frozen });
 
-  const payload: GSServer.Payloads.Synchronise = {
+  const payload: GSServer.Payload.Synchronise = {
     code: GSServer.Code.Synchronise,
     data,
   };
@@ -54,7 +54,7 @@ export function closeForbidden(ws: Client) {
   );
 }
 
-export function send(ws: Client, payload: GSServer.Payload) {
+export function send(ws: Client, payload: GSServer.Payload.PayloadType) {
   try {
     ws.send(JSON.stringify(payload));
   } catch {}

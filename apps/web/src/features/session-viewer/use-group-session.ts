@@ -4,7 +4,8 @@ import type {
 } from "@core/db/group-session";
 import { getRateLimitMessage } from "@core/db/rate-limit/utils";
 import { UserRepresentation } from "@core/lib/group-session";
-import { GSClient, GSServer } from "@core/lib/group-session/proto";
+import * as GSClient from "@core/lib/group-session/proto/client";
+import * as GSServer from "@core/lib/group-session/proto/server";
 import { usePublicEnv } from "@web/components/providers/public-env-provider";
 import React from "react";
 import useWebSocket, { type Options } from "react-use-websocket-lite";
@@ -219,7 +220,7 @@ export function useGroupSession({
   }, [data, compressedUser]);
 
   const _sendAndDispatch = React.useCallback(
-    <T extends GSClient.Payload>(
+    <T extends GSClient.Payload.PayloadType>(
       createPayload: (id: string) => T,
       dispatchAction: GroupSessionUpdateAction,
     ) => {
@@ -332,7 +333,7 @@ function onMessage(
   dispatchGroupSession: React.Dispatch<GroupSessionUpdateAction>,
   rollbacksRef: React.RefObject<Rollbacks>,
 ) {
-  let payload: GSServer.Payload;
+  let payload: GSServer.Payload.PayloadType;
   try {
     payload = JSON.parse(ev.data);
   } catch {

@@ -8,7 +8,8 @@ import {
   updateGroupSession,
 } from "@core/db/group-session";
 import { rateLimit } from "@core/db/rate-limit";
-import { GSServer } from "@core/lib/group-session/proto";
+import * as GSServer from "@core/lib/group-session/proto/server";
+
 import {
   baseSessionEditSchema,
   sessionEditSchemaFactory,
@@ -87,7 +88,7 @@ export async function PATCH(req: Request, { params }: Context) {
   // publishing just the raw data is inefficient, as the websocket handler will
   // have to parse it, assemble its own payload, then stringify it. this way, all
   // they have to do is send it (and parse it to update their own cache)
-  const partialSyncPayload: GSServer.Payloads.PartialSynchronise = {
+  const partialSyncPayload: GSServer.Payload.PartialSynchronise = {
     code: GSServer.Code.PartialSynchronise,
     data: parseResult.data,
   };

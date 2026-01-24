@@ -6,7 +6,7 @@ import {
   getHostId,
   paths,
 } from "@core/db/group-session";
-import type { GSServer } from "@core/lib/group-session/proto";
+import type * as GSServer from "@core/lib/group-session/proto/server";
 import { getLogger } from "@core/logger";
 import type { UserData } from "./index";
 import { closeDeleted, sendPreStringified, updateCache } from "./utils";
@@ -229,7 +229,7 @@ export class RoomManager {
       (msg: string) => {
         if (!RoomManager.rooms.has(this.code) || room.stale) return;
 
-        const payload: GSServer.Payloads.PartialSynchronise = JSON.parse(msg);
+        const payload: GSServer.Payload.PartialSynchronise = JSON.parse(msg);
         updateCache(room.cache, {
           frozen: payload.data?.frozen,
           groupSize: payload.data?.groupSize,

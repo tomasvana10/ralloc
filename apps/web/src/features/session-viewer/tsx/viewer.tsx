@@ -3,7 +3,7 @@
 import type { GroupSessionData } from "@core/db/group-session";
 import { getRateLimitMessage } from "@core/db/rate-limit/utils";
 import { UserRepresentation } from "@core/lib/group-session";
-import { GSServer } from "@core/lib/group-session/proto";
+import * as GSServer from "@core/lib/group-session/proto/server";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { ClientAvatar } from "@web/components/auth/avatar";
 import { CopyableCode } from "@web/components/code";

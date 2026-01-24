@@ -12,7 +12,8 @@ import {
 import { ActionStatus } from "@core/db/group-session/actions/types";
 import { rateLimit } from "@core/db/rate-limit";
 import { UserRepresentation } from "@core/lib/group-session";
-import { GSClient, GSServer } from "@core/lib/group-session/proto";
+import * as GSClient from "@core/lib/group-session/proto/client";
+import * as GSServer from "@core/lib/group-session/proto/server";
 import type { Cache, Client } from "@ws/room";
 import type { UserData } from "../index";
 import { closeForbidden, doSafeSync, send, sendPreStringified } from "../utils";
@@ -40,7 +41,7 @@ export async function handleMessage(
     return;
   }
 
-  const parseResult = GSClient.payload.safeParse(serialisedData);
+  const parseResult = GSClient.Payload.payload.safeParse(serialisedData);
   if (parseResult.error) {
     ws.end(1008, "malformed json payload");
     return;
@@ -55,7 +56,7 @@ export async function handleMessage(
   });
 
   if (rl.res) {
-    const rateLimitPayload: GSServer.Payloads.MessageRateLimit = {
+    const rateLimitPayload: GSServer.Payload.MessageRateLimit = {
       code: GSServer.Code.MessageRateLimit,
       id: parseResult.data.id,
       retryAfter: rl.retryAfter,
@@ -127,7 +128,7 @@ export async function handleMessage(
 }
 
 async function createReplyPayload(
-  received: GSClient.Payload,
+  received: GSClient.Payload.PayloadType,
   ws: Client,
   userId: string,
   isHost: boolean,
@@ -135,7 +136,7 @@ async function createReplyPayload(
   hostId: string,
   cache: Cache,
 ) {
-  let reply: GSServer.Payload;
+  let reply: GSServer.Payload.PayloadType;
 
   switch (received.code) {
     //#region join/leave
