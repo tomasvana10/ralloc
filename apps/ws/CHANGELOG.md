@@ -1,5 +1,20 @@
 # @ralloc/ws
 
+## 0.32.0
+
+### Minor Changes
+
+- 512f17c: Redesign room system to improve scalability
+- 8a2c5ad: Use modular-based approach to define the WebSocket messaging libraries
+
+### Patch Changes
+
+- Updated dependencies [d8efc63]
+- Updated dependencies [98c6d55]
+- Updated dependencies [512f17c]
+- Updated dependencies [8a2c5ad]
+  - @ralloc/core@0.32.0
+
 ## 0.30.1
 
 ### Patch Changes

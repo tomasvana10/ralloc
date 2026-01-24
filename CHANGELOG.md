@@ -1,5 +1,11 @@
 # ralloc
 
+## 0.32.0
+
+### Patch Changes
+
+- e5afe44: Update README.md
+
 ## 0.31.0
 
 ### Minor Changes

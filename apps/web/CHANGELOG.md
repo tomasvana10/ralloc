@@ -1,5 +1,21 @@
 # @ralloc/web
 
+## 0.32.0
+
+### Minor Changes
+
+- 98c6d55: Minor database refactors
+- 8a2c5ad: Use modular-based approach to define the WebSocket messaging libraries
+
+### Patch Changes
+
+- b531530: Do not send messages or update client state if `frozen` is true
+- Updated dependencies [d8efc63]
+- Updated dependencies [98c6d55]
+- Updated dependencies [512f17c]
+- Updated dependencies [8a2c5ad]
+  - @ralloc/core@0.32.0
+
 ## 0.31.0
 
 ### Patch Changes
